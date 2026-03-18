@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Republic Bar — Daily Trading Report</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0f0f0e;
+    --surface: #1a1a18;
+    --surface-2: #222220;
+    --border: rgba(255,255,255,0.08);
+    --border-hover: rgba(255,255,255,0.15);
+    --text: #f0ede6;
+    --text-muted: #7a7870;
+    --text-dim: #4a4845;
+    --accent: #c8a96e;
+    --accent-dim: rgba(200,169,110,0.12);
+    --success: #6aaa7a;
+    --font-sans: 'DM Sans', sans-serif;
+    --font-mono: 'DM Mono', monospace;
+    --radius: 10px;
+    --radius-sm: 6px;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 0;
+  }
+
+  header {
+    border-bottom: 1px solid var(--border);
+    padding: 1.5rem 2rem;
+    display: flex;
+    align-items: baseline;
+    gap: 1rem;
+  }
+
+  header h1 {
+    font-size: 15px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  header span {
+    font-size: 13px;
+    color: var(--text-muted);
+    font-weight: 300;
+  }
+
+  .page {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 4rem;
+  }
+
+  .section-label {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 10px;
+    margin-top: 2rem;
+  }
+
+  .section-label:first-of-type { margin-top: 0; }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.25rem;
+    margin-bottom: 8px;
+  }
+
+  .floor-title {
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  .card-toggle {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .chevron {
+    font-size: 11px;
+    color: var(--text-dim);
+    transition: transform 0.15s;
+    display: inline-block;
+  }
+
+  .card.expanded .chevron { transform: rotate(90deg); }
+
+  .card-body {
+    display: none;
+    margin-top: 12px;
+  }
+
+  .card.expanded .card-body { display: block; }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+
+  @media (max-width: 500px) {
+    .grid-4 { grid-template-columns: 1fr 1fr; }
+
+    header { padding: 1rem 1.25rem; }
+
+    .page { padding: 1.25rem 1rem 4rem; }
+
+    .grid-2 { grid-template-columns: 1fr; }
+
+    .grid-2 .input-group[style*="grid-column"] { grid-column: auto; }
+
+    .btn-row { flex-direction: column; }
+    .btn-row button, .btn-row .btn-copy { width: 100%; text-align: center; }
+
+    .ms-option { padding: 10px 12px; flex: 1 1 auto; text-align: center; }
+  }
+
+  .input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .input-group label {
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 0.04em;
+  }
+
+  input[type="text"],
+  input[type="number"],
+  select,
+  textarea {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-family: var(--font-sans);
+    font-size: 14px;
+    font-weight: 400;
+    padding: 9px 12px;
+    width: 100%;
+    transition: border-color 0.15s;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
+  input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+
+  select {
+    cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%237a7870' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 32px;
+  }
+
+  textarea {
+    resize: vertical;
+    min-height: 90px;
+    line-height: 1.6;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  .sph-pill {
+    display: inline-block;
+    background: var(--accent-dim);
+    color: var(--accent);
+    border-radius: 4px;
+    font-size: 11px;
+    font-family: var(--font-mono);
+    padding: 2px 8px;
+    margin-top: 6px;
+  }
+
+  .floor-foot {
+    margin-top: 10px;
+    font-size: 12px;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+  }
+
+  .total-bar {
+    background: var(--accent-dim);
+    border: 1px solid rgba(200,169,110,0.2);
+    border-radius: var(--radius);
+    padding: 1rem 1.25rem;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-top: 1rem;
+  }
+
+  .total-item { display: flex; flex-direction: column; gap: 3px; }
+  .total-label { font-size: 11px; color: var(--accent); opacity: 0.7; letter-spacing: 0.05em; }
+  .total-value { font-size: 20px; font-weight: 500; color: var(--accent); font-family: var(--font-mono); }
+
+  .btn-row { display: flex; gap: 10px; margin-top: 1.5rem; flex-wrap: wrap; align-items: center; }
+
+  button {
+    font-family: var(--font-sans);
+    font-size: 13px;
+    font-weight: 500;
+    padding: 10px 20px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all 0.15s;
+    letter-spacing: 0.03em;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #0f0f0e;
+    border: none;
+  }
+
+  .btn-primary:hover { opacity: 0.88; }
+
+  .btn-ghost {
+    background: transparent;
+    border: 1px solid var(--border-hover);
+    color: var(--text-muted);
+  }
+
+  .btn-ghost:hover { border-color: var(--border-hover); color: var(--text); background: var(--surface-2); }
+
+  .btn-copy {
+    background: transparent;
+    border: 1px solid var(--border-hover);
+    color: var(--text-muted);
+  }
+
+  .btn-copy:hover { color: var(--text); border-color: rgba(200,169,110,0.4); }
+
+  .divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 2rem 0;
+  }
+
+  .output-wrap {
+    position: relative;
+  }
+
+  .output-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.25rem;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    line-height: 1.75;
+    color: var(--text);
+    white-space: pre-wrap;
+    word-break: break-word;
+    min-height: 80px;
+  }
+
+  .output-placeholder { color: var(--text-dim); font-style: italic; font-family: var(--font-sans); font-size: 14px; }
+
+  .copy-confirm {
+    font-size: 12px;
+    color: var(--success);
+    font-family: var(--font-mono);
+    display: none;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .animate-in { animation: fadeIn 0.3s ease forwards; }
+
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
+  input[type="number"] { -moz-appearance: textfield; }
+
+  .multi-select {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .ms-option {
+    font-family: var(--font-sans);
+    font-size: 13px;
+    font-weight: 400;
+    padding: 8px 14px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: var(--surface-2);
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.15s;
+    letter-spacing: 0.02em;
+  }
+
+  .ms-option:hover {
+    border-color: var(--border-hover);
+    color: var(--text);
+  }
+
+  .ms-option { position: relative; }
+
+  .ms-option[data-tip]::after {
+    content: attr(data-tip);
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: #2a2a28;
+    border: 1px solid var(--border-hover);
+    color: var(--text-muted);
+    font-size: 11px;
+    white-space: nowrap;
+    padding: 4px 8px;
+    border-radius: var(--radius-sm);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+
+  .ms-option[data-tip]:hover::after {
+    opacity: 1;
+  }
+
+  .ms-option.selected {
+    background: var(--accent-dim);
+    border-color: rgba(200,169,110,0.4);
+    color: var(--accent);
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>The Republic Hotel</h1>
+  <span>Shift Report</span>
+</header>
+
+<div class="page">
+
+  <div class="card expanded">
+    <div class="floor-title card-toggle">Shift <span class="chevron">▶</span></div>
+    <div class="card-body">
+      <div style="display: flex; flex-direction: column; gap: 12px;">
+        <div class="input-group">
+          <label>Day</label>
+          <select id="rpt-day">
+            <option>Monday</option><option>Tuesday</option><option>Wednesday</option>
+            <option>Thursday</option><option>Friday</option><option>Saturday</option><option>Sunday</option>
+          </select>
+        </div>
+        <div class="input-group">
+          <label>Shift</label>
+          <div class="multi-select" id="rpt-session">
+            <button type="button" class="ms-option" data-value="Day" data-tip="Open – 4pm">Day</button>
+            <button type="button" class="ms-option" data-value="Happy Hour" data-tip="5pm – 7pm">Happy Hour</button>
+            <button type="button" class="ms-option" data-value="Night" data-tip="4pm – 10pm">Night</button>
+            <button type="button" class="ms-option" data-value="Late Night" data-tip="10pm – Close">Late Night</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card expanded">
+    <div class="floor-title card-toggle">Revenue <span class="chevron">▶</span></div>
+    <div class="card-body">
+      <div class="grid-2">
+        <div class="input-group" style="grid-column: span 2;">
+          <label>Beverage revenue ($)</label>
+          <input type="number" id="rev-bev" placeholder="0" min="0" step="1" />
+        </div>
+        <div class="input-group">
+          <label>Food revenue ($)</label>
+          <input type="number" id="rev-food" placeholder="0" min="0" step="1" />
+        </div>
+        <div class="input-group">
+          <label>Covers</label>
+          <input type="number" id="rev-covers" placeholder="0" min="0" step="1" />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p class="section-label" style="margin-top: 2rem;">Floor reports</p>
+
+  <div class="card">
+    <div class="floor-title card-toggle">Taylor's Rooftop <span class="chevron">▶</span></div>
+    <div class="card-body"><textarea id="floor-rt" placeholder="Notes for Taylor's Rooftop…"></textarea></div>
+  </div>
+  <div class="card">
+    <div class="floor-title card-toggle">Sports Bar <span class="chevron">▶</span></div>
+    <div class="card-body"><textarea id="floor-sb" placeholder="Notes for Sports Bar…"></textarea></div>
+  </div>
+  <div class="card">
+    <div class="floor-title card-toggle">Bistro <span class="chevron">▶</span></div>
+    <div class="card-body"><textarea id="floor-bi" placeholder="Notes for Bistro…"></textarea></div>
+  </div>
+  <div class="card">
+    <div class="floor-title card-toggle">Republic Bar <span class="chevron">▶</span></div>
+    <div class="card-body"><textarea id="floor-rb" placeholder="Notes for Republic Bar…"></textarea></div>
+  </div>
+
+  <p class="section-label" style="margin-top: 2rem;">Other</p>
+
+  <div class="card">
+    <div class="floor-title card-toggle">Gaming <span class="chevron">▶</span></div>
+    <div class="card-body"><textarea id="sec-gaming" placeholder="Gaming notes…"></textarea></div>
+  </div>
+  <div class="card">
+    <div class="floor-title card-toggle">DJs <span class="chevron">▶</span></div>
+    <div class="card-body"><textarea id="sec-djs" placeholder="DJ notes…"></textarea></div>
+  </div>
+  <div class="card">
+    <div class="floor-title card-toggle">Security <span class="chevron">▶</span></div>
+    <div class="card-body"><textarea id="sec-security" placeholder="Security notes…"></textarea></div>
+  </div>
+  <div class="card">
+    <div class="floor-title card-toggle">Staff <span class="chevron">▶</span></div>
+    <div class="card-body"><textarea id="sec-staff" placeholder="Staff notes…"></textarea></div>
+  </div>
+
+  <div class="card" style="margin-top: 2rem;">
+    <div class="floor-title card-toggle">Incidents / notes <span class="chevron">▶</span></div>
+    <div class="card-body"><textarea id="rpt-notes" placeholder="Any incidents, maintenance issues, staff matters, or notable events from the shift…"></textarea></div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn-primary" onclick="generate()">Generate report</button>
+    <button class="btn-ghost" onclick="clearAll()">Clear</button>
+  </div>
+
+  <hr class="divider" />
+
+  <p class="section-label">WhatsApp message</p>
+  <div class="output-wrap">
+    <div class="output-box" id="output"><span class="output-placeholder">Your report will appear here — ready to copy into WhatsApp.</span></div>
+  </div>
+  <div class="btn-row">
+    <button class="btn-copy" id="copy-btn" onclick="copyReport()" style="display:none;">Copy to clipboard</button>
+    <span class="copy-confirm" id="copy-confirm">Copied to clipboard</span>
+  </div>
+
+</div>
+
+<script>
+  function num(id) { return parseFloat(document.getElementById(id).value) || 0; }
+  function val(id) { return document.getElementById(id).value.trim(); }
+
+  function fmtMoney(n) { return '$' + Math.round(n).toLocaleString('en-AU'); }
+
+function getSelectedSessions() {
+    return [...document.querySelectorAll('#rpt-session .ms-option.selected')].map(b => b.dataset.value);
+  }
+
+  const floors = [
+    { id: 'rt', label: "Taylor's Rooftop" },
+    { id: 'sb', label: 'Sports Bar' },
+    { id: 'bi', label: 'Bistro' },
+    { id: 'rb', label: 'Republic Bar' },
+  ];
+
+  function generate() {
+    const day = val('rpt-day');
+    const sessions = getSelectedSessions();
+    const notes = val('rpt-notes');
+    const food = num('rev-food');
+    const bev = num('rev-bev');
+    const totalRev = food + bev;
+    const sessionStr = sessions.length ? sessions.join(' · ') : '';
+
+    const covers = num('rev-covers');
+
+    const lines = [
+      `*${day} ${sessionStr}*`,
+      `_Bev: ${fmtMoney(bev)}_`,
+    ];
+    if (food) lines.push(`_Food: ${fmtMoney(food)} (Covers: ${covers || '—'})_`);
+
+    const floorNotes = floors.map(f => ({ label: f.label, text: document.getElementById('floor-' + f.id).value.trim() })).filter(f => f.text);
+    if (floorNotes.length) {
+      lines.push(``);
+      floorNotes.forEach((f, i) => {
+        if (i > 0) lines.push(`──────────`);
+        lines.push(`*${f.label}*`, f.text);
+      });
+    }
+
+    const extras = [
+      { id: 'sec-gaming', label: 'Gaming' },
+      { id: 'sec-djs', label: 'DJs' },
+      { id: 'sec-security', label: 'Security' },
+      { id: 'sec-staff', label: 'Staff' },
+    ].map(s => ({ label: s.label, text: document.getElementById(s.id).value.trim() })).filter(s => s.text);
+
+    if (extras.length) {
+      extras.forEach((s, i) => {
+        lines.push(`──────────`, `*${s.label}*`, s.text);
+      });
+    }
+
+    if (notes) {
+      lines.push(`──────────`, notes);
+    }
+
+    const out = lines.join('\n');
+    const box = document.getElementById('output');
+    box.textContent = out;
+    box.classList.add('animate-in');
+    setTimeout(() => box.classList.remove('animate-in'), 400);
+
+    document.getElementById('copy-btn').style.display = 'inline-block';
+    document.getElementById('copy-confirm').style.display = 'none';
+  }
+
+  function copyReport() {
+    const text = document.getElementById('output').textContent;
+    navigator.clipboard.writeText(text).then(() => {
+      document.getElementById('copy-confirm').style.display = 'inline';
+      setTimeout(() => document.getElementById('copy-confirm').style.display = 'none', 2500);
+    });
+  }
+
+  function clearAll() {
+    ['rev-food', 'rev-bev', 'rev-covers'].forEach(id => document.getElementById(id).value = '');
+    floors.forEach(f => document.getElementById('floor-' + f.id).value = '');
+    ['sec-gaming', 'sec-djs', 'sec-security', 'sec-staff'].forEach(id => document.getElementById(id).value = '');
+    document.querySelectorAll('#rpt-session .ms-option').forEach(b => b.classList.remove('selected'));
+    document.getElementById('rpt-notes').value = '';
+    const box = document.getElementById('output');
+    box.innerHTML = '<span class="output-placeholder">Your report will appear here — ready to copy into WhatsApp.</span>';
+    document.getElementById('copy-btn').style.display = 'none';
+    document.getElementById('copy-confirm').style.display = 'none';
+  }
+
+  // Init
+  const today = new Date();
+  const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  document.getElementById('rpt-day').value = days[today.getDay()];
+
+  function updateHappyHour() {
+    const day = document.getElementById('rpt-day').value;
+    const btn = document.querySelector('.ms-option[data-value="Happy Hour"]');
+    const hide = day === 'Saturday' || day === 'Sunday';
+    btn.style.display = hide ? 'none' : '';
+    if (hide) btn.classList.remove('selected');
+  }
+
+  document.getElementById('rpt-day').addEventListener('change', updateHappyHour);
+  updateHappyHour();
+
+  document.querySelectorAll('#rpt-session .ms-option').forEach(btn => {
+    btn.addEventListener('click', () => btn.classList.toggle('selected'));
+  });
+
+  document.querySelectorAll('.card-toggle').forEach(toggle => {
+    toggle.addEventListener('click', () => toggle.closest('.card').classList.toggle('expanded'));
+  });
+</script>
+</body>
+</html>
