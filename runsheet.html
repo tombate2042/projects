@@ -792,10 +792,6 @@
             <option>Other</option>
           </select>
         </div>
-        <div class="field">
-          <label>Custom Location Note</label>
-          <input type="text" id="f-location-note" placeholder="e.g. Private room, rear section..." oninput="autoSave()">
-        </div>
       </div>
     </div>
   </div>
@@ -829,14 +825,6 @@
         <div class="field">
           <label>Food Cost</label>
           <input type="text" id="f-food-cost" placeholder="e.g. $1,200" oninput="autoSave()">
-        </div>
-        <div class="field">
-          <label>Food Cost Per Head</label>
-          <input type="text" id="f-food-cph" placeholder="e.g. $30pp" oninput="autoSave()">
-        </div>
-        <div class="field">
-          <label>Beverage Package</label>
-          <input type="text" id="f-bev-package" placeholder="e.g. $45pp / Cash bar" oninput="autoSave()">
         </div>
       </div>
     </div>
@@ -1515,13 +1503,10 @@ function loadFormData() {
     setVal('f-end', d.end);
     setVal('f-pax', d.pax);
     setVal('f-location', d.location);
-    setVal('f-location-note', d.locationNote);
     setVal('f-client', d.client);
     setVal('f-contact', d.contact);
     setVal('f-prepaid', d.prepaid);
     setVal('f-food-cost', d.foodCost);
-    setVal('f-food-cph', d.foodCph);
-    setVal('f-bev-package', d.bevPackage);
     setVal('f-notes', d.notes);
     setVal('misc-notes', d.miscNotes);
     if (d.menuType) {
@@ -1553,13 +1538,10 @@ function getFormData() {
     end: v('f-end'),
     pax: v('f-pax'),
     location: v('f-location'),
-    locationNote: v('f-location-note'),
     client: v('f-client'),
     contact: v('f-contact'),
     prepaid: v('f-prepaid'),
     foodCost: v('f-food-cost'),
-    foodCph: v('f-food-cph'),
-    bevPackage: v('f-bev-package'),
     notes: v('f-notes'),
     miscNotes: v('misc-notes'),
     menuType: currentMenuType,
@@ -1757,7 +1739,7 @@ function buildRunsheet() {
 
   const dateStr = d.date ? formatDate(d.date) : '—';
   const timeStr = [d.start ? formatTime(d.start) : '', d.end ? formatTime(d.end) : ''].filter(Boolean).join(' – ') || '—';
-  const locationStr = [d.location, d.locationNote].filter(Boolean).join(' — ') || '—';
+  const locationStr = d.location || '—';
 
   let foodHtml = '';
   if (d.menuType === 'canape-a' || d.menuType === 'canape-b') {
@@ -1855,11 +1837,7 @@ function buildRunsheet() {
         </div>
         <div class="rs-cell">
           <div class="rs-label">Food Cost</div>
-          <div class="rs-value">${escHtml(d.foodCost) || '—'} ${d.foodCph ? '<span style="color:#888;font-size:13px;font-family:var(--sans);">(' + escHtml(d.foodCph) + ')</span>' : ''}</div>
-        </div>
-        <div class="rs-cell">
-          <div class="rs-label">Beverage</div>
-          <div class="rs-value">${escHtml(d.bevPackage) || '—'}</div>
+          <div class="rs-value">${escHtml(d.foodCost) || '—'}</div>
         </div>
       </div>
 
@@ -1904,8 +1882,8 @@ function escJs(str) {
 
 function clearForm() {
   if (!confirm('Clear all event details? Menu Manager items are preserved.')) return;
-  ['f-event-name','f-date','f-start','f-end','f-pax','f-location','f-location-note',
-   'f-client','f-contact','f-prepaid','f-food-cost','f-food-cph','f-bev-package','f-notes','misc-notes'].forEach(id => {
+  ['f-event-name','f-date','f-start','f-end','f-pax','f-location',
+   'f-client','f-contact','f-prepaid','f-food-cost','f-notes','misc-notes'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.value = '';
   });
