@@ -886,10 +886,11 @@
   <div class="mm-layout">
     <div class="mm-sidebar">
       <div class="mm-menu-list">
-        <button class="mm-menu-btn active" onclick="showMMPanel('canape-a')">Canapé Menu A</button>
-        <button class="mm-menu-btn" onclick="showMMPanel('canape-b')">Canapé Menu B</button>
-        <button class="mm-menu-btn" onclick="showMMPanel('banquet')">Banquet Menu</button>
-        <button class="mm-menu-btn" onclick="showMMPanel('bistro')">Bistro Sit-Down</button>
+        <button class="mm-menu-btn active" onclick="showMMPanel('canape-a')">Canapés</button>
+        <button class="mm-menu-btn" onclick="showMMPanel('banquet')">Banquet</button>
+        <button class="mm-menu-btn" onclick="showMMPanel('bistro')">Bistro</button>
+        <button class="mm-menu-btn" onclick="showMMPanel('grazing-stations')">Grazing Stations</button>
+        <button class="mm-menu-btn" onclick="showMMPanel('grazing-platters')">Grazing Platters</button>
       </div>
       <div style="margin-top:1.5rem;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);font-size:12px;color:var(--text2);line-height:1.5;">
         Changes save automatically to your browser.
@@ -897,15 +898,11 @@
     </div>
     <div class="mm-main">
 
-      <!-- Canapé A -->
+      <!-- Canapés -->
       <div class="mm-panel active" id="mmp-canape-a">
         <div class="section-card">
-          <div class="section-header"><span class="dot"></span>Canapé Menu A</div>
+          <div class="section-header"><span class="dot"></span>Canapés</div>
           <div class="section-body">
-            <div class="mm-limit-row">
-              <label>Max selections:</label>
-              <input type="number" id="ca-limit-input" min="1" max="30" value="5" onchange="saveMenus()">
-            </div>
             <div class="mm-section-title">Canapé Items</div>
             <div class="mm-items" id="mm-ca-items"></div>
             <button class="btn btn-add" onclick="addMMItem('canape','')">+ Add item</button>
@@ -913,28 +910,10 @@
         </div>
       </div>
 
-      <!-- Canapé B -->
-      <div class="mm-panel" id="mmp-canape-b">
-        <div class="section-card">
-          <div class="section-header"><span class="dot"></span>Canapé Menu B</div>
-          <div class="section-body">
-            <div class="mm-limit-row">
-              <label>Max selections:</label>
-              <input type="number" id="cb-limit-input" min="1" max="30" value="8" onchange="saveMenus()">
-            </div>
-            <div class="mm-section-title">Canapé Items (same pool, different limit)</div>
-            <p style="font-size:12px;color:var(--text2);margin-bottom:12px;">Canapé A & B share the same item list. Edit items in Canapé A — they appear here too. Only the selection limit differs.</p>
-            <div class="mm-limit-row" style="background:var(--accent-light);border-color:#a8ccb4;">
-              <span style="color:var(--accent);font-size:12px;">Items are managed in Canapé Menu A above.</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
       <!-- Banquet -->
       <div class="mm-panel" id="mmp-banquet">
         <div class="section-card">
-          <div class="section-header"><span class="dot"></span>Banquet Menu</div>
+          <div class="section-header"><span class="dot"></span>Banquet</div>
           <div class="section-body">
             <div class="mm-section">
               <div class="mm-section-title">Entrée Options</div>
@@ -958,11 +937,35 @@
       <!-- Bistro -->
       <div class="mm-panel" id="mmp-bistro">
         <div class="section-card">
-          <div class="section-header"><span class="dot"></span>Bistro Sit-Down Dishes</div>
+          <div class="section-header"><span class="dot"></span>Bistro</div>
           <div class="section-body">
             <p style="font-size:12px;color:var(--text2);margin-bottom:12px;">These are the dishes available for per-guest selection in the Bistro menu.</p>
             <div class="mm-items" id="mm-bistro-dishes"></div>
             <button class="btn btn-add" onclick="addMMItem('bistro-dishes','')">+ Add dish</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Grazing Stations -->
+      <div class="mm-panel" id="mmp-grazing-stations">
+        <div class="section-card">
+          <div class="section-header"><span class="dot"></span>Grazing Stations</div>
+          <div class="section-body">
+            <div class="mm-section-title">Station Items</div>
+            <div class="mm-items" id="mm-grazing-stations-items"></div>
+            <button class="btn btn-add" onclick="addMMItem('grazing-stations','')">+ Add item</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Grazing Platters -->
+      <div class="mm-panel" id="mmp-grazing-platters">
+        <div class="section-card">
+          <div class="section-header"><span class="dot"></span>Grazing Platters</div>
+          <div class="section-body">
+            <div class="mm-section-title">Platter Items</div>
+            <div class="mm-items" id="mm-grazing-platters-items"></div>
+            <button class="btn btn-add" onclick="addMMItem('grazing-platters','')">+ Add item</button>
           </div>
         </div>
       </div>
@@ -993,13 +996,15 @@
    STATE
 ════════════════════════════════════════════ */
 let menuData = {
-  canape: [],          // shared list
+  canape: [],
   caLimitA: 5,
   caLimitB: 8,
   banquetEntree: [],
   banquetMain: [],
   banquetDessert: [],
-  bistroDishes: []
+  bistroDishes: [],
+  grazingStations: [],
+  grazingPlatters: []
 };
 
 let selectedCanapeA = [];
@@ -1181,7 +1186,7 @@ function showMMPanel(name) {
   document.querySelectorAll('.mm-panel').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.mm-menu-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('mmp-' + name).classList.add('active');
-  const map = { 'canape-a': 0, 'canape-b': 1, 'banquet': 2, 'bistro': 3 };
+  const map = { 'canape-a': 0, 'banquet': 1, 'bistro': 2, 'grazing-stations': 3, 'grazing-platters': 4 };
   document.querySelectorAll('.mm-menu-btn')[map[name]].classList.add('active');
 }
 
@@ -1191,7 +1196,9 @@ function addMMItem(type, value) {
     'banquet-entree': 'banquetEntree',
     'banquet-main': 'banquetMain',
     'banquet-dessert': 'banquetDessert',
-    'bistro-dishes': 'bistroDishes'
+    'bistro-dishes': 'bistroDishes',
+    'grazing-stations': 'grazingStations',
+    'grazing-platters': 'grazingPlatters'
   };
   menuData[map[type]].push(value || '');
   saveMenus();
@@ -1210,7 +1217,9 @@ function removeMMItem(type, idx) {
     'banquet-entree': 'banquetEntree',
     'banquet-main': 'banquetMain',
     'banquet-dessert': 'banquetDessert',
-    'bistro-dishes': 'bistroDishes'
+    'bistro-dishes': 'bistroDishes',
+    'grazing-stations': 'grazingStations',
+    'grazing-platters': 'grazingPlatters'
   };
   menuData[map[type]].splice(idx, 1);
   saveMenus();
@@ -1224,7 +1233,9 @@ function updateMMItem(type, idx, val) {
     'banquet-entree': 'banquetEntree',
     'banquet-main': 'banquetMain',
     'banquet-dessert': 'banquetDessert',
-    'bistro-dishes': 'bistroDishes'
+    'bistro-dishes': 'bistroDishes',
+    'grazing-stations': 'grazingStations',
+    'grazing-platters': 'grazingPlatters'
   };
   menuData[map[type]][idx] = val;
   saveMenus();
@@ -1237,6 +1248,8 @@ function renderMMItems() {
   renderMMList('mm-banquet-main', 'banquet-main', menuData.banquetMain);
   renderMMList('mm-banquet-dessert', 'banquet-dessert', menuData.banquetDessert);
   renderMMList('mm-bistro-dishes', 'bistro-dishes', menuData.bistroDishes);
+  renderMMList('mm-grazing-stations-items', 'grazing-stations', menuData.grazingStations || []);
+  renderMMList('mm-grazing-platters-items', 'grazing-platters', menuData.grazingPlatters || []);
   updateLimitInputs();
 }
 
