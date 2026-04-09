@@ -1053,6 +1053,16 @@
               <div class="mm-items" id="mm-bistro-burger-addons"></div>
               <button class="btn btn-add" onclick="addMMItem('bistro-burger-addons','')">+ Add option</button>
             </div>
+            <div class="mm-section">
+              <div class="mm-section-title">Schnitzel Upgrade</div>
+              <div class="mm-items" id="mm-bistro-schnitzel-upgrade"></div>
+              <button class="btn btn-add" onclick="addMMItem('bistro-schnitzel-upgrade','')">+ Add option</button>
+            </div>
+            <div class="mm-section">
+              <div class="mm-section-title">Extra Sauce</div>
+              <div class="mm-items" id="mm-bistro-extra-sauce"></div>
+              <button class="btn btn-add" onclick="addMMItem('bistro-extra-sauce','')">+ Add option</button>
+            </div>
           </div>
         </div>
       </div>
@@ -1128,6 +1138,8 @@ let menuData = {
   bistroSteakTemp: [],
   bistroBowlAddOns: [],
   bistroBurgerAddOns: [],
+  bistroSchnitzelUpgrade: [],
+  bistroExtraSauce: [],
   grazingStations: [],
   grazingPlatters: []
 };
@@ -1337,6 +1349,8 @@ function addMMItem(type, value) {
     'bistro-steak-temp': 'bistroSteakTemp',
     'bistro-bowl-addons': 'bistroBowlAddOns',
     'bistro-burger-addons': 'bistroBurgerAddOns',
+    'bistro-schnitzel-upgrade': 'bistroSchnitzelUpgrade',
+    'bistro-extra-sauce': 'bistroExtraSauce',
     'grazing-stations': 'grazingStations',
     'grazing-platters': 'grazingPlatters'
   };
@@ -1373,6 +1387,8 @@ function removeMMItem(type, idx) {
     'bistro-steak-temp': 'bistroSteakTemp',
     'bistro-bowl-addons': 'bistroBowlAddOns',
     'bistro-burger-addons': 'bistroBurgerAddOns',
+    'bistro-schnitzel-upgrade': 'bistroSchnitzelUpgrade',
+    'bistro-extra-sauce': 'bistroExtraSauce',
     'grazing-stations': 'grazingStations',
     'grazing-platters': 'grazingPlatters'
   };
@@ -1403,6 +1419,8 @@ function updateMMItem(type, idx, field, val) {
     'bistro-steak-temp': 'bistroSteakTemp',
     'bistro-bowl-addons': 'bistroBowlAddOns',
     'bistro-burger-addons': 'bistroBurgerAddOns',
+    'bistro-schnitzel-upgrade': 'bistroSchnitzelUpgrade',
+    'bistro-extra-sauce': 'bistroExtraSauce',
     'grazing-stations': 'grazingStations',
     'grazing-platters': 'grazingPlatters'
   };
@@ -1440,7 +1458,9 @@ function renderMMItems() {
   renderMMList('mm-bistro-sauces',        'bistro-sauces',        menuData.bistroSauces        || [], noDesc);
   renderMMList('mm-bistro-steak-temp',    'bistro-steak-temp',    menuData.bistroSteakTemp     || [], noDesc);
   renderMMList('mm-bistro-bowl-addons',   'bistro-bowl-addons',   menuData.bistroBowlAddOns    || [], noDesc);
-  renderMMList('mm-bistro-burger-addons', 'bistro-burger-addons', menuData.bistroBurgerAddOns  || [], noDesc);
+  renderMMList('mm-bistro-burger-addons',      'bistro-burger-addons',      menuData.bistroBurgerAddOns      || [], noDesc);
+  renderMMList('mm-bistro-schnitzel-upgrade',  'bistro-schnitzel-upgrade',  menuData.bistroSchnitzelUpgrade  || [], noDesc);
+  renderMMList('mm-bistro-extra-sauce',        'bistro-extra-sauce',        menuData.bistroExtraSauce        || [], noDesc);
   renderMMList('mm-grazing-stations-items', 'grazing-stations', menuData.grazingStations || [], all);
   renderMMList('mm-grazing-platters-items', 'grazing-platters', menuData.grazingPlatters || [], all);
   updateLimitInputs();
@@ -1507,7 +1527,7 @@ function loadMenus() {
       const keys = ['canapeSmall','canapePremium','canapeSubstantial','canapeSliders','canapeDessert',
                     'banquetMains','banquetSides','banquetDessert',
                     'bistroSnacks','bistroBurgers','bistroPubClassics','bistroBowls','bistroMains','bistroSides',
-                    'bistroMainSides','bistroSauces','bistroSteakTemp','bistroBowlAddOns','bistroBurgerAddOns',
+                    'bistroMainSides','bistroSauces','bistroSteakTemp','bistroBowlAddOns','bistroBurgerAddOns','bistroSchnitzelUpgrade','bistroExtraSauce',
                     'grazingStations','grazingPlatters'];
       keys.forEach(k => {
         if (!menuData[k]) menuData[k] = [];
@@ -1846,7 +1866,9 @@ const BISTRO_ADDONS = [
   { id: 'sauce',      label: 'Sauce',        key: 'bistroSauces',       appliesTo: ['bistroMains', 'bistroPubClassics'] },
   { id: 'steakTemp',  label: 'Steak Temp',   key: 'bistroSteakTemp',    appliesTo: ['bistroMains'] },
   { id: 'bowlAddOn',  label: 'Bowl Add On',  key: 'bistroBowlAddOns',   appliesTo: ['bistroBowls'] },
-  { id: 'burgerAddOn',label: 'Burger Add On',key: 'bistroBurgerAddOns', appliesTo: ['bistroBurgers'] }
+  { id: 'burgerAddOn',      label: 'Burger Add On',      key: 'bistroBurgerAddOns',      appliesTo: ['bistroBurgers'] },
+  { id: 'schnitzelUpgrade', label: 'Schnitzel Upgrade',  key: 'bistroSchnitzelUpgrade',  appliesTo: ['bistroMains', 'bistroPubClassics'] },
+  { id: 'extraSauce',       label: 'Extra Sauce',        key: 'bistroExtraSauce',         appliesTo: ['bistroSnacks', 'bistroBurgers', 'bistroPubClassics', 'bistroBowls', 'bistroMains', 'bistroSides'] }
 ];
 
 function getBistroDisCat(dishName) {
