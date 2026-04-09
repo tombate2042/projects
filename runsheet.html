@@ -874,15 +874,15 @@
       <div class="menu-panel" id="mp-banquet">
         <div class="form-grid" style="gap:10px;">
           <div class="field">
-            <label>Entrée</label>
-            <select id="banquet-entree" onchange="autoSave()">
-              <option value="">— Select entrée —</option>
+            <label>Mains</label>
+            <select id="banquet-mains" onchange="autoSave()">
+              <option value="">— Select main —</option>
             </select>
           </div>
           <div class="field">
-            <label>Main</label>
-            <select id="banquet-main" onchange="autoSave()">
-              <option value="">— Select main —</option>
+            <label>Sides</label>
+            <select id="banquet-sides" onchange="autoSave()">
+              <option value="">— Select side —</option>
             </select>
           </div>
           <div class="field">
@@ -999,17 +999,17 @@
           <div class="section-header"><span class="dot"></span>Banquet</div>
           <div class="section-body">
             <div class="mm-section">
-              <div class="mm-section-title">Entrée Options</div>
-              <div class="mm-items" id="mm-banquet-entree"></div>
-              <button class="btn btn-add" onclick="addMMItem('banquet-entree','')">+ Add entrée</button>
+              <div class="mm-section-title">Mains</div>
+              <div class="mm-items" id="mm-banquet-mains"></div>
+              <button class="btn btn-add" onclick="addMMItem('banquet-mains','')">+ Add main</button>
             </div>
             <div class="mm-section">
-              <div class="mm-section-title">Main Options</div>
-              <div class="mm-items" id="mm-banquet-main"></div>
-              <button class="btn btn-add" onclick="addMMItem('banquet-main','')">+ Add main</button>
+              <div class="mm-section-title">Sides</div>
+              <div class="mm-items" id="mm-banquet-sides"></div>
+              <button class="btn btn-add" onclick="addMMItem('banquet-sides','')">+ Add side</button>
             </div>
             <div class="mm-section">
-              <div class="mm-section-title">Dessert Options</div>
+              <div class="mm-section-title">Dessert</div>
               <div class="mm-items" id="mm-banquet-dessert"></div>
               <button class="btn btn-add" onclick="addMMItem('banquet-dessert','')">+ Add dessert</button>
             </div>
@@ -1113,8 +1113,8 @@ let menuData = {
   canapeDessert: [],
   caLimitA: 5,
   caLimitB: 8,
-  banquetEntree: [],
-  banquetMain: [],
+  banquetMains: [],
+  banquetSides: [],
   banquetDessert: [],
   bistroSnacks: [],
   bistroBurgers: [],
@@ -1316,8 +1316,8 @@ function addMMItem(type, value) {
     'canape-substantial': 'canapeSubstantial',
     'canape-sliders': 'canapeSliders',
     'canape-dessert': 'canapeDessert',
-    'banquet-entree': 'banquetEntree',
-    'banquet-main': 'banquetMain',
+    'banquet-mains': 'banquetMains',
+    'banquet-sides': 'banquetSides',
     'banquet-dessert': 'banquetDessert',
     'bistro-snacks': 'bistroSnacks',
     'bistro-burgers': 'bistroBurgers',
@@ -1347,8 +1347,8 @@ function removeMMItem(type, idx) {
     'canape-substantial': 'canapeSubstantial',
     'canape-sliders': 'canapeSliders',
     'canape-dessert': 'canapeDessert',
-    'banquet-entree': 'banquetEntree',
-    'banquet-main': 'banquetMain',
+    'banquet-mains': 'banquetMains',
+    'banquet-sides': 'banquetSides',
     'banquet-dessert': 'banquetDessert',
     'bistro-snacks': 'bistroSnacks',
     'bistro-burgers': 'bistroBurgers',
@@ -1372,8 +1372,8 @@ function updateMMItem(type, idx, field, val) {
     'canape-substantial': 'canapeSubstantial',
     'canape-sliders': 'canapeSliders',
     'canape-dessert': 'canapeDessert',
-    'banquet-entree': 'banquetEntree',
-    'banquet-main': 'banquetMain',
+    'banquet-mains': 'banquetMains',
+    'banquet-sides': 'banquetSides',
     'banquet-dessert': 'banquetDessert',
     'bistro-snacks': 'bistroSnacks',
     'bistro-burgers': 'bistroBurgers',
@@ -1396,9 +1396,9 @@ function renderMMItems() {
   renderMMList('mm-canape-substantial', 'canape-substantial', menuData.canapeSubstantial || []);
   renderMMList('mm-canape-sliders', 'canape-sliders', menuData.canapeSliders || []);
   renderMMList('mm-canape-dessert', 'canape-dessert', menuData.canapeDessert || []);
-  renderMMList('mm-banquet-entree', 'banquet-entree', menuData.banquetEntree);
-  renderMMList('mm-banquet-main', 'banquet-main', menuData.banquetMain);
-  renderMMList('mm-banquet-dessert', 'banquet-dessert', menuData.banquetDessert);
+  renderMMList('mm-banquet-mains', 'banquet-mains', menuData.banquetMains || []);
+  renderMMList('mm-banquet-sides', 'banquet-sides', menuData.banquetSides || []);
+  renderMMList('mm-banquet-dessert', 'banquet-dessert', menuData.banquetDessert || []);
   renderMMList('mm-bistro-snacks', 'bistro-snacks', menuData.bistroSnacks || []);
   renderMMList('mm-bistro-burgers', 'bistro-burgers', menuData.bistroBurgers || []);
   renderMMList('mm-bistro-pub-classics', 'bistro-pub-classics', menuData.bistroPubClassics || []);
@@ -1459,6 +1459,9 @@ function loadMenus() {
     const saved = localStorage.getItem('rr_menus');
     if (saved) {
       menuData = JSON.parse(saved);
+      // Migrate legacy banquet keys
+      if (menuData.banquetEntree && !menuData.banquetMains) { menuData.banquetMains = menuData.banquetEntree; delete menuData.banquetEntree; }
+      if (menuData.banquetMain && !menuData.banquetSides) { menuData.banquetSides = menuData.banquetMain; delete menuData.banquetMain; }
       // Migrate legacy canape single array into Small subcategory
       if (menuData.canape && menuData.canape.length && !menuData.canapeSmall) {
         menuData.canapeSmall = menuData.canape;
@@ -1471,7 +1474,7 @@ function loadMenus() {
       }
       // Ensure all arrays exist and migrate legacy strings to objects
       const keys = ['canapeSmall','canapePremium','canapeSubstantial','canapeSliders','canapeDessert',
-                    'banquetEntree','banquetMain','banquetDessert',
+                    'banquetMains','banquetSides','banquetDessert',
                     'bistroSnacks','bistroBurgers','bistroPubClassics','bistroBowls','bistroMains','bistroSides',
                     'grazingStations','grazingPlatters'];
       keys.forEach(k => {
@@ -1513,8 +1516,8 @@ function loadFormData() {
       if (d.menuType === 'canape-b') { selectedCanapeB = d.canapeB || []; }
       if (d.menuType === 'banquet') {
         setTimeout(() => {
-          setVal('banquet-entree', d.banquetEntree);
-          setVal('banquet-main', d.banquetMain);
+          setVal('banquet-mains', d.banquetMains);
+          setVal('banquet-sides', d.banquetSides);
           setVal('banquet-dessert', d.banquetDessert);
         }, 50);
       }
@@ -1548,8 +1551,8 @@ function getFormData() {
     menuType: currentMenuType,
     canapeA: selectedCanapeA,
     canapeB: selectedCanapeB,
-    banquetEntree: v('banquet-entree'),
-    banquetMain: v('banquet-main'),
+    banquetMains: v('banquet-mains'),
+    banquetSides: v('banquet-sides'),
     banquetDessert: v('banquet-dessert'),
     bistroRows: bistroRows
   };
@@ -1713,15 +1716,14 @@ function refreshFoodSelectors() {
 
 function populateBanquetDropdowns() {
   const selectors = [
-    { id: 'banquet-entree', items: menuData.banquetEntree },
-    { id: 'banquet-main', items: menuData.banquetMain },
-    { id: 'banquet-dessert', items: menuData.banquetDessert }
+    { id: 'banquet-mains', items: menuData.banquetMains || [], label: 'main' },
+    { id: 'banquet-sides', items: menuData.banquetSides || [], label: 'side' },
+    { id: 'banquet-dessert', items: menuData.banquetDessert || [], label: 'dessert' }
   ];
-  selectors.forEach(({ id, items }) => {
+  selectors.forEach(({ id, items, label }) => {
     const el = document.getElementById(id);
     if (!el) return;
     const cur = el.value;
-    const label = { 'banquet-entree': 'entrée', 'banquet-main': 'main', 'banquet-dessert': 'dessert' }[id];
     el.innerHTML = `<option value="">— Select ${label} —</option>` +
       items.map(i => { const n = typeof i === 'object' ? (i.name || '') : i; return `<option value="${escHtml(n)}" ${cur === n ? 'selected' : ''}>${escHtml(n)}</option>`; }).join('');
   });
@@ -1766,8 +1768,8 @@ function buildRunsheet() {
         <div class="rs-cell">
           <div class="rs-food-type">Banquet Menu</div>
           <div class="rs-food-courses">
-            <div class="rs-course-row"><span class="rs-course-label">Entrée</span><span class="rs-course-value">${escHtml(d.banquetEntree) || '<em style="color:#aaa;">Not selected</em>'}</span></div>
-            <div class="rs-course-row"><span class="rs-course-label">Main</span><span class="rs-course-value">${escHtml(d.banquetMain) || '<em style="color:#aaa;">Not selected</em>'}</span></div>
+            <div class="rs-course-row"><span class="rs-course-label">Mains</span><span class="rs-course-value">${escHtml(d.banquetMains) || '<em style="color:#aaa;">Not selected</em>'}</span></div>
+            <div class="rs-course-row"><span class="rs-course-label">Sides</span><span class="rs-course-value">${escHtml(d.banquetSides) || '<em style="color:#aaa;">Not selected</em>'}</span></div>
             <div class="rs-course-row"><span class="rs-course-label">Dessert</span><span class="rs-course-value">${escHtml(d.banquetDessert) || '<em style="color:#aaa;">Not selected</em>'}</span></div>
           </div>
         </div>
