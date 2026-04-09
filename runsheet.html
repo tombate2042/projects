@@ -921,9 +921,31 @@
         <div class="section-card">
           <div class="section-header"><span class="dot"></span>Canapés</div>
           <div class="section-body">
-            <div class="mm-section-title">Canapé Items</div>
-            <div class="mm-items" id="mm-ca-items"></div>
-            <button class="btn btn-add" onclick="addMMItem('canape','')">+ Add item</button>
+            <div class="mm-section">
+              <div class="mm-section-title">Small</div>
+              <div class="mm-items" id="mm-canape-small"></div>
+              <button class="btn btn-add" onclick="addMMItem('canape-small','')">+ Add item</button>
+            </div>
+            <div class="mm-section">
+              <div class="mm-section-title">Premium</div>
+              <div class="mm-items" id="mm-canape-premium"></div>
+              <button class="btn btn-add" onclick="addMMItem('canape-premium','')">+ Add item</button>
+            </div>
+            <div class="mm-section">
+              <div class="mm-section-title">Substantial</div>
+              <div class="mm-items" id="mm-canape-substantial"></div>
+              <button class="btn btn-add" onclick="addMMItem('canape-substantial','')">+ Add item</button>
+            </div>
+            <div class="mm-section">
+              <div class="mm-section-title">Sliders</div>
+              <div class="mm-items" id="mm-canape-sliders"></div>
+              <button class="btn btn-add" onclick="addMMItem('canape-sliders','')">+ Add item</button>
+            </div>
+            <div class="mm-section">
+              <div class="mm-section-title">Dessert</div>
+              <div class="mm-items" id="mm-canape-dessert"></div>
+              <button class="btn btn-add" onclick="addMMItem('canape-dessert','')">+ Add item</button>
+            </div>
           </div>
         </div>
       </div>
@@ -957,9 +979,36 @@
         <div class="section-card">
           <div class="section-header"><span class="dot"></span>Bistro</div>
           <div class="section-body">
-            <p style="font-size:12px;color:var(--text2);margin-bottom:12px;">These are the dishes available for per-guest selection in the Bistro menu.</p>
-            <div class="mm-items" id="mm-bistro-dishes"></div>
-            <button class="btn btn-add" onclick="addMMItem('bistro-dishes','')">+ Add item</button>
+            <div class="mm-section">
+              <div class="mm-section-title">Snacks &amp; Sharing</div>
+              <div class="mm-items" id="mm-bistro-snacks"></div>
+              <button class="btn btn-add" onclick="addMMItem('bistro-snacks','')">+ Add item</button>
+            </div>
+            <div class="mm-section">
+              <div class="mm-section-title">Burgers</div>
+              <div class="mm-items" id="mm-bistro-burgers"></div>
+              <button class="btn btn-add" onclick="addMMItem('bistro-burgers','')">+ Add item</button>
+            </div>
+            <div class="mm-section">
+              <div class="mm-section-title">Pub Classics</div>
+              <div class="mm-items" id="mm-bistro-pub-classics"></div>
+              <button class="btn btn-add" onclick="addMMItem('bistro-pub-classics','')">+ Add item</button>
+            </div>
+            <div class="mm-section">
+              <div class="mm-section-title">Bowls</div>
+              <div class="mm-items" id="mm-bistro-bowls"></div>
+              <button class="btn btn-add" onclick="addMMItem('bistro-bowls','')">+ Add item</button>
+            </div>
+            <div class="mm-section">
+              <div class="mm-section-title">Mains</div>
+              <div class="mm-items" id="mm-bistro-mains"></div>
+              <button class="btn btn-add" onclick="addMMItem('bistro-mains','')">+ Add item</button>
+            </div>
+            <div class="mm-section">
+              <div class="mm-section-title">Sides</div>
+              <div class="mm-items" id="mm-bistro-sides"></div>
+              <button class="btn btn-add" onclick="addMMItem('bistro-sides','')">+ Add item</button>
+            </div>
           </div>
         </div>
       </div>
@@ -1014,13 +1063,22 @@
    STATE
 ════════════════════════════════════════════ */
 let menuData = {
-  canape: [],
+  canapeSmall: [],
+  canapePremium: [],
+  canapeSubstantial: [],
+  canapeSliders: [],
+  canapeDessert: [],
   caLimitA: 5,
   caLimitB: 8,
   banquetEntree: [],
   banquetMain: [],
   banquetDessert: [],
-  bistroDishes: [],
+  bistroSnacks: [],
+  bistroBurgers: [],
+  bistroPubClassics: [],
+  bistroBowls: [],
+  bistroMains: [],
+  bistroSides: [],
   grazingStations: [],
   grazingPlatters: []
 };
@@ -1210,11 +1268,20 @@ function showMMPanel(name) {
 
 function addMMItem(type, value) {
   const map = {
-    'canape': 'canape',
+    'canape-small': 'canapeSmall',
+    'canape-premium': 'canapePremium',
+    'canape-substantial': 'canapeSubstantial',
+    'canape-sliders': 'canapeSliders',
+    'canape-dessert': 'canapeDessert',
     'banquet-entree': 'banquetEntree',
     'banquet-main': 'banquetMain',
     'banquet-dessert': 'banquetDessert',
-    'bistro-dishes': 'bistroDishes',
+    'bistro-snacks': 'bistroSnacks',
+    'bistro-burgers': 'bistroBurgers',
+    'bistro-pub-classics': 'bistroPubClassics',
+    'bistro-bowls': 'bistroBowls',
+    'bistro-mains': 'bistroMains',
+    'bistro-sides': 'bistroSides',
     'grazing-stations': 'grazingStations',
     'grazing-platters': 'grazingPlatters'
   };
@@ -1232,11 +1299,20 @@ function addMMItem(type, value) {
 
 function removeMMItem(type, idx) {
   const map = {
-    'canape': 'canape',
+    'canape-small': 'canapeSmall',
+    'canape-premium': 'canapePremium',
+    'canape-substantial': 'canapeSubstantial',
+    'canape-sliders': 'canapeSliders',
+    'canape-dessert': 'canapeDessert',
     'banquet-entree': 'banquetEntree',
     'banquet-main': 'banquetMain',
     'banquet-dessert': 'banquetDessert',
-    'bistro-dishes': 'bistroDishes',
+    'bistro-snacks': 'bistroSnacks',
+    'bistro-burgers': 'bistroBurgers',
+    'bistro-pub-classics': 'bistroPubClassics',
+    'bistro-bowls': 'bistroBowls',
+    'bistro-mains': 'bistroMains',
+    'bistro-sides': 'bistroSides',
     'grazing-stations': 'grazingStations',
     'grazing-platters': 'grazingPlatters'
   };
@@ -1248,11 +1324,20 @@ function removeMMItem(type, idx) {
 
 function updateMMItem(type, idx, field, val) {
   const map = {
-    'canape': 'canape',
+    'canape-small': 'canapeSmall',
+    'canape-premium': 'canapePremium',
+    'canape-substantial': 'canapeSubstantial',
+    'canape-sliders': 'canapeSliders',
+    'canape-dessert': 'canapeDessert',
     'banquet-entree': 'banquetEntree',
     'banquet-main': 'banquetMain',
     'banquet-dessert': 'banquetDessert',
-    'bistro-dishes': 'bistroDishes',
+    'bistro-snacks': 'bistroSnacks',
+    'bistro-burgers': 'bistroBurgers',
+    'bistro-pub-classics': 'bistroPubClassics',
+    'bistro-bowls': 'bistroBowls',
+    'bistro-mains': 'bistroMains',
+    'bistro-sides': 'bistroSides',
     'grazing-stations': 'grazingStations',
     'grazing-platters': 'grazingPlatters'
   };
@@ -1263,11 +1348,20 @@ function updateMMItem(type, idx, field, val) {
 }
 
 function renderMMItems() {
-  renderMMList('mm-ca-items', 'canape', menuData.canape);
+  renderMMList('mm-canape-small', 'canape-small', menuData.canapeSmall || []);
+  renderMMList('mm-canape-premium', 'canape-premium', menuData.canapePremium || []);
+  renderMMList('mm-canape-substantial', 'canape-substantial', menuData.canapeSubstantial || []);
+  renderMMList('mm-canape-sliders', 'canape-sliders', menuData.canapeSliders || []);
+  renderMMList('mm-canape-dessert', 'canape-dessert', menuData.canapeDessert || []);
   renderMMList('mm-banquet-entree', 'banquet-entree', menuData.banquetEntree);
   renderMMList('mm-banquet-main', 'banquet-main', menuData.banquetMain);
   renderMMList('mm-banquet-dessert', 'banquet-dessert', menuData.banquetDessert);
-  renderMMList('mm-bistro-dishes', 'bistro-dishes', menuData.bistroDishes);
+  renderMMList('mm-bistro-snacks', 'bistro-snacks', menuData.bistroSnacks || []);
+  renderMMList('mm-bistro-burgers', 'bistro-burgers', menuData.bistroBurgers || []);
+  renderMMList('mm-bistro-pub-classics', 'bistro-pub-classics', menuData.bistroPubClassics || []);
+  renderMMList('mm-bistro-bowls', 'bistro-bowls', menuData.bistroBowls || []);
+  renderMMList('mm-bistro-mains', 'bistro-mains', menuData.bistroMains || []);
+  renderMMList('mm-bistro-sides', 'bistro-sides', menuData.bistroSides || []);
   renderMMList('mm-grazing-stations-items', 'grazing-stations', menuData.grazingStations || []);
   renderMMList('mm-grazing-platters-items', 'grazing-platters', menuData.grazingPlatters || []);
   updateLimitInputs();
@@ -1322,8 +1416,21 @@ function loadMenus() {
     const saved = localStorage.getItem('rr_menus');
     if (saved) {
       menuData = JSON.parse(saved);
-      // Migrate legacy string arrays to objects
-      const keys = ['canape','banquetEntree','banquetMain','banquetDessert','bistroDishes','grazingStations','grazingPlatters'];
+      // Migrate legacy canape single array into Small subcategory
+      if (menuData.canape && menuData.canape.length && !menuData.canapeSmall) {
+        menuData.canapeSmall = menuData.canape;
+        delete menuData.canape;
+      }
+      // Migrate legacy bistroDishes into Snacks & Sharing
+      if (menuData.bistroDishes && menuData.bistroDishes.length && !menuData.bistroSnacks) {
+        menuData.bistroSnacks = menuData.bistroDishes;
+        delete menuData.bistroDishes;
+      }
+      // Ensure all arrays exist and migrate legacy strings to objects
+      const keys = ['canapeSmall','canapePremium','canapeSubstantial','canapeSliders','canapeDessert',
+                    'banquetEntree','banquetMain','banquetDessert',
+                    'bistroSnacks','bistroBurgers','bistroPubClassics','bistroBowls','bistroMains','bistroSides',
+                    'grazingStations','grazingPlatters'];
       keys.forEach(k => {
         if (!menuData[k]) menuData[k] = [];
         menuData[k] = menuData[k].map(i => typeof i === 'string' ? { name: i, description: '', price: '' } : i);
@@ -1430,25 +1537,38 @@ function selectMenuType(type, silent) {
    CANAPÉ
 ════════════════════════════════════════════ */
 function renderCanapeItems(ab) {
-  const items = menuData.canape;
+  const subcats = [
+    { label: 'Small',       key: 'canapeSmall' },
+    { label: 'Premium',     key: 'canapePremium' },
+    { label: 'Substantial', key: 'canapeSubstantial' },
+    { label: 'Sliders',     key: 'canapeSliders' },
+    { label: 'Dessert',     key: 'canapeDessert' }
+  ];
   const selected = ab === 'a' ? selectedCanapeA : selectedCanapeB;
   const limit = ab === 'a' ? menuData.caLimitA : menuData.caLimitB;
   const containerId = ab === 'a' ? 'ca-items' : 'cb-items';
   const container = document.getElementById(containerId);
 
-  if (!items.length) {
+  const allItems = subcats.flatMap(s => (menuData[s.key] || []));
+  if (!allItems.length) {
     container.innerHTML = '<p style="color:var(--text3);font-size:13px;padding:8px 0;">No items added yet — go to Menu Manager to add canapé items.</p>';
     updateCanapeCount(ab, selected, limit);
     return;
   }
 
-  container.innerHTML = items.map((item, i) => {
-    const name = typeof item === 'object' ? (item.name || '') : item;
-    const sel = selected.includes(name);
-    return `<div class="canape-item ${sel ? 'selected' : ''}" onclick="toggleCanape('${ab}','${escJs(name)}',this)">
-      <input type="checkbox" ${sel ? 'checked' : ''} onclick="event.stopPropagation();toggleCanape('${ab}','${escJs(name)}',this.parentElement)">
-      <span>${escHtml(name)}</span>
-    </div>`;
+  container.innerHTML = subcats.map(({ label, key }) => {
+    const items = menuData[key] || [];
+    if (!items.length) return '';
+    const itemsHtml = items.map(item => {
+      const name = typeof item === 'object' ? (item.name || '') : item;
+      if (!name) return '';
+      const sel = selected.includes(name);
+      return `<div class="canape-item ${sel ? 'selected' : ''}" onclick="toggleCanape('${ab}','${escJs(name)}',this)">
+        <input type="checkbox" ${sel ? 'checked' : ''} onclick="event.stopPropagation();toggleCanape('${ab}','${escJs(name)}',this.parentElement)">
+        <span>${escHtml(name)}</span>
+      </div>`;
+    }).join('');
+    return `<div style="margin-bottom:10px;"><div style="font-size:11px;font-family:var(--sans);text-transform:uppercase;letter-spacing:0.05em;color:var(--text3);margin-bottom:4px;">${label}</div><div class="canape-grid" style="margin:0;">${itemsHtml}</div></div>`;
   }).join('');
   updateCanapeCount(ab, selected, limit);
 }
@@ -1506,7 +1626,20 @@ function removeBistroRow(idx) {
 
 function renderBistroRows() {
   const tbody = document.getElementById('bistro-rows');
-  const dishes = menuData.bistroDishes;
+  const subcats = [
+    { label: 'Snacks & Sharing', key: 'bistroSnacks' },
+    { label: 'Burgers',          key: 'bistroBurgers' },
+    { label: 'Pub Classics',     key: 'bistroPubClassics' },
+    { label: 'Bowls',            key: 'bistroBowls' },
+    { label: 'Mains',            key: 'bistroMains' },
+    { label: 'Sides',            key: 'bistroSides' }
+  ];
+  const optionsHtml = subcats.map(({ label, key }) => {
+    const items = menuData[key] || [];
+    if (!items.length) return '';
+    const opts = items.map(d => { const n = typeof d === 'object' ? (d.name || '') : d; return n ? `<option value="${escHtml(n)}">${escHtml(n)}</option>` : ''; }).join('');
+    return opts ? `<optgroup label="${label}">${opts}</optgroup>` : '';
+  }).join('');
   tbody.innerHTML = bistroRows.map((row, i) => `
     <tr>
       <td class="rs-bistro-num" style="color:var(--text3);font-size:12px;text-align:center;">${i + 1}</td>
@@ -1514,12 +1647,14 @@ function renderBistroRows() {
       <td>
         <select onchange="bistroRows[${i}].dish=this.value;autoSave()">
           <option value="">— Select dish —</option>
-          ${dishes.map(d => { const n = typeof d === 'object' ? (d.name || '') : d; return `<option value="${escHtml(n)}" ${row.dish === n ? 'selected' : ''}>${escHtml(n)}</option>`; }).join('')}
+          ${optionsHtml.replace(/(<option value="[^"]*")>/g, (m, p1) => row.dish && p1.includes(`"${escHtml(row.dish)}"`) ? p1 + ' selected>' : m)}
         </select>
       </td>
       <td><button class="btn-icon" onclick="removeBistroRow(${i})">✕</button></td>
     </tr>
   `).join('');
+  // Fix selected state properly
+  tbody.querySelectorAll('select').forEach((sel, i) => { if (bistroRows[i]) sel.value = bistroRows[i].dish || ''; });
 }
 
 /* ════════════════════════════════════════════
