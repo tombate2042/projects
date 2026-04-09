@@ -1390,41 +1390,55 @@ function updateMMItem(type, idx, field, val) {
   refreshFoodSelectors();
 }
 
+const MM_FIELDS = {
+  all:         { desc: true,  price: true  },
+  noPrice:     { desc: true,  price: false },
+  noDesc:      { desc: false, price: true  }
+};
+
 function renderMMItems() {
-  renderMMList('mm-canape-small', 'canape-small', menuData.canapeSmall || []);
-  renderMMList('mm-canape-premium', 'canape-premium', menuData.canapePremium || []);
-  renderMMList('mm-canape-substantial', 'canape-substantial', menuData.canapeSubstantial || []);
-  renderMMList('mm-canape-sliders', 'canape-sliders', menuData.canapeSliders || []);
-  renderMMList('mm-canape-dessert', 'canape-dessert', menuData.canapeDessert || []);
-  renderMMList('mm-banquet-mains', 'banquet-mains', menuData.banquetMains || []);
-  renderMMList('mm-banquet-sides', 'banquet-sides', menuData.banquetSides || []);
-  renderMMList('mm-banquet-dessert', 'banquet-dessert', menuData.banquetDessert || []);
-  renderMMList('mm-bistro-snacks', 'bistro-snacks', menuData.bistroSnacks || []);
-  renderMMList('mm-bistro-burgers', 'bistro-burgers', menuData.bistroBurgers || []);
-  renderMMList('mm-bistro-pub-classics', 'bistro-pub-classics', menuData.bistroPubClassics || []);
-  renderMMList('mm-bistro-bowls', 'bistro-bowls', menuData.bistroBowls || []);
-  renderMMList('mm-bistro-mains', 'bistro-mains', menuData.bistroMains || []);
-  renderMMList('mm-bistro-sides', 'bistro-sides', menuData.bistroSides || []);
-  renderMMList('mm-grazing-stations-items', 'grazing-stations', menuData.grazingStations || []);
-  renderMMList('mm-grazing-platters-items', 'grazing-platters', menuData.grazingPlatters || []);
+  const all     = MM_FIELDS.all;
+  const noPrice = MM_FIELDS.noPrice;
+  const noDesc  = MM_FIELDS.noDesc;
+  renderMMList('mm-canape-small',       'canape-small',       menuData.canapeSmall       || [], all);
+  renderMMList('mm-canape-premium',     'canape-premium',     menuData.canapePremium     || [], all);
+  renderMMList('mm-canape-substantial', 'canape-substantial', menuData.canapeSubstantial || [], all);
+  renderMMList('mm-canape-sliders',     'canape-sliders',     menuData.canapeSliders     || [], all);
+  renderMMList('mm-canape-dessert',     'canape-dessert',     menuData.canapeDessert     || [], all);
+  renderMMList('mm-banquet-mains',      'banquet-mains',      menuData.banquetMains      || [], noPrice);
+  renderMMList('mm-banquet-sides',      'banquet-sides',      menuData.banquetSides      || [], noPrice);
+  renderMMList('mm-banquet-dessert',    'banquet-dessert',    menuData.banquetDessert    || [], noPrice);
+  renderMMList('mm-bistro-snacks',      'bistro-snacks',      menuData.bistroSnacks      || [], noDesc);
+  renderMMList('mm-bistro-burgers',     'bistro-burgers',     menuData.bistroBurgers     || [], noDesc);
+  renderMMList('mm-bistro-pub-classics','bistro-pub-classics',menuData.bistroPubClassics || [], noDesc);
+  renderMMList('mm-bistro-bowls',       'bistro-bowls',       menuData.bistroBowls       || [], noDesc);
+  renderMMList('mm-bistro-mains',       'bistro-mains',       menuData.bistroMains       || [], noDesc);
+  renderMMList('mm-bistro-sides',       'bistro-sides',       menuData.bistroSides       || [], noDesc);
+  renderMMList('mm-grazing-stations-items', 'grazing-stations', menuData.grazingStations || [], all);
+  renderMMList('mm-grazing-platters-items', 'grazing-platters', menuData.grazingPlatters || [], all);
   updateLimitInputs();
 }
 
-function renderMMList(containerId, type, items) {
+function renderMMList(containerId, type, items, fields) {
+  fields = fields || MM_FIELDS.all;
   const el = document.getElementById(containerId);
   if (!el) return;
-  const header = items.length ? `<div class="mm-items-header"><span>Name</span><span>Description</span><span>Price</span><span></span></div>` : '';
+  const cols = `${fields.desc && fields.price ? '2fr 3fr 1fr' : fields.desc ? '2fr 3fr' : fields.price ? '2fr 1fr' : '1fr'}`;
+  const headerCols = fields.desc && fields.price ? '<span>Name</span><span>Description</span><span>Price</span>'
+                   : fields.desc  ? '<span>Name</span><span>Description</span>'
+                   : fields.price ? '<span>Name</span><span>Price</span>'
+                   : '<span>Name</span>';
+  const header = items.length ? `<div class="mm-items-header" style="grid-template-columns:${cols} 28px;">${headerCols}<span></span></div>` : '';
   el.innerHTML = header + items.map((item, i) => {
     const n = escHtml(item.name || '');
     const d = escHtml(item.description || '');
     const p = escHtml(item.price || '');
+    const inputs = `<input type="text" value="${n}" placeholder="Item name..." oninput="updateMMItem('${type}',${i},'name',this.value)">`
+      + (fields.desc  ? `<input type="text" value="${d}" placeholder="Description..." oninput="updateMMItem('${type}',${i},'description',this.value)">` : '')
+      + (fields.price ? `<input type="text" value="${p}" placeholder="$0.00" oninput="updateMMItem('${type}',${i},'price',this.value)">` : '');
     return `
     <div class="mm-item-row">
-      <div class="mm-item-fields">
-        <input type="text" value="${n}" placeholder="Item name..." oninput="updateMMItem('${type}',${i},'name',this.value)">
-        <input type="text" value="${d}" placeholder="Description..." oninput="updateMMItem('${type}',${i},'description',this.value)">
-        <input type="text" value="${p}" placeholder="$0.00" oninput="updateMMItem('${type}',${i},'price',this.value)">
-      </div>
+      <div class="mm-item-fields" style="grid-template-columns:${cols};">${inputs}</div>
       <button class="btn-icon" onclick="removeMMItem('${type}',${i})">✕</button>
     </div>`;
   }).join('');
