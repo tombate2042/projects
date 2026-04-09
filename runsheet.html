@@ -1030,43 +1030,36 @@
           <div class="section-body">
             <div class="mm-section">
               <div class="mm-section-title">Main Sides</div>
-              <div id="aato-mainSide"></div>
               <div class="mm-items" id="mm-bistro-main-sides"></div>
               <button class="btn btn-add" onclick="addMMItem('bistro-main-sides','')">+ Add option</button>
             </div>
             <div class="mm-section">
               <div class="mm-section-title">Sauces</div>
-              <div id="aato-sauce"></div>
               <div class="mm-items" id="mm-bistro-sauces"></div>
               <button class="btn btn-add" onclick="addMMItem('bistro-sauces','')">+ Add option</button>
             </div>
             <div class="mm-section">
               <div class="mm-section-title">Steak Temp</div>
-              <div id="aato-steakTemp"></div>
               <div class="mm-items" id="mm-bistro-steak-temp"></div>
               <button class="btn btn-add" onclick="addMMItem('bistro-steak-temp','')">+ Add option</button>
             </div>
             <div class="mm-section">
               <div class="mm-section-title">Bowl Add Ons</div>
-              <div id="aato-bowlAddOn"></div>
               <div class="mm-items" id="mm-bistro-bowl-addons"></div>
               <button class="btn btn-add" onclick="addMMItem('bistro-bowl-addons','')">+ Add option</button>
             </div>
             <div class="mm-section">
               <div class="mm-section-title">Burger Add Ons</div>
-              <div id="aato-burgerAddOn"></div>
               <div class="mm-items" id="mm-bistro-burger-addons"></div>
               <button class="btn btn-add" onclick="addMMItem('bistro-burger-addons','')">+ Add option</button>
             </div>
             <div class="mm-section">
               <div class="mm-section-title">Schnitzel Upgrade</div>
-              <div id="aato-schnitzelUpgrade"></div>
               <div class="mm-items" id="mm-bistro-schnitzel-upgrade"></div>
               <button class="btn btn-add" onclick="addMMItem('bistro-schnitzel-upgrade','')">+ Add option</button>
             </div>
             <div class="mm-section">
               <div class="mm-section-title">Extra Sauce</div>
-              <div id="aato-extraSauce"></div>
               <div class="mm-items" id="mm-bistro-extra-sauce"></div>
               <button class="btn btn-add" onclick="addMMItem('bistro-extra-sauce','')">+ Add option</button>
             </div>
@@ -1147,15 +1140,7 @@ let menuData = {
   bistroBurgerAddOns: [],
   bistroSchnitzelUpgrade: [],
   bistroExtraSauce: [],
-  bistroAddonAppliesTo: {
-    mainSide:        ['bistroMains', 'bistroPubClassics'],
-    sauce:           ['bistroMains', 'bistroPubClassics'],
-    steakTemp:       ['bistroMains'],
-    bowlAddOn:       ['bistroBowls'],
-    burgerAddOn:     ['bistroBurgers'],
-    schnitzelUpgrade:['bistroMains', 'bistroPubClassics'],
-    extraSauce:      ['bistroSnacks', 'bistroBurgers', 'bistroPubClassics', 'bistroBowls', 'bistroMains', 'bistroSides']
-  },
+  bistroItemAddons: {},
   grazingStations: [],
   grazingPlatters: []
 };
@@ -1464,12 +1449,12 @@ function renderMMItems() {
   renderMMList('mm-banquet-mains',      'banquet-mains',      menuData.banquetMains      || [], noPrice);
   renderMMList('mm-banquet-sides',      'banquet-sides',      menuData.banquetSides      || [], noPrice);
   renderMMList('mm-banquet-dessert',    'banquet-dessert',    menuData.banquetDessert    || [], noPrice);
-  renderMMList('mm-bistro-snacks',        'bistro-snacks',        menuData.bistroSnacks        || [], noDesc);
-  renderMMList('mm-bistro-burgers',       'bistro-burgers',       menuData.bistroBurgers       || [], noDesc);
-  renderMMList('mm-bistro-pub-classics',  'bistro-pub-classics',  menuData.bistroPubClassics   || [], noDesc);
-  renderMMList('mm-bistro-bowls',         'bistro-bowls',         menuData.bistroBowls         || [], noDesc);
-  renderMMList('mm-bistro-mains',         'bistro-mains',         menuData.bistroMains         || [], noDesc);
-  renderMMList('mm-bistro-sides',         'bistro-sides',         menuData.bistroSides         || [], noDesc);
+  renderBistroMMList('mm-bistro-snacks',       'bistro-snacks',       menuData.bistroSnacks      || []);
+  renderBistroMMList('mm-bistro-burgers',      'bistro-burgers',      menuData.bistroBurgers     || []);
+  renderBistroMMList('mm-bistro-pub-classics', 'bistro-pub-classics', menuData.bistroPubClassics || []);
+  renderBistroMMList('mm-bistro-bowls',        'bistro-bowls',        menuData.bistroBowls       || []);
+  renderBistroMMList('mm-bistro-mains',        'bistro-mains',        menuData.bistroMains       || []);
+  renderBistroMMList('mm-bistro-sides',        'bistro-sides',        menuData.bistroSides       || []);
   renderMMList('mm-bistro-main-sides',    'bistro-main-sides',    menuData.bistroMainSides     || [], noDesc);
   renderMMList('mm-bistro-sauces',        'bistro-sauces',        menuData.bistroSauces        || [], noDesc);
   renderMMList('mm-bistro-steak-temp',    'bistro-steak-temp',    menuData.bistroSteakTemp     || [], noDesc);
@@ -1480,7 +1465,6 @@ function renderMMItems() {
   renderMMList('mm-grazing-stations-items', 'grazing-stations', menuData.grazingStations || [], all);
   renderMMList('mm-grazing-platters-items', 'grazing-platters', menuData.grazingPlatters || [], all);
   updateLimitInputs();
-  renderAddonAppliesTo();
 }
 
 function renderMMList(containerId, type, items, fields) {
@@ -1510,32 +1494,44 @@ function renderMMList(containerId, type, items, fields) {
 
 function updateLimitInputs() {}
 
-function renderAddonAppliesTo() {
-  const appliesTo = menuData.bistroAddonAppliesTo || {};
-  BISTRO_ADDONS.forEach(a => {
-    const el = document.getElementById('aato-' + a.id);
-    if (!el) return;
-    const current = appliesTo[a.id] || a.appliesTo;
-    el.innerHTML = '<div style="display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;padding:6px 0 8px;border-bottom:1px solid var(--border);margin-bottom:8px;">'
-      + '<span style="font-size:10px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;color:var(--text3);flex-shrink:0;">Applies to</span>'
-      + BISTRO_DISH_CATS.map(c => `<label style="display:flex;align-items:center;gap:4px;font-size:12px;color:var(--text2);cursor:pointer;white-space:nowrap;">
-          <input type="checkbox" ${current.includes(c.key) ? 'checked' : ''}
-            onchange="updateAddonAppliesTo('${a.id}','${c.key}',this.checked)"
-            style="accent-color:var(--accent-mid);width:13px;height:13px;flex-shrink:0;">
-          ${c.label}</label>`).join('')
-      + '</div>';
-  });
+function renderBistroMMList(containerId, type, items) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  const header = items.length
+    ? `<div class="mm-items-header" style="grid-template-columns:2fr 1fr 28px;"><span>Name</span><span>Price</span><span></span></div>`
+    : '';
+  el.innerHTML = header + items.map((item, i) => {
+    const n = escHtml(item.name || '');
+    const p = escHtml(item.price || '');
+    const itemAddons = (menuData.bistroItemAddons || {})[item.name] || [];
+    const checkboxes = BISTRO_ADDONS.map(a =>
+      `<label style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text2);cursor:pointer;white-space:nowrap;">
+        <input type="checkbox" ${itemAddons.includes(a.id) ? 'checked' : ''}
+          onchange="toggleBistroItemAddon('${escJs(item.name)}','${a.id}',this.checked)"
+          style="accent-color:var(--accent-mid);width:13px;height:13px;">
+        ${escHtml(a.label)}</label>`
+    ).join('');
+    return `<div class="mm-item-row">
+      <div class="mm-item-fields" style="grid-template-columns:2fr 1fr;">
+        <input type="text" value="${n}" placeholder="Item name..." oninput="updateMMItem('${type}',${i},'name',this.value)">
+        <input type="text" value="${p}" placeholder="$0.00" oninput="updateMMItem('${type}',${i},'price',this.value)">
+      </div>
+      <button class="btn-icon" onclick="removeMMItem('${type}',${i})">✕</button>
+    </div>
+    <details style="margin:0 36px 8px 0;">
+      <summary style="font-size:11px;color:var(--text3);cursor:pointer;padding:2px 0;user-select:none;">Add-ons for <strong style="color:var(--text2);">${n || 'this item'}</strong></summary>
+      <div style="display:flex;flex-wrap:wrap;gap:6px 16px;padding:8px 0 4px 10px;border-left:2px solid var(--border);margin-top:4px;">${checkboxes}</div>
+    </details>`;
+  }).join('');
 }
 
-function updateAddonAppliesTo(addonId, catKey, checked) {
-  if (!menuData.bistroAddonAppliesTo) menuData.bistroAddonAppliesTo = {};
-  const current = menuData.bistroAddonAppliesTo[addonId]
-    ? [...menuData.bistroAddonAppliesTo[addonId]]
-    : [...(BISTRO_ADDONS.find(a => a.id === addonId)?.appliesTo || [])];
-  const idx = current.indexOf(catKey);
-  if (checked && idx === -1) current.push(catKey);
+function toggleBistroItemAddon(itemName, addonId, checked) {
+  if (!menuData.bistroItemAddons) menuData.bistroItemAddons = {};
+  const current = menuData.bistroItemAddons[itemName] || [];
+  const idx = current.indexOf(addonId);
+  if (checked && idx === -1) current.push(addonId);
   if (!checked && idx > -1) current.splice(idx, 1);
-  menuData.bistroAddonAppliesTo[addonId] = current;
+  menuData.bistroItemAddons[itemName] = current;
   saveMenus();
   refreshFoodSelectors();
 }
@@ -1935,11 +1931,10 @@ function renderBistroRows() {
   }).join('');
 
   tbody.innerHTML = bistroRows.map((row, i) => {
-    const catKey = getBistroDisCat(row.dish);
     const addOns = row.addOns || {};
-    const addonAppliesTo = menuData.bistroAddonAppliesTo || {};
+    const enabledAddons = (menuData.bistroItemAddons || {})[row.dish] || [];
     const addonSelects = BISTRO_ADDONS
-      .filter(a => catKey && (addonAppliesTo[a.id] || a.appliesTo).includes(catKey))
+      .filter(a => enabledAddons.includes(a.id))
       .map(a => {
         const opts = (menuData[a.key] || []).map(d => { const n = typeof d === 'object' ? (d.name||'') : d; return n ? `<option value="${escHtml(n)}" ${addOns[a.id]===n?'selected':''}>${escHtml(n)}</option>` : ''; }).join('');
         return opts ? `<select style="margin-top:4px;" onchange="bistroRows[${i}].addOns=bistroRows[${i}].addOns||{};bistroRows[${i}].addOns['${a.id}']=this.value;autoSave()">
