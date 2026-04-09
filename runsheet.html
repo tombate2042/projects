@@ -1363,9 +1363,10 @@ function updateMMItem(type, idx, field, val) {
 }
 
 const MM_FIELDS = {
-  all:         { desc: true,  price: true  },
-  noPrice:     { desc: true,  price: false },
-  noDesc:      { desc: false, price: true  }
+  all:         { desc: true,  price: true,  options: false },
+  noPrice:     { desc: true,  price: false, options: false },
+  noDesc:      { desc: false, price: true,  options: false },
+  bistro:      { desc: false, price: true,  options: true  }
 };
 
 function renderMMItems() {
@@ -1380,12 +1381,13 @@ function renderMMItems() {
   renderMMList('mm-banquet-mains',      'banquet-mains',      menuData.banquetMains      || [], noPrice);
   renderMMList('mm-banquet-sides',      'banquet-sides',      menuData.banquetSides      || [], noPrice);
   renderMMList('mm-banquet-dessert',    'banquet-dessert',    menuData.banquetDessert    || [], noPrice);
-  renderMMList('mm-bistro-snacks',      'bistro-snacks',      menuData.bistroSnacks      || [], noDesc);
-  renderMMList('mm-bistro-burgers',     'bistro-burgers',     menuData.bistroBurgers     || [], noDesc);
-  renderMMList('mm-bistro-pub-classics','bistro-pub-classics',menuData.bistroPubClassics || [], noDesc);
-  renderMMList('mm-bistro-bowls',       'bistro-bowls',       menuData.bistroBowls       || [], noDesc);
-  renderMMList('mm-bistro-mains',       'bistro-mains',       menuData.bistroMains       || [], noDesc);
-  renderMMList('mm-bistro-sides',       'bistro-sides',       menuData.bistroSides       || [], noDesc);
+  const bistroF = MM_FIELDS.bistro;
+  renderMMList('mm-bistro-snacks',      'bistro-snacks',      menuData.bistroSnacks      || [], bistroF);
+  renderMMList('mm-bistro-burgers',     'bistro-burgers',     menuData.bistroBurgers     || [], bistroF);
+  renderMMList('mm-bistro-pub-classics','bistro-pub-classics',menuData.bistroPubClassics || [], bistroF);
+  renderMMList('mm-bistro-bowls',       'bistro-bowls',       menuData.bistroBowls       || [], bistroF);
+  renderMMList('mm-bistro-mains',       'bistro-mains',       menuData.bistroMains       || [], bistroF);
+  renderMMList('mm-bistro-sides',       'bistro-sides',       menuData.bistroSides       || [], bistroF);
   renderMMList('mm-grazing-stations-items', 'grazing-stations', menuData.grazingStations || [], all);
   renderMMList('mm-grazing-platters-items', 'grazing-platters', menuData.grazingPlatters || [], all);
   updateLimitInputs();
@@ -1395,19 +1397,28 @@ function renderMMList(containerId, type, items, fields) {
   fields = fields || MM_FIELDS.all;
   const el = document.getElementById(containerId);
   if (!el) return;
-  const cols = `${fields.desc && fields.price ? '2fr 3fr 1fr' : fields.desc ? '2fr 3fr' : fields.price ? '2fr 1fr' : '1fr'}`;
-  const headerCols = fields.desc && fields.price ? '<span>Name</span><span>Description</span><span>Price</span>'
-                   : fields.desc  ? '<span>Name</span><span>Description</span>'
-                   : fields.price ? '<span>Name</span><span>Price</span>'
-                   : '<span>Name</span>';
+  let cols, headerCols;
+  if (fields.desc && fields.price) {
+    cols = '2fr 3fr 1fr'; headerCols = '<span>Name</span><span>Description</span><span>Price</span>';
+  } else if (fields.desc) {
+    cols = '2fr 3fr'; headerCols = '<span>Name</span><span>Description</span>';
+  } else if (fields.price && fields.options) {
+    cols = '2fr 1fr 3fr'; headerCols = '<span>Name</span><span>Price</span><span>Options (comma-separated)</span>';
+  } else if (fields.price) {
+    cols = '2fr 1fr'; headerCols = '<span>Name</span><span>Price</span>';
+  } else {
+    cols = '1fr'; headerCols = '<span>Name</span>';
+  }
   const header = items.length ? `<div class="mm-items-header" style="grid-template-columns:${cols} 28px;">${headerCols}<span></span></div>` : '';
   el.innerHTML = header + items.map((item, i) => {
     const n = escHtml(item.name || '');
     const d = escHtml(item.description || '');
     const p = escHtml(item.price || '');
+    const o = escHtml(item.options || '');
     const inputs = `<input type="text" value="${n}" placeholder="Item name..." oninput="updateMMItem('${type}',${i},'name',this.value)">`
-      + (fields.desc  ? `<input type="text" value="${d}" placeholder="Description..." oninput="updateMMItem('${type}',${i},'description',this.value)">` : '')
-      + (fields.price ? `<input type="text" value="${p}" placeholder="$0.00" oninput="updateMMItem('${type}',${i},'price',this.value)">` : '');
+      + (fields.desc    ? `<input type="text" value="${d}" placeholder="Description..." oninput="updateMMItem('${type}',${i},'description',this.value)">` : '')
+      + (fields.price   ? `<input type="text" value="${p}" placeholder="$0.00" oninput="updateMMItem('${type}',${i},'price',this.value)">` : '')
+      + (fields.options ? `<input type="text" value="${o}" placeholder="e.g. Gravy, Pepper Sauce" oninput="updateMMItem('${type}',${i},'options',this.value)">` : '');
     return `
     <div class="mm-item-row">
       <div class="mm-item-fields" style="grid-template-columns:${cols};">${inputs}</div>
@@ -1776,6 +1787,17 @@ function removeBistroRow(idx) {
   autoSave();
 }
 
+function getBistroItemOptions(dishName) {
+  const keys = ['bistroSnacks','bistroBurgers','bistroPubClassics','bistroBowls','bistroMains','bistroSides'];
+  for (const key of keys) {
+    const item = (menuData[key] || []).find(i => (typeof i === 'object' ? i.name : i) === dishName);
+    if (item && typeof item === 'object' && item.options) {
+      return item.options.split(',').map(o => o.trim()).filter(Boolean);
+    }
+  }
+  return [];
+}
+
 function renderBistroRows() {
   const tbody = document.getElementById('bistro-rows');
   const subcats = [
@@ -1786,27 +1808,40 @@ function renderBistroRows() {
     { label: 'Mains',            key: 'bistroMains' },
     { label: 'Sides',            key: 'bistroSides' }
   ];
-  const optionsHtml = subcats.map(({ label, key }) => {
+  const dishOptHtml = subcats.map(({ label, key }) => {
     const items = menuData[key] || [];
     if (!items.length) return '';
     const opts = items.map(d => { const n = typeof d === 'object' ? (d.name || '') : d; return n ? `<option value="${escHtml(n)}">${escHtml(n)}</option>` : ''; }).join('');
     return opts ? `<optgroup label="${label}">${opts}</optgroup>` : '';
   }).join('');
-  tbody.innerHTML = bistroRows.map((row, i) => `
+
+  tbody.innerHTML = bistroRows.map((row, i) => {
+    const itemOptions = getBistroItemOptions(row.dish);
+    const optionSelect = itemOptions.length ? `
+      <select style="margin-top:4px;" onchange="bistroRows[${i}].option=this.value;autoSave()">
+        <option value="">— Choose option —</option>
+        ${itemOptions.map(o => `<option value="${escHtml(o)}" ${row.option === o ? 'selected' : ''}>${escHtml(o)}</option>`).join('')}
+      </select>` : '';
+    return `
     <tr>
       <td class="rs-bistro-num" style="color:var(--text3);font-size:12px;text-align:center;">${i + 1}</td>
       <td><input type="text" value="${escHtml(row.name)}" placeholder="Guest name" oninput="bistroRows[${i}].name=this.value;autoSave()"></td>
       <td>
-        <select onchange="bistroRows[${i}].dish=this.value;autoSave()">
+        <select data-bistro-dish="${i}" onchange="bistroRows[${i}].dish=this.value;bistroRows[${i}].option='';renderBistroRows();autoSave()">
           <option value="">— Select dish —</option>
-          ${optionsHtml.replace(/(<option value="[^"]*")>/g, (m, p1) => row.dish && p1.includes(`"${escHtml(row.dish)}"`) ? p1 + ' selected>' : m)}
+          ${dishOptHtml}
         </select>
+        ${optionSelect}
       </td>
       <td><button class="btn-icon" onclick="removeBistroRow(${i})">✕</button></td>
-    </tr>
-  `).join('');
-  // Fix selected state properly
-  tbody.querySelectorAll('select').forEach((sel, i) => { if (bistroRows[i]) sel.value = bistroRows[i].dish || ''; });
+    </tr>`;
+  }).join('');
+
+  // Fix selected state for dish dropdowns
+  tbody.querySelectorAll('[data-bistro-dish]').forEach(sel => {
+    const i = parseInt(sel.dataset.bistroDish);
+    if (bistroRows[i]) sel.value = bistroRows[i].dish || '';
+  });
 }
 
 /* ════════════════════════════════════════════
@@ -1889,7 +1924,7 @@ function buildRunsheet() {
               <tr>
                 <td class="rs-bistro-num">${i + 1}</td>
                 <td>${escHtml(r.name) || '—'}</td>
-                <td>${escHtml(r.dish) || '—'}</td>
+                <td>${escHtml(r.dish) || '—'}${r.option ? `<span style="color:#888;font-size:12px;margin-left:6px;">· ${escHtml(r.option)}</span>` : ''}</td>
               </tr>`).join('') || '<tr><td colspan="3" style="text-align:center;color:#aaa;padding:16px;font-family:var(--sans);font-size:13px;">No guests added</td></tr>'}
           </tbody>
         </table>
