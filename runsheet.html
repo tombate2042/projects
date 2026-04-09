@@ -607,12 +607,61 @@
   }
   .misc-textarea:focus { outline: none; border-color: var(--accent-mid); }
 
-  .save-notice {
+  .sync-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
     font-size: 11px;
-    color: var(--text3);
-    text-align: right;
-    margin-top: 8px;
+    color: rgba(255,255,255,0.55);
+    letter-spacing: 0.3px;
   }
+  .sync-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.3);
+    flex-shrink: 0;
+    transition: background 0.3s;
+  }
+  .sync-dot.ok { background: #7ec49a; }
+  .sync-dot.err { background: #e07070; }
+  .sync-dot.syncing { background: #e8c070; animation: pulse 1s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  /* settings */
+  .settings-info {
+    background: var(--accent-light);
+    border: 1px solid #a8ccb4;
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    font-size: 13px;
+    color: var(--accent);
+    line-height: 1.6;
+    margin-bottom: 1.25rem;
+  }
+  .settings-info strong { font-weight: 700; }
+  .settings-info code {
+    background: rgba(0,0,0,0.07);
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-family: monospace;
+    font-size: 12px;
+  }
+  .token-field { font-family: monospace; font-size: 13px; letter-spacing: 0.5px; }
+  .sync-log {
+    background: #1a1916;
+    color: #7ec49a;
+    border-radius: var(--radius);
+    padding: 12px 14px;
+    font-family: monospace;
+    font-size: 12px;
+    line-height: 1.7;
+    min-height: 80px;
+    max-height: 160px;
+    overflow-y: auto;
+    margin-top: 12px;
+  }
+  .sync-log .log-err { color: #e07070; }
+  .sync-log .log-info { color: #9a968e; }
 </style>
 </head>
 <body>
@@ -622,12 +671,17 @@
     <div class="app-header h1" style="font-family:Georgia,serif;font-size:18px;font-weight:normal;letter-spacing:0.5px;color:#fff;">The Republic Bar</div>
     <div class="subtitle">Event Runsheet Generator</div>
   </div>
+  <div class="sync-status" id="sync-status">
+    <div class="sync-dot" id="sync-dot"></div>
+    <span id="sync-label">Not configured</span>
+  </div>
 </div>
 
 <div class="tabs">
   <button class="tab-btn active" onclick="switchTab('form')">Event Details</button>
   <button class="tab-btn" onclick="switchTab('menu')">Menu Manager</button>
   <button class="tab-btn" onclick="switchTab('preview')">Print Preview</button>
+  <button class="tab-btn" onclick="switchTab('settings')" style="margin-left:auto;">⚙ Settings</button>
 </div>
 
 <!-- ═══════════════════════════════════════════
@@ -954,13 +1008,156 @@ let bistroRows = [];
 let currentMenuType = null;
 
 /* ════════════════════════════════════════════
+   GIST SYNC
+════════════════════════════════════════════ */
+let gistConfig = { gistId: '', token: '', filename: 'menus.json' };
+let syncDebounce = null;
+
+function loadGistConfig() {
+  try {
+    const saved = localStorage.getItem('rr_gist');
+    if (saved) gistConfig = { ...gistConfig, ...JSON.parse(saved) };
+  } catch(e) {}
+  updateSyncStatus('idle');
+}
+
+function saveGistConfig() {
+  localStorage.setItem('rr_gist', JSON.stringify(gistConfig));
+}
+
+function gistReady() {
+  return gistConfig.gistId && gistConfig.token && gistConfig.filename;
+}
+
+function updateSyncStatus(state, msg) {
+  const dot = document.getElementById('sync-dot');
+  const label = document.getElementById('sync-label');
+  if (!dot || !label) return;
+  dot.className = 'sync-dot';
+  if (!gistReady()) { label.textContent = 'Not configured'; return; }
+  if (state === 'ok') { dot.classList.add('ok'); label.textContent = msg || 'Synced'; }
+  else if (state === 'err') { dot.classList.add('err'); label.textContent = msg || 'Sync error'; }
+  else if (state === 'syncing') { dot.classList.add('syncing'); label.textContent = 'Syncing...'; }
+  else { label.textContent = 'Connected'; }
+}
+
+function addLog(msg, type) {
+  const log = document.getElementById('sync-log');
+  if (!log) return;
+  const ts = new Date().toLocaleTimeString('en-AU', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  const cls = type === 'err' ? 'log-err' : type === 'info' ? 'log-info' : '';
+  const line = document.createElement('div');
+  line.className = cls;
+  line.textContent = `[${ts}] ${msg}`;
+  if (log.firstChild && log.firstChild.textContent.includes('Sync log')) log.innerHTML = '';
+  log.appendChild(line);
+  log.scrollTop = log.scrollHeight;
+}
+
+async function pushToGist() {
+  if (!gistReady()) { addLog('Not configured — save your Gist ID and token first.', 'err'); return; }
+  updateSyncStatus('syncing');
+  try {
+    const content = JSON.stringify(menuData, null, 2);
+    const res = await fetch(`https://api.github.com/gists/${gistConfig.gistId}`, {
+      method: 'PATCH',
+      headers: {
+        'Authorization': `token ${gistConfig.token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ files: { [gistConfig.filename]: { content } } })
+    });
+    if (!res.ok) throw new Error(`GitHub API returned ${res.status}`);
+    updateSyncStatus('ok', 'Synced ✓');
+    addLog('Menus pushed to Gist successfully.', '');
+  } catch(e) {
+    updateSyncStatus('err', 'Push failed');
+    addLog('Push failed: ' + e.message, 'err');
+  }
+}
+
+async function pullFromGist() {
+  if (!gistReady()) { addLog('Not configured — save your Gist ID and token first.', 'err'); return; }
+  updateSyncStatus('syncing');
+  try {
+    const res = await fetch(`https://api.github.com/gists/${gistConfig.gistId}`, {
+      headers: { 'Authorization': `token ${gistConfig.token}` }
+    });
+    if (!res.ok) throw new Error(`GitHub API returned ${res.status}`);
+    const data = await res.json();
+    const file = data.files[gistConfig.filename];
+    if (!file) throw new Error(`File "${gistConfig.filename}" not found in Gist`);
+    const parsed = JSON.parse(file.content);
+    menuData = { ...menuData, ...parsed };
+    localStorage.setItem('rr_menus', JSON.stringify(menuData));
+    renderMMItems();
+    refreshFoodSelectors();
+    updateSyncStatus('ok', 'Pulled ✓');
+    addLog('Menus pulled from Gist successfully.', '');
+  } catch(e) {
+    updateSyncStatus('err', 'Pull failed');
+    addLog('Pull failed: ' + e.message, 'err');
+  }
+}
+
+async function testGistConnection() {
+  const gistId = document.getElementById('s-gist-id').value.trim();
+  const token = document.getElementById('s-token').value.trim();
+  const filename = document.getElementById('s-filename').value.trim() || 'menus.json';
+  if (!gistId || !token) { addLog('Enter Gist ID and token before testing.', 'err'); return; }
+  addLog('Testing connection...', 'info');
+  try {
+    const res = await fetch(`https://api.github.com/gists/${gistId}`, {
+      headers: { 'Authorization': `token ${token}` }
+    });
+    if (!res.ok) throw new Error(`GitHub API returned ${res.status} — check your Gist ID and token`);
+    const data = await res.json();
+    const fileList = Object.keys(data.files).join(', ');
+    addLog(`Connected! Gist found. Files: ${fileList}`, '');
+    if (!data.files[filename]) addLog(`Note: "${filename}" not found yet — it will be created on first push.`, 'info');
+    else addLog(`File "${filename}" found and ready.`, '');
+  } catch(e) {
+    addLog('Connection failed: ' + e.message, 'err');
+  }
+}
+
+function loadSettingsFields() {
+  setVal('s-gist-id', gistConfig.gistId);
+  setVal('s-token', gistConfig.token);
+  setVal('s-filename', gistConfig.filename || 'menus.json');
+}
+
+function settingsDirty() {}
+
+function saveSettings() {
+  gistConfig.gistId = document.getElementById('s-gist-id').value.trim();
+  gistConfig.token = document.getElementById('s-token').value.trim();
+  gistConfig.filename = document.getElementById('s-filename').value.trim() || 'menus.json';
+  saveGistConfig();
+  updateSyncStatus('idle');
+  addLog('Settings saved. Pulling latest menus from Gist...', 'info');
+  pullFromGist();
+}
+
+function clearCredentials() {
+  if (!confirm('Clear Gist credentials from this browser? Your Gist data is unaffected.')) return;
+  gistConfig = { gistId: '', token: '', filename: 'menus.json' };
+  localStorage.removeItem('rr_gist');
+  loadSettingsFields();
+  updateSyncStatus('idle');
+  addLog('Credentials cleared from this browser.', 'info');
+}
+
+/* ════════════════════════════════════════════
    INIT
 ════════════════════════════════════════════ */
 function init() {
+  loadGistConfig();
   loadMenus();
   loadFormData();
   renderMMItems();
   updateLimitInputs();
+  if (gistReady()) pullFromGist();
 }
 
 /* ════════════════════════════════════════════
@@ -971,9 +1168,10 @@ function switchTab(name) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   document.getElementById(name + '-panel').classList.add('active');
   const btns = document.querySelectorAll('.tab-btn');
-  const map = { form: 0, menu: 1, preview: 2 };
-  btns[map[name]].classList.add('active');
+  const map = { form: 0, menu: 1, preview: 2, settings: 3 };
+  if (btns[map[name]]) btns[map[name]].classList.add('active');
   if (name === 'preview') buildRunsheet();
+  if (name === 'settings') loadSettingsFields();
 }
 
 /* ════════════════════════════════════════════
@@ -1071,6 +1269,10 @@ document.addEventListener('change', function(e) {
 function saveMenus() {
   localStorage.setItem('rr_menus', JSON.stringify(menuData));
   refreshFoodSelectors();
+  if (gistReady()) {
+    clearTimeout(syncDebounce);
+    syncDebounce = setTimeout(() => pushToGist(), 1500);
+  }
 }
 
 function loadMenus() {
@@ -1470,5 +1672,67 @@ function clearForm() {
 
 init();
 </script>
+<!-- ═══════════════════════════════════════════
+     TAB 4: SETTINGS
+══════════════════════════════════════════════ -->
+<div id="settings-panel" class="tab-panel">
+<div class="container" style="max-width:640px;">
+
+  <div class="settings-info">
+    <strong>GitHub Gist Sync</strong><br>
+    Menu data syncs across all devices via a private GitHub Gist. Your token is stored only in this browser's localStorage — it is never sent anywhere except directly to the GitHub API.<br><br>
+    Need help setting this up? <strong>Gist ID</strong> is the long string at the end of your Gist URL.<br>
+    Your <strong>token</strong> needs only the <code>gist</code> scope.
+  </div>
+
+  <div class="section-card">
+    <div class="section-header"><span class="dot"></span>Gist Credentials</div>
+    <div class="section-body">
+      <div class="form-grid" style="gap:14px;">
+        <div class="field">
+          <label>Gist ID</label>
+          <input type="text" id="s-gist-id" placeholder="e.g. a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4" class="token-field" oninput="settingsDirty()">
+        </div>
+        <div class="field">
+          <label>GitHub Personal Access Token</label>
+          <input type="password" id="s-token" placeholder="ghp_••••••••••••••••••••••••••••••••••••" class="token-field" oninput="settingsDirty()">
+          <span style="font-size:11px;color:var(--text3);margin-top:2px;">Stored locally in your browser only. Required scope: gist.</span>
+        </div>
+        <div class="field">
+          <label>Filename in Gist</label>
+          <input type="text" id="s-filename" placeholder="menus.json" class="token-field" oninput="settingsDirty()">
+          <span style="font-size:11px;color:var(--text3);margin-top:2px;">Must match the filename you created in your Gist.</span>
+        </div>
+      </div>
+      <div class="btn-row" style="margin-top:1rem;">
+        <button class="btn btn-outline" onclick="testGistConnection()">Test Connection</button>
+        <button class="btn btn-primary" id="save-settings-btn" onclick="saveSettings()">Save Settings</button>
+      </div>
+      <div class="sync-log" id="sync-log"><span class="log-info">Sync log will appear here...</span></div>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-header"><span class="dot"></span>Manual Sync</div>
+    <div class="section-body">
+      <p style="font-size:13px;color:var(--text2);margin-bottom:12px;">Menus sync automatically when you save changes in Menu Manager. Use these if you need to force a sync.</p>
+      <div class="btn-row" style="margin-top:0;justify-content:flex-start;">
+        <button class="btn btn-outline" onclick="pushToGist()">Push to Gist ↑</button>
+        <button class="btn btn-outline" onclick="pullFromGist()">Pull from Gist ↓</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-header"><span class="dot"></span>Danger Zone</div>
+    <div class="section-body">
+      <p style="font-size:13px;color:var(--text2);margin-bottom:12px;">Clear saved credentials from this browser. Does not affect your Gist data.</p>
+      <button class="btn" style="background:var(--danger-light);color:var(--danger);border-color:var(--danger);font-size:13px;padding:8px 16px;" onclick="clearCredentials()">Clear Saved Credentials</button>
+    </div>
+  </div>
+
+</div>
+</div>
+
 </body>
 </html>
