@@ -835,7 +835,7 @@
     <div class="section-header"><span class="dot"></span>Food Selection</div>
     <div class="section-body">
       <div class="menu-type-grid">
-        <button class="menu-type-btn" onclick="selectMenuType('canape-a')" id="mt-canape-a">Canapé A<br><span style="font-size:10px;font-weight:400;opacity:0.7;">Fewer items</span></button>
+        <button class="menu-type-btn" onclick="selectMenuType('canape-a')" id="mt-canape-a">2hr Canapé<br><span style="font-size:10px;font-weight:400;opacity:0.7;">6 items</span></button>
         <button class="menu-type-btn" onclick="selectMenuType('canape-b')" id="mt-canape-b">Canapé B<br><span style="font-size:10px;font-weight:400;opacity:0.7;">More items</span></button>
         <button class="menu-type-btn" onclick="selectMenuType('banquet')" id="mt-banquet">Banquet<br><span style="font-size:10px;font-weight:400;opacity:0.7;">Set courses</span></button>
         <button class="menu-type-btn" onclick="selectMenuType('bistro')" id="mt-bistro">Bistro<br><span style="font-size:10px;font-weight:400;opacity:0.7;">Per person</span></button>
@@ -1099,7 +1099,7 @@ let menuData = {
   canapeSubstantial: [],
   canapeSliders: [],
   canapeDessert: [],
-  caLimitA: 5,
+  caLimitsA: { small: 2, premium: 2, substantial: 1, sliders: 1, dessert: 0 },
   caLimitB: 8,
   banquetMains: [],
   banquetSides: [],
@@ -1433,14 +1433,11 @@ function renderMMList(containerId, type, items, fields) {
 }
 
 function updateLimitInputs() {
-  const caA = document.getElementById('ca-limit-input');
   const cbB = document.getElementById('cb-limit-input');
-  if (caA) caA.value = menuData.caLimitA;
   if (cbB) cbB.value = menuData.caLimitB;
 }
 
 document.addEventListener('change', function(e) {
-  if (e.target.id === 'ca-limit-input') { menuData.caLimitA = parseInt(e.target.value) || 5; saveMenus(); updateCanapeLimit('a'); }
   if (e.target.id === 'cb-limit-input') { menuData.caLimitB = parseInt(e.target.value) || 8; saveMenus(); updateCanapeLimit('b'); }
 });
 
@@ -1578,55 +1575,84 @@ function selectMenuType(type, silent) {
 /* ════════════════════════════════════════════
    CANAPÉ
 ════════════════════════════════════════════ */
+const CANAPE_SUBCATS = [
+  { label: 'Small',       key: 'canapeSmall',       id: 'small' },
+  { label: 'Premium',     key: 'canapePremium',     id: 'premium' },
+  { label: 'Substantial', key: 'canapeSubstantial', id: 'substantial' },
+  { label: 'Sliders',     key: 'canapeSliders',     id: 'sliders' },
+  { label: 'Dessert',     key: 'canapeDessert',     id: 'dessert' }
+];
+
+function getCanapeSubcat(name) {
+  for (const s of CANAPE_SUBCATS) {
+    if ((menuData[s.key] || []).some(i => (typeof i === 'object' ? i.name : i) === name)) return s.id;
+  }
+  return null;
+}
+
 function renderCanapeItems(ab) {
-  const subcats = [
-    { label: 'Small',       key: 'canapeSmall' },
-    { label: 'Premium',     key: 'canapePremium' },
-    { label: 'Substantial', key: 'canapeSubstantial' },
-    { label: 'Sliders',     key: 'canapeSliders' },
-    { label: 'Dessert',     key: 'canapeDessert' }
-  ];
   const selected = ab === 'a' ? selectedCanapeA : selectedCanapeB;
-  const limit = ab === 'a' ? menuData.caLimitA : menuData.caLimitB;
   const containerId = ab === 'a' ? 'ca-items' : 'cb-items';
   const container = document.getElementById(containerId);
 
-  const allItems = subcats.flatMap(s => (menuData[s.key] || []));
+  const allItems = CANAPE_SUBCATS.flatMap(s => (menuData[s.key] || []));
   if (!allItems.length) {
     container.innerHTML = '<p style="color:var(--text3);font-size:13px;padding:8px 0;">No items added yet — go to Menu Manager to add canapé items.</p>';
-    updateCanapeCount(ab, selected, limit);
+    updateCanapeCount(ab, selected);
     return;
   }
 
-  container.innerHTML = subcats.map(({ label, key }) => {
-    const items = menuData[key] || [];
+  const limitsA = menuData.caLimitsA || { small: 2, premium: 2, substantial: 1, sliders: 1, dessert: 0 };
+
+  container.innerHTML = CANAPE_SUBCATS.map(({ label, key, id }) => {
+    const items = (menuData[key] || []).map(i => typeof i === 'object' ? (i.name || '') : i).filter(Boolean);
     if (!items.length) return '';
-    const itemsHtml = items.map(item => {
-      const name = typeof item === 'object' ? (item.name || '') : item;
-      if (!name) return '';
+    if (ab === 'a' && limitsA[id] === 0) return ''; // hidden for 2hr canapé
+    const subcatLimit = ab === 'a' ? limitsA[id] : null;
+    const subcatSelected = items.filter(n => selected.includes(n));
+    const countStr = subcatLimit != null ? ` <span style="font-weight:600;color:var(--accent);">${subcatSelected.length}/${subcatLimit}</span>` : '';
+    const itemsHtml = items.map(name => {
       const sel = selected.includes(name);
       return `<div class="canape-item ${sel ? 'selected' : ''}" onclick="toggleCanape('${ab}','${escJs(name)}',this)">
         <input type="checkbox" ${sel ? 'checked' : ''} onclick="event.stopPropagation();toggleCanape('${ab}','${escJs(name)}',this.parentElement)">
         <span>${escHtml(name)}</span>
       </div>`;
     }).join('');
-    return `<div style="margin-bottom:10px;"><div style="font-size:11px;font-family:var(--sans);text-transform:uppercase;letter-spacing:0.05em;color:var(--text3);margin-bottom:4px;">${label}</div><div class="canape-grid" style="margin:0;">${itemsHtml}</div></div>`;
+    return `<div style="margin-bottom:12px;">
+      <div style="font-size:11px;font-family:var(--sans);text-transform:uppercase;letter-spacing:0.05em;color:var(--text3);margin-bottom:4px;">${label}${countStr}</div>
+      <div class="canape-grid" style="margin:0;">${itemsHtml}</div>
+    </div>`;
   }).join('');
-  updateCanapeCount(ab, selected, limit);
+  updateCanapeCount(ab, selected);
 }
 
 function toggleCanape(ab, item, el) {
   const selected = ab === 'a' ? selectedCanapeA : selectedCanapeB;
-  const limit = ab === 'a' ? menuData.caLimitA : menuData.caLimitB;
   const idx = selected.indexOf(item);
   if (idx > -1) {
     selected.splice(idx, 1);
     el.classList.remove('selected');
     el.querySelector('input').checked = false;
   } else {
-    if (selected.length >= limit) {
-      alert(`Canapé ${ab.toUpperCase()} limit is ${limit} items. Deselect an item first.`);
-      return;
+    if (ab === 'a') {
+      // Per-subcategory limits
+      const limitsA = menuData.caLimitsA || { small: 2, premium: 2, substantial: 1, sliders: 1, dessert: 0 };
+      const subcatId = getCanapeSubcat(item);
+      const limit = limitsA[subcatId] || 0;
+      const subcatItems = (menuData[CANAPE_SUBCATS.find(s => s.id === subcatId)?.key] || [])
+        .map(i => typeof i === 'object' ? i.name : i).filter(Boolean);
+      const alreadySelected = selected.filter(n => subcatItems.includes(n)).length;
+      if (alreadySelected >= limit) {
+        const label = CANAPE_SUBCATS.find(s => s.id === subcatId)?.label || subcatId;
+        alert(`${label} limit is ${limit}. Deselect a ${label.toLowerCase()} item first.`);
+        return;
+      }
+    } else {
+      const limit = menuData.caLimitB || 8;
+      if (selected.length >= limit) {
+        alert(`Canapé B limit is ${limit} items. Deselect an item first.`);
+        return;
+      }
     }
     selected.push(item);
     el.classList.add('selected');
@@ -1634,21 +1660,27 @@ function toggleCanape(ab, item, el) {
   }
   if (ab === 'a') selectedCanapeA = selected;
   else selectedCanapeB = selected;
-  updateCanapeCount(ab, selected, limit);
+  updateCanapeCount(ab, selected);
   autoSave();
 }
 
-function updateCanapeCount(ab, selected, limit) {
+function updateCanapeCount(ab, selected) {
   const countEl = document.getElementById(ab === 'a' ? 'ca-count' : 'cb-count');
   const maxEl = document.getElementById(ab === 'a' ? 'ca-max' : 'cb-max');
   if (countEl) countEl.textContent = selected.length;
-  if (maxEl) maxEl.textContent = limit;
+  if (maxEl) {
+    if (ab === 'a') {
+      const lims = menuData.caLimitsA || { small: 2, premium: 2, substantial: 1, sliders: 1, dessert: 0 };
+      maxEl.textContent = Object.values(lims).reduce((a, b) => a + b, 0);
+    } else {
+      maxEl.textContent = menuData.caLimitB || 8;
+    }
+  }
 }
 
 function updateCanapeLimit(ab) {
   const selected = ab === 'a' ? selectedCanapeA : selectedCanapeB;
-  const limit = ab === 'a' ? menuData.caLimitA : menuData.caLimitB;
-  updateCanapeCount(ab, selected, limit);
+  updateCanapeCount(ab, selected);
 }
 
 /* ════════════════════════════════════════════
@@ -1744,7 +1776,7 @@ function buildRunsheet() {
   let foodHtml = '';
   if (d.menuType === 'canape-a' || d.menuType === 'canape-b') {
     const sel = d.menuType === 'canape-a' ? d.canapeA : d.canapeB;
-    const label = d.menuType === 'canape-a' ? 'Canapé Menu A' : 'Canapé Menu B';
+    const label = d.menuType === 'canape-a' ? '2hr Canapé' : 'Canapé Menu B';
     const limit = d.menuType === 'canape-a' ? menuData.caLimitA : menuData.caLimitB;
     foodHtml = `
       <div class="rs-section-title">Food Selection</div>
