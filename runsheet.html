@@ -729,8 +729,7 @@
 
 <div class="app-header">
   <div>
-    <div class="app-header h1" style="font-family:Georgia,serif;font-size:18px;font-weight:normal;letter-spacing:0.5px;color:#fff;">The Republic Bar</div>
-    <div class="subtitle">Event Runsheet Generator</div>
+    <div class="app-header h1" style="font-family:Georgia,serif;font-size:18px;font-weight:normal;letter-spacing:0.5px;color:#fff;">The Republic Hotel - Event Runsheet Generator</div>
   </div>
   <div class="sync-status" id="sync-status">
     <div class="sync-dot" id="sync-dot"></div>
@@ -837,7 +836,7 @@
       <div class="menu-type-grid">
         <button class="menu-type-btn" onclick="selectMenuType('canape-a')" id="mt-canape-a">2hr Canapé<br><span style="font-size:10px;font-weight:400;opacity:0.7;">6 items</span></button>
         <button class="menu-type-btn" onclick="selectMenuType('canape-b')" id="mt-canape-b">3hr Canapé<br><span style="font-size:10px;font-weight:400;opacity:0.7;">8 items</span></button>
-        <button class="menu-type-btn" onclick="selectMenuType('banquet')" id="mt-banquet">Banquet<br><span style="font-size:10px;font-weight:400;opacity:0.7;">Set courses</span></button>
+        <button class="menu-type-btn" onclick="selectMenuType('banquet')" id="mt-banquet">Banquet<br><span style="font-size:10px;font-weight:400;opacity:0.7;">6 items</span></button>
         <button class="menu-type-btn" onclick="selectMenuType('bistro')" id="mt-bistro">Bistro<br><span style="font-size:10px;font-weight:400;opacity:0.7;">Per person</span></button>
         <button class="menu-type-btn" onclick="selectMenuType('misc')" id="mt-misc">Misc<br><span style="font-size:10px;font-weight:400;opacity:0.7;">Other</span></button>
       </div>
@@ -860,26 +859,10 @@
 
       <!-- Banquet -->
       <div class="menu-panel" id="mp-banquet">
-        <div class="form-grid" style="gap:10px;">
-          <div class="field">
-            <label>Mains</label>
-            <select id="banquet-mains" onchange="autoSave()">
-              <option value="">— Select main —</option>
-            </select>
-          </div>
-          <div class="field">
-            <label>Sides</label>
-            <select id="banquet-sides" onchange="autoSave()">
-              <option value="">— Select side —</option>
-            </select>
-          </div>
-          <div class="field">
-            <label>Dessert</label>
-            <select id="banquet-dessert" onchange="autoSave()">
-              <option value="">— Select dessert —</option>
-            </select>
-          </div>
+        <div id="bq-limit-bar" class="canape-limit-bar">
+          <span id="bq-count">0</span> / <span id="bq-max">6</span> items selected
         </div>
+        <div id="bq-items"></div>
       </div>
 
       <!-- Bistro Sit-Down -->
@@ -1116,6 +1099,7 @@ let menuData = {
 
 let selectedCanapeA = [];
 let selectedCanapeB = [];
+let selectedBanquet = [];
 let bistroRows = [];
 let currentMenuType = null;
 
@@ -1504,11 +1488,13 @@ function loadFormData() {
       if (d.menuType === 'canape-a') { selectedCanapeA = d.canapeA || []; }
       if (d.menuType === 'canape-b') { selectedCanapeB = d.canapeB || []; }
       if (d.menuType === 'banquet') {
-        setTimeout(() => {
-          setVal('banquet-mains', d.banquetMains);
-          setVal('banquet-sides', d.banquetSides);
-          setVal('banquet-dessert', d.banquetDessert);
-        }, 50);
+        if (Array.isArray(d.banquet)) {
+          selectedBanquet = d.banquet;
+        } else {
+          // migrate from old single-select format
+          selectedBanquet = [d.banquetMains, d.banquetSides, d.banquetDessert].filter(Boolean);
+        }
+        renderBanquetItems();
       }
       if (d.menuType === 'bistro') { bistroRows = d.bistroRows || []; renderBistroRows(); }
     }
@@ -1537,9 +1523,7 @@ function getFormData() {
     menuType: currentMenuType,
     canapeA: selectedCanapeA,
     canapeB: selectedCanapeB,
-    banquetMains: v('banquet-mains'),
-    banquetSides: v('banquet-sides'),
-    banquetDessert: v('banquet-dessert'),
+    banquet: selectedBanquet,
     bistroRows: bistroRows
   };
 }
@@ -1561,6 +1545,7 @@ function selectMenuType(type, silent) {
   refreshFoodSelectors();
   if (type === 'canape-a') renderCanapeItems('a');
   if (type === 'canape-b') renderCanapeItems('b');
+  if (type === 'banquet') renderBanquetItems();
   if (type === 'bistro' && bistroRows.length === 0) addBistroRow();
   if (!silent) autoSave();
 }
@@ -1702,6 +1687,81 @@ function updateCanapeLimit(ab) {
 }
 
 /* ════════════════════════════════════════════
+   BANQUET SELECTION
+════════════════════════════════════════════ */
+const BANQUET_SUBCATS = [
+  { label: 'Mains',   key: 'banquetMains',   id: 'mains',   limit: 3 },
+  { label: 'Sides',   key: 'banquetSides',   id: 'sides',   limit: 2 },
+  { label: 'Dessert', key: 'banquetDessert', id: 'dessert', limit: 1 }
+];
+
+function renderBanquetItems() {
+  const container = document.getElementById('bq-items');
+  const allItems = BANQUET_SUBCATS.flatMap(s => (menuData[s.key] || []));
+  if (!allItems.length) {
+    container.innerHTML = '<p style="color:var(--text3);font-size:13px;padding:8px 0;">No items added yet — go to Menu Manager to add banquet items.</p>';
+    updateBanquetCount();
+    return;
+  }
+  container.innerHTML = BANQUET_SUBCATS.map(({ label, key, id, limit }) => {
+    const items = (menuData[key] || []).map(i => typeof i === 'object' ? (i.name || '') : i).filter(Boolean);
+    if (!items.length) return '';
+    const subcatSelected = items.filter(n => selectedBanquet.includes(n));
+    const countSpanId = `bq-subcount-${id}`;
+    const countStr = ` <span id="${countSpanId}" style="font-weight:600;color:var(--accent);">${subcatSelected.length}/${limit}</span>`;
+    const itemsHtml = items.map(name => {
+      const sel = selectedBanquet.includes(name);
+      return `<div class="canape-item ${sel ? 'selected' : ''}" onclick="toggleBanquet('${escJs(name)}',this)">
+        <input type="checkbox" ${sel ? 'checked' : ''} onclick="event.stopPropagation();toggleBanquet('${escJs(name)}',this.parentElement)">
+        <span>${escHtml(name)}</span>
+      </div>`;
+    }).join('');
+    return `<div style="margin-bottom:12px;">
+      <div style="font-size:11px;font-family:var(--sans);text-transform:uppercase;letter-spacing:0.05em;color:var(--text3);margin-bottom:4px;">${label}${countStr}</div>
+      <div class="canape-grid" style="margin:0;">${itemsHtml}</div>
+    </div>`;
+  }).join('');
+  updateBanquetCount();
+}
+
+function toggleBanquet(item, el) {
+  const idx = selectedBanquet.indexOf(item);
+  if (idx > -1) {
+    selectedBanquet.splice(idx, 1);
+    el.classList.remove('selected');
+    el.querySelector('input').checked = false;
+  } else {
+    const subcat = BANQUET_SUBCATS.find(s => (menuData[s.key] || []).some(i => (typeof i === 'object' ? i.name : i) === item));
+    if (subcat) {
+      const subcatItems = (menuData[subcat.key] || []).map(i => typeof i === 'object' ? i.name : i).filter(Boolean);
+      const alreadySelected = selectedBanquet.filter(n => subcatItems.includes(n)).length;
+      if (alreadySelected >= subcat.limit) {
+        alert(`${subcat.label} limit is ${subcat.limit}. Deselect a ${subcat.label.toLowerCase()} item first.`);
+        return;
+      }
+    }
+    selectedBanquet.push(item);
+    el.classList.add('selected');
+    el.querySelector('input').checked = true;
+  }
+  updateBanquetCount();
+  autoSave();
+}
+
+function updateBanquetCount() {
+  const countEl = document.getElementById('bq-count');
+  const maxEl = document.getElementById('bq-max');
+  if (countEl) countEl.textContent = selectedBanquet.length;
+  if (maxEl) maxEl.textContent = BANQUET_SUBCATS.reduce((a, s) => a + s.limit, 0);
+  BANQUET_SUBCATS.forEach(({ key, id, limit }) => {
+    const el = document.getElementById(`bq-subcount-${id}`);
+    if (!el) return;
+    const items = (menuData[key] || []).map(i => typeof i === 'object' ? i.name : i).filter(Boolean);
+    el.textContent = `${items.filter(n => selectedBanquet.includes(n)).length}/${limit}`;
+  });
+}
+
+/* ════════════════════════════════════════════
    BISTRO ROWS
 ════════════════════════════════════════════ */
 function addBistroRow() {
@@ -1756,24 +1816,10 @@ function refreshFoodSelectors() {
   if (!currentMenuType) return;
   if (currentMenuType === 'canape-a') renderCanapeItems('a');
   if (currentMenuType === 'canape-b') renderCanapeItems('b');
-  if (currentMenuType === 'banquet') populateBanquetDropdowns();
+  if (currentMenuType === 'banquet') renderBanquetItems();
   if (currentMenuType === 'bistro') renderBistroRows();
 }
 
-function populateBanquetDropdowns() {
-  const selectors = [
-    { id: 'banquet-mains', items: menuData.banquetMains || [], label: 'main' },
-    { id: 'banquet-sides', items: menuData.banquetSides || [], label: 'side' },
-    { id: 'banquet-dessert', items: menuData.banquetDessert || [], label: 'dessert' }
-  ];
-  selectors.forEach(({ id, items, label }) => {
-    const el = document.getElementById(id);
-    if (!el) return;
-    const cur = el.value;
-    el.innerHTML = `<option value="">— Select ${label} —</option>` +
-      items.map(i => { const n = typeof i === 'object' ? (i.name || '') : i; return `<option value="${escHtml(n)}" ${cur === n ? 'selected' : ''}>${escHtml(n)}</option>`; }).join('');
-  });
-}
 
 /* ════════════════════════════════════════════
    RUNSHEET BUILD
@@ -1808,16 +1854,24 @@ function buildRunsheet() {
         </div>
       </div>`;
   } else if (d.menuType === 'banquet') {
+    const bq = d.banquet || [];
+    const coursesHtml = BANQUET_SUBCATS.map(({ label, key, limit }) => {
+      const items = (menuData[key] || []).map(i => typeof i === 'object' ? (i.name || '') : i).filter(Boolean);
+      const chosen = bq.filter(n => items.includes(n));
+      const tagsHtml = chosen.length
+        ? chosen.map(n => `<span class="rs-canape-tag">${escHtml(n)}</span>`).join('')
+        : `<em style="color:#aaa;font-size:13px;font-family:var(--sans);">Not selected</em>`;
+      return `<div class="rs-course-row" style="align-items:flex-start;gap:12px;">
+        <span class="rs-course-label" style="padding-top:3px;">${label} <span style="font-weight:400;color:#bbb;">(${chosen.length}/${limit})</span></span>
+        <div class="rs-canape-list" style="margin:0;flex:1;">${tagsHtml}</div>
+      </div>`;
+    }).join('');
     foodHtml = `
       <div class="rs-section-title">Food Selection</div>
       <div class="rs-row full">
         <div class="rs-cell">
           <div class="rs-food-type">Banquet Menu</div>
-          <div class="rs-food-courses">
-            <div class="rs-course-row"><span class="rs-course-label">Mains</span><span class="rs-course-value">${escHtml(d.banquetMains) || '<em style="color:#aaa;">Not selected</em>'}</span></div>
-            <div class="rs-course-row"><span class="rs-course-label">Sides</span><span class="rs-course-value">${escHtml(d.banquetSides) || '<em style="color:#aaa;">Not selected</em>'}</span></div>
-            <div class="rs-course-row"><span class="rs-course-label">Dessert</span><span class="rs-course-value">${escHtml(d.banquetDessert) || '<em style="color:#aaa;">Not selected</em>'}</span></div>
-          </div>
+          <div class="rs-food-courses">${coursesHtml}</div>
         </div>
       </div>`;
   } else if (d.menuType === 'bistro') {
