@@ -1,0 +1,1474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Republic Bar — Event Runsheet</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f5f4f0;
+    --surface: #ffffff;
+    --surface2: #f0efe9;
+    --border: #d8d5cc;
+    --border-strong: #b8b4aa;
+    --text: #1a1916;
+    --text2: #5a5750;
+    --text3: #9a968e;
+    --accent: #1a3a2a;
+    --accent-light: #e8f0eb;
+    --accent-mid: #2d6b48;
+    --danger: #8b2e2e;
+    --danger-light: #fdf0f0;
+    --amber: #7a4f10;
+    --amber-light: #fdf5e8;
+    --font: 'Georgia', serif;
+    --sans: 'Helvetica Neue', Arial, sans-serif;
+    --radius: 6px;
+    --radius-lg: 10px;
+  }
+
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ── */
+  .app-header {
+    background: var(--accent);
+    color: #fff;
+    padding: 0 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 56px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .app-header h1 {
+    font-family: var(--font);
+    font-size: 18px;
+    font-weight: normal;
+    letter-spacing: 0.5px;
+  }
+  .app-header .subtitle {
+    font-size: 11px;
+    opacity: 0.6;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-top: 1px;
+  }
+
+  /* ── TABS ── */
+  .tabs {
+    display: flex;
+    background: var(--accent);
+    padding: 0 2rem;
+    gap: 4px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+  }
+  .tab-btn {
+    padding: 10px 18px;
+    background: none;
+    border: none;
+    color: rgba(255,255,255,0.55);
+    font-family: var(--sans);
+    font-size: 13px;
+    letter-spacing: 0.3px;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: color 0.15s, border-color 0.15s;
+    margin-bottom: -1px;
+  }
+  .tab-btn:hover { color: rgba(255,255,255,0.85); }
+  .tab-btn.active { color: #fff; border-bottom-color: #7ec49a; }
+
+  /* ── LAYOUT ── */
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  .container { max-width: 900px; margin: 0 auto; padding: 2rem; }
+
+  /* ── FORM ── */
+  .section-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    margin-bottom: 1.25rem;
+    overflow: hidden;
+  }
+  .section-header {
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    padding: 10px 16px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text2);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-header .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--accent-mid);
+    flex-shrink: 0;
+  }
+  .section-body { padding: 16px; }
+
+  .form-grid { display: grid; gap: 12px; }
+  .form-grid-2 { grid-template-columns: 1fr 1fr; }
+  .form-grid-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .form-grid-4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
+
+  .field { display: flex; flex-direction: column; gap: 4px; }
+  .field label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--text2);
+  }
+  .field input, .field select, .field textarea {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 8px 10px;
+    font-family: var(--sans);
+    font-size: 14px;
+    color: var(--text);
+    background: var(--surface);
+    transition: border-color 0.15s;
+    width: 100%;
+  }
+  .field input:focus, .field select:focus, .field textarea:focus {
+    outline: none;
+    border-color: var(--accent-mid);
+  }
+  .field textarea { resize: vertical; min-height: 80px; }
+
+  /* ── MENU SELECTOR ── */
+  .menu-type-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .menu-type-btn {
+    padding: 10px 8px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text2);
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.15s;
+    line-height: 1.3;
+  }
+  .menu-type-btn:hover { border-color: var(--accent-mid); color: var(--accent); }
+  .menu-type-btn.active {
+    border-color: var(--accent-mid);
+    background: var(--accent-light);
+    color: var(--accent);
+  }
+
+  .menu-panel { display: none; }
+  .menu-panel.active { display: block; }
+
+  /* canape checkboxes */
+  .canape-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 8px;
+  }
+  .canape-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: background 0.1s, border-color 0.1s;
+    font-size: 13px;
+  }
+  .canape-item:hover { background: var(--surface2); }
+  .canape-item.selected {
+    background: var(--accent-light);
+    border-color: var(--accent-mid);
+    color: var(--accent);
+  }
+  .canape-item input[type=checkbox] { accent-color: var(--accent-mid); width: 14px; height: 14px; flex-shrink: 0; }
+  .canape-limit-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+    padding: 8px 12px;
+    background: var(--amber-light);
+    border-radius: var(--radius);
+    border: 1px solid #e8c878;
+    font-size: 13px;
+    color: var(--amber);
+    font-weight: 600;
+  }
+
+  /* bistro sit-down */
+  .bistro-table { width: 100%; border-collapse: collapse; }
+  .bistro-table th {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--text2);
+    padding: 6px 8px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+  .bistro-table td { padding: 5px 4px; }
+  .bistro-table td input, .bistro-table td select {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 6px 8px;
+    font-family: var(--sans);
+    font-size: 13px;
+    width: 100%;
+    background: var(--surface);
+    color: var(--text);
+  }
+  .bistro-table td input:focus, .bistro-table td select:focus {
+    outline: none; border-color: var(--accent-mid);
+  }
+  .btn-icon {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 4px 8px;
+    cursor: pointer;
+    color: var(--danger);
+    font-size: 14px;
+    line-height: 1;
+  }
+  .btn-icon:hover { background: var(--danger-light); border-color: var(--danger); }
+
+  /* ── BUTTONS ── */
+  .btn-row {
+    display: flex;
+    gap: 10px;
+    margin-top: 1.5rem;
+    justify-content: flex-end;
+  }
+  .btn {
+    padding: 10px 20px;
+    border-radius: var(--radius);
+    font-family: var(--sans);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    border: 1.5px solid transparent;
+  }
+  .btn-primary {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+  }
+  .btn-primary:hover { background: var(--accent-mid); border-color: var(--accent-mid); }
+  .btn-outline {
+    background: none;
+    color: var(--text2);
+    border-color: var(--border-strong);
+  }
+  .btn-outline:hover { background: var(--surface2); color: var(--text); }
+  .btn-add {
+    background: var(--accent-light);
+    color: var(--accent);
+    border-color: var(--accent-mid);
+    font-size: 12px;
+    padding: 6px 14px;
+    margin-top: 8px;
+  }
+  .btn-add:hover { background: #d0e8d8; }
+
+  /* ── MENU MANAGER ── */
+  .mm-layout { display: grid; grid-template-columns: 200px 1fr; gap: 1.5rem; }
+  .mm-sidebar {}
+  .mm-menu-list { display: flex; flex-direction: column; gap: 6px; }
+  .mm-menu-btn {
+    padding: 10px 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    font-size: 13px;
+    font-weight: 600;
+    text-align: left;
+    cursor: pointer;
+    color: var(--text2);
+    transition: all 0.15s;
+  }
+  .mm-menu-btn:hover { background: var(--surface2); }
+  .mm-menu-btn.active { background: var(--accent-light); border-color: var(--accent-mid); color: var(--accent); }
+  .mm-main {}
+  .mm-panel { display: none; }
+  .mm-panel.active { display: block; }
+  .mm-section { margin-bottom: 1.5rem; }
+  .mm-section-title {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--text2);
+    margin-bottom: 8px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+  }
+  .mm-items { display: flex; flex-direction: column; gap: 6px; }
+  .mm-item-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .mm-item-row input {
+    flex: 1;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 7px 10px;
+    font-family: var(--sans);
+    font-size: 13px;
+    color: var(--text);
+    background: var(--surface);
+  }
+  .mm-item-row input:focus { outline: none; border-color: var(--accent-mid); }
+  .mm-limit-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+    padding: 10px 14px;
+    background: var(--amber-light);
+    border-radius: var(--radius);
+    border: 1px solid #e8c878;
+    font-size: 13px;
+    color: var(--amber);
+  }
+  .mm-limit-row label { font-weight: 600; }
+  .mm-limit-row input {
+    width: 60px;
+    border: 1px solid #e8c878;
+    border-radius: var(--radius);
+    padding: 5px 8px;
+    font-size: 14px;
+    font-weight: 700;
+    text-align: center;
+    color: var(--amber);
+    background: #fff;
+  }
+
+  /* ── PRINT PREVIEW ── */
+  #preview-panel { background: var(--bg); }
+  .preview-container { max-width: 820px; margin: 0 auto; padding: 2rem; }
+  .preview-actions {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 1.5rem;
+    align-items: center;
+  }
+  .preview-actions span {
+    font-size: 13px;
+    color: var(--text3);
+    flex: 1;
+  }
+  .runsheet {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    font-family: var(--font);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  }
+
+  /* ── PRINT STYLES ── */
+  @media print {
+    body { background: #fff; }
+    .app-header, .tabs, .preview-actions, #form-panel, #menu-panel { display: none !important; }
+    #preview-panel { display: block !important; }
+    .preview-container { padding: 0; max-width: 100%; }
+    .runsheet { border: none; border-radius: 0; box-shadow: none; }
+    .tab-panel { display: block !important; }
+  }
+
+  /* Runsheet internals */
+  .rs-masthead {
+    background: var(--accent);
+    color: #fff;
+    padding: 24px 32px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+  .rs-venue {
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    opacity: 0.6;
+    margin-bottom: 6px;
+  }
+  .rs-event-name {
+    font-size: 26px;
+    font-weight: normal;
+    letter-spacing: 0.3px;
+    margin-bottom: 4px;
+  }
+  .rs-date {
+    font-size: 14px;
+    opacity: 0.75;
+    font-family: var(--sans);
+  }
+  .rs-badge {
+    background: rgba(255,255,255,0.15);
+    border-radius: 4px;
+    padding: 6px 14px;
+    font-family: var(--sans);
+    font-size: 11px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.9);
+    text-align: right;
+  }
+  .rs-badge .rs-pax {
+    font-size: 28px;
+    font-weight: 700;
+    font-family: var(--font);
+    display: block;
+    line-height: 1;
+    margin-top: 4px;
+    letter-spacing: 0;
+  }
+
+  .rs-body { padding: 0; }
+
+  .rs-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border-bottom: 1px solid #e8e5de;
+  }
+  .rs-row.three { grid-template-columns: 1fr 1fr 1fr; }
+  .rs-row.full { grid-template-columns: 1fr; }
+  .rs-cell {
+    padding: 14px 24px;
+    border-right: 1px solid #e8e5de;
+  }
+  .rs-cell:last-child { border-right: none; }
+  .rs-label {
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: #888;
+    font-family: var(--sans);
+    margin-bottom: 4px;
+  }
+  .rs-value {
+    font-size: 15px;
+    color: #1a1916;
+    line-height: 1.4;
+  }
+  .rs-value.large { font-size: 18px; }
+
+  .rs-section-title {
+    background: #f5f4f0;
+    border-bottom: 1px solid #e8e5de;
+    padding: 8px 24px;
+    font-family: var(--sans);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: #5a5750;
+  }
+
+  .rs-food-type {
+    display: inline-block;
+    background: var(--accent-light);
+    color: var(--accent);
+    border: 1px solid #a8ccb4;
+    border-radius: 4px;
+    padding: 2px 10px;
+    font-family: var(--sans);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+
+  .rs-food-courses { display: flex; flex-direction: column; gap: 6px; }
+  .rs-course-row { display: flex; gap: 12px; align-items: baseline; }
+  .rs-course-label {
+    font-family: var(--sans);
+    font-size: 10px;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: #888;
+    width: 64px;
+    flex-shrink: 0;
+  }
+  .rs-course-value { font-size: 14px; color: #1a1916; }
+
+  .rs-canape-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 4px;
+  }
+  .rs-canape-tag {
+    background: #f0efe9;
+    border: 1px solid #d8d5cc;
+    border-radius: 4px;
+    padding: 3px 10px;
+    font-family: var(--sans);
+    font-size: 12px;
+    color: #3a3730;
+  }
+
+  .rs-bistro-table { width: 100%; border-collapse: collapse; font-family: var(--sans); }
+  .rs-bistro-table th {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: #888;
+    padding: 8px 16px;
+    text-align: left;
+    border-bottom: 1px solid #e8e5de;
+    background: #f5f4f0;
+  }
+  .rs-bistro-table td {
+    padding: 9px 16px;
+    font-size: 13px;
+    color: #1a1916;
+    border-bottom: 1px solid #f0efe9;
+  }
+  .rs-bistro-table tr:last-child td { border-bottom: none; }
+  .rs-bistro-table tr:nth-child(even) td { background: #fafaf8; }
+  .rs-bistro-num {
+    width: 32px;
+    text-align: center;
+    color: #888;
+    font-size: 11px;
+  }
+
+  .rs-notes {
+    padding: 16px 24px;
+    font-size: 14px;
+    line-height: 1.6;
+    color: #3a3730;
+    min-height: 60px;
+    white-space: pre-wrap;
+  }
+
+  .rs-footer {
+    background: #f5f4f0;
+    border-top: 1px solid #e8e5de;
+    padding: 10px 24px;
+    font-family: var(--sans);
+    font-size: 11px;
+    color: #888;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .empty-state {
+    padding: 40px;
+    text-align: center;
+    color: var(--text3);
+    font-size: 14px;
+  }
+
+  /* misc menu */
+  .misc-textarea {
+    width: 100%;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 10px 12px;
+    font-family: var(--sans);
+    font-size: 14px;
+    color: var(--text);
+    min-height: 100px;
+    resize: vertical;
+    background: var(--surface);
+  }
+  .misc-textarea:focus { outline: none; border-color: var(--accent-mid); }
+
+  .save-notice {
+    font-size: 11px;
+    color: var(--text3);
+    text-align: right;
+    margin-top: 8px;
+  }
+</style>
+</head>
+<body>
+
+<div class="app-header">
+  <div>
+    <div class="app-header h1" style="font-family:Georgia,serif;font-size:18px;font-weight:normal;letter-spacing:0.5px;color:#fff;">The Republic Bar</div>
+    <div class="subtitle">Event Runsheet Generator</div>
+  </div>
+</div>
+
+<div class="tabs">
+  <button class="tab-btn active" onclick="switchTab('form')">Event Details</button>
+  <button class="tab-btn" onclick="switchTab('menu')">Menu Manager</button>
+  <button class="tab-btn" onclick="switchTab('preview')">Print Preview</button>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     TAB 1: EVENT DETAILS FORM
+══════════════════════════════════════════════ -->
+<div id="form-panel" class="tab-panel active">
+<div class="container">
+
+  <!-- Event Info -->
+  <div class="section-card">
+    <div class="section-header"><span class="dot"></span>Event Information</div>
+    <div class="section-body">
+      <div class="form-grid form-grid-2" style="margin-bottom:12px;">
+        <div class="field" style="grid-column:1/-1;">
+          <label>Event Name</label>
+          <input type="text" id="f-event-name" placeholder="e.g. Smith Birthday Party" oninput="autoSave()">
+        </div>
+      </div>
+      <div class="form-grid form-grid-4" style="margin-bottom:12px;">
+        <div class="field">
+          <label>Date</label>
+          <input type="date" id="f-date" oninput="autoSave()">
+        </div>
+        <div class="field">
+          <label>Start Time</label>
+          <input type="time" id="f-start" oninput="autoSave()">
+        </div>
+        <div class="field">
+          <label>End Time</label>
+          <input type="time" id="f-end" oninput="autoSave()">
+        </div>
+        <div class="field">
+          <label>Number of People</label>
+          <input type="number" id="f-pax" placeholder="e.g. 40" min="1" oninput="autoSave()">
+        </div>
+      </div>
+      <div class="form-grid form-grid-2">
+        <div class="field">
+          <label>Location / Area</label>
+          <select id="f-location" onchange="autoSave()">
+            <option value="">— Select floor/area —</option>
+            <option>Republic Bar — Ground Floor</option>
+            <option>Bistro — Level 2</option>
+            <option>Sports Bar — Level 3</option>
+            <option>Rooftop Bar — Level 4</option>
+            <option>Full Venue Hire</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Custom Location Note</label>
+          <input type="text" id="f-location-note" placeholder="e.g. Private room, rear section..." oninput="autoSave()">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Client Info -->
+  <div class="section-card">
+    <div class="section-header"><span class="dot"></span>Client Information</div>
+    <div class="section-body">
+      <div class="form-grid form-grid-3">
+        <div class="field">
+          <label>Client Name</label>
+          <input type="text" id="f-client" placeholder="Full name" oninput="autoSave()">
+        </div>
+        <div class="field">
+          <label>Contact Number</label>
+          <input type="tel" id="f-contact" placeholder="04xx xxx xxx" oninput="autoSave()">
+        </div>
+        <div class="field">
+          <label>Prepaid Amount</label>
+          <input type="text" id="f-prepaid" placeholder="e.g. $500" oninput="autoSave()">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Food Cost -->
+  <div class="section-card">
+    <div class="section-header"><span class="dot"></span>Financials</div>
+    <div class="section-body">
+      <div class="form-grid form-grid-3">
+        <div class="field">
+          <label>Food Cost</label>
+          <input type="text" id="f-food-cost" placeholder="e.g. $1,200" oninput="autoSave()">
+        </div>
+        <div class="field">
+          <label>Food Cost Per Head</label>
+          <input type="text" id="f-food-cph" placeholder="e.g. $30pp" oninput="autoSave()">
+        </div>
+        <div class="field">
+          <label>Beverage Package</label>
+          <input type="text" id="f-bev-package" placeholder="e.g. $45pp / Cash bar" oninput="autoSave()">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Food Selection -->
+  <div class="section-card">
+    <div class="section-header"><span class="dot"></span>Food Selection</div>
+    <div class="section-body">
+      <div class="menu-type-grid">
+        <button class="menu-type-btn" onclick="selectMenuType('canape-a')" id="mt-canape-a">Canapé A<br><span style="font-size:10px;font-weight:400;opacity:0.7;">Fewer items</span></button>
+        <button class="menu-type-btn" onclick="selectMenuType('canape-b')" id="mt-canape-b">Canapé B<br><span style="font-size:10px;font-weight:400;opacity:0.7;">More items</span></button>
+        <button class="menu-type-btn" onclick="selectMenuType('banquet')" id="mt-banquet">Banquet<br><span style="font-size:10px;font-weight:400;opacity:0.7;">Set courses</span></button>
+        <button class="menu-type-btn" onclick="selectMenuType('bistro')" id="mt-bistro">Bistro<br><span style="font-size:10px;font-weight:400;opacity:0.7;">Per person</span></button>
+        <button class="menu-type-btn" onclick="selectMenuType('misc')" id="mt-misc">Misc<br><span style="font-size:10px;font-weight:400;opacity:0.7;">Other</span></button>
+      </div>
+
+      <!-- Canapé A -->
+      <div class="menu-panel" id="mp-canape-a">
+        <div id="ca-limit-bar" class="canape-limit-bar">
+          <span id="ca-count">0</span> / <span id="ca-max"></span> items selected
+        </div>
+        <div class="canape-grid" id="ca-items"></div>
+      </div>
+
+      <!-- Canapé B -->
+      <div class="menu-panel" id="mp-canape-b">
+        <div id="cb-limit-bar" class="canape-limit-bar">
+          <span id="cb-count">0</span> / <span id="cb-max"></span> items selected
+        </div>
+        <div class="canape-grid" id="cb-items"></div>
+      </div>
+
+      <!-- Banquet -->
+      <div class="menu-panel" id="mp-banquet">
+        <div class="form-grid" style="gap:10px;">
+          <div class="field">
+            <label>Entrée</label>
+            <select id="banquet-entree" onchange="autoSave()">
+              <option value="">— Select entrée —</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Main</label>
+            <select id="banquet-main" onchange="autoSave()">
+              <option value="">— Select main —</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Dessert</label>
+            <select id="banquet-dessert" onchange="autoSave()">
+              <option value="">— Select dessert —</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bistro Sit-Down -->
+      <div class="menu-panel" id="mp-bistro">
+        <p style="font-size:12px;color:var(--text2);margin-bottom:10px;">Enter each guest's name and their dish selection.</p>
+        <table class="bistro-table">
+          <thead>
+            <tr>
+              <th style="width:36px;">#</th>
+              <th>Guest Name</th>
+              <th>Dish</th>
+              <th style="width:40px;"></th>
+            </tr>
+          </thead>
+          <tbody id="bistro-rows"></tbody>
+        </table>
+        <button class="btn btn-add" onclick="addBistroRow()">+ Add guest</button>
+      </div>
+
+      <!-- Misc -->
+      <div class="menu-panel" id="mp-misc">
+        <div class="field">
+          <label>Food notes / custom order</label>
+          <textarea class="misc-textarea" id="misc-notes" placeholder="Describe food requirements, custom items, dietary notes..." oninput="autoSave()"></textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notes -->
+  <div class="section-card">
+    <div class="section-header"><span class="dot"></span>Event Notes</div>
+    <div class="section-body">
+      <div class="field">
+        <label>Notes / Special Requirements</label>
+        <textarea id="f-notes" placeholder="Decorations, AV requirements, dietary needs, run-of-show details..." oninput="autoSave()"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-outline" onclick="clearForm()">Clear Form</button>
+    <button class="btn btn-primary" onclick="switchTab('preview')">Preview Runsheet →</button>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     TAB 2: MENU MANAGER
+══════════════════════════════════════════════ -->
+<div id="menu-panel" class="tab-panel">
+<div class="container">
+  <div class="mm-layout">
+    <div class="mm-sidebar">
+      <div class="mm-menu-list">
+        <button class="mm-menu-btn active" onclick="showMMPanel('canape-a')">Canapé Menu A</button>
+        <button class="mm-menu-btn" onclick="showMMPanel('canape-b')">Canapé Menu B</button>
+        <button class="mm-menu-btn" onclick="showMMPanel('banquet')">Banquet Menu</button>
+        <button class="mm-menu-btn" onclick="showMMPanel('bistro')">Bistro Sit-Down</button>
+      </div>
+      <div style="margin-top:1.5rem;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);font-size:12px;color:var(--text2);line-height:1.5;">
+        Changes save automatically to your browser.
+      </div>
+    </div>
+    <div class="mm-main">
+
+      <!-- Canapé A -->
+      <div class="mm-panel active" id="mmp-canape-a">
+        <div class="section-card">
+          <div class="section-header"><span class="dot"></span>Canapé Menu A</div>
+          <div class="section-body">
+            <div class="mm-limit-row">
+              <label>Max selections:</label>
+              <input type="number" id="ca-limit-input" min="1" max="30" value="5" onchange="saveMenus()">
+            </div>
+            <div class="mm-section-title">Canapé Items</div>
+            <div class="mm-items" id="mm-ca-items"></div>
+            <button class="btn btn-add" onclick="addMMItem('canape','')">+ Add item</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Canapé B -->
+      <div class="mm-panel" id="mmp-canape-b">
+        <div class="section-card">
+          <div class="section-header"><span class="dot"></span>Canapé Menu B</div>
+          <div class="section-body">
+            <div class="mm-limit-row">
+              <label>Max selections:</label>
+              <input type="number" id="cb-limit-input" min="1" max="30" value="8" onchange="saveMenus()">
+            </div>
+            <div class="mm-section-title">Canapé Items (same pool, different limit)</div>
+            <p style="font-size:12px;color:var(--text2);margin-bottom:12px;">Canapé A & B share the same item list. Edit items in Canapé A — they appear here too. Only the selection limit differs.</p>
+            <div class="mm-limit-row" style="background:var(--accent-light);border-color:#a8ccb4;">
+              <span style="color:var(--accent);font-size:12px;">Items are managed in Canapé Menu A above.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Banquet -->
+      <div class="mm-panel" id="mmp-banquet">
+        <div class="section-card">
+          <div class="section-header"><span class="dot"></span>Banquet Menu</div>
+          <div class="section-body">
+            <div class="mm-section">
+              <div class="mm-section-title">Entrée Options</div>
+              <div class="mm-items" id="mm-banquet-entree"></div>
+              <button class="btn btn-add" onclick="addMMItem('banquet-entree','')">+ Add entrée</button>
+            </div>
+            <div class="mm-section">
+              <div class="mm-section-title">Main Options</div>
+              <div class="mm-items" id="mm-banquet-main"></div>
+              <button class="btn btn-add" onclick="addMMItem('banquet-main','')">+ Add main</button>
+            </div>
+            <div class="mm-section">
+              <div class="mm-section-title">Dessert Options</div>
+              <div class="mm-items" id="mm-banquet-dessert"></div>
+              <button class="btn btn-add" onclick="addMMItem('banquet-dessert','')">+ Add dessert</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bistro -->
+      <div class="mm-panel" id="mmp-bistro">
+        <div class="section-card">
+          <div class="section-header"><span class="dot"></span>Bistro Sit-Down Dishes</div>
+          <div class="section-body">
+            <p style="font-size:12px;color:var(--text2);margin-bottom:12px;">These are the dishes available for per-guest selection in the Bistro menu.</p>
+            <div class="mm-items" id="mm-bistro-dishes"></div>
+            <button class="btn btn-add" onclick="addMMItem('bistro-dishes','')">+ Add dish</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     TAB 3: PRINT PREVIEW
+══════════════════════════════════════════════ -->
+<div id="preview-panel" class="tab-panel">
+<div class="preview-container">
+  <div class="preview-actions">
+    <span>Review your runsheet below, then print or save as PDF.</span>
+    <button class="btn btn-outline" onclick="switchTab('form')">← Edit Details</button>
+    <button class="btn btn-primary" onclick="window.print()">Print / Save PDF</button>
+  </div>
+  <div class="runsheet" id="runsheet-output">
+    <div class="empty-state">Fill in event details and click "Preview Runsheet" to generate.</div>
+  </div>
+</div>
+</div>
+
+<script>
+/* ════════════════════════════════════════════
+   STATE
+════════════════════════════════════════════ */
+let menuData = {
+  canape: [],          // shared list
+  caLimitA: 5,
+  caLimitB: 8,
+  banquetEntree: [],
+  banquetMain: [],
+  banquetDessert: [],
+  bistroDishes: []
+};
+
+let selectedCanapeA = [];
+let selectedCanapeB = [];
+let bistroRows = [];
+let currentMenuType = null;
+
+/* ════════════════════════════════════════════
+   INIT
+════════════════════════════════════════════ */
+function init() {
+  loadMenus();
+  loadFormData();
+  renderMMItems();
+  updateLimitInputs();
+}
+
+/* ════════════════════════════════════════════
+   TABS
+════════════════════════════════════════════ */
+function switchTab(name) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(name + '-panel').classList.add('active');
+  const btns = document.querySelectorAll('.tab-btn');
+  const map = { form: 0, menu: 1, preview: 2 };
+  btns[map[name]].classList.add('active');
+  if (name === 'preview') buildRunsheet();
+}
+
+/* ════════════════════════════════════════════
+   MENU MANAGER
+════════════════════════════════════════════ */
+function showMMPanel(name) {
+  document.querySelectorAll('.mm-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.mm-menu-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('mmp-' + name).classList.add('active');
+  const map = { 'canape-a': 0, 'canape-b': 1, 'banquet': 2, 'bistro': 3 };
+  document.querySelectorAll('.mm-menu-btn')[map[name]].classList.add('active');
+}
+
+function addMMItem(type, value) {
+  const map = {
+    'canape': 'canape',
+    'banquet-entree': 'banquetEntree',
+    'banquet-main': 'banquetMain',
+    'banquet-dessert': 'banquetDessert',
+    'bistro-dishes': 'bistroDishes'
+  };
+  menuData[map[type]].push(value || '');
+  saveMenus();
+  renderMMItems();
+  // focus last input
+  setTimeout(() => {
+    const container = document.getElementById('mm-' + type + (type === 'canape' ? '-items' : (type.startsWith('banquet') ? '' : '')));
+    const rows = (container || document.getElementById('mm-' + type + '-items') || document.getElementById('mm-' + type)).querySelectorAll('input');
+    if (rows.length) rows[rows.length - 1].focus();
+  }, 50);
+}
+
+function removeMMItem(type, idx) {
+  const map = {
+    'canape': 'canape',
+    'banquet-entree': 'banquetEntree',
+    'banquet-main': 'banquetMain',
+    'banquet-dessert': 'banquetDessert',
+    'bistro-dishes': 'bistroDishes'
+  };
+  menuData[map[type]].splice(idx, 1);
+  saveMenus();
+  renderMMItems();
+  refreshFoodSelectors();
+}
+
+function updateMMItem(type, idx, val) {
+  const map = {
+    'canape': 'canape',
+    'banquet-entree': 'banquetEntree',
+    'banquet-main': 'banquetMain',
+    'banquet-dessert': 'banquetDessert',
+    'bistro-dishes': 'bistroDishes'
+  };
+  menuData[map[type]][idx] = val;
+  saveMenus();
+  refreshFoodSelectors();
+}
+
+function renderMMItems() {
+  renderMMList('mm-ca-items', 'canape', menuData.canape);
+  renderMMList('mm-banquet-entree', 'banquet-entree', menuData.banquetEntree);
+  renderMMList('mm-banquet-main', 'banquet-main', menuData.banquetMain);
+  renderMMList('mm-banquet-dessert', 'banquet-dessert', menuData.banquetDessert);
+  renderMMList('mm-bistro-dishes', 'bistro-dishes', menuData.bistroDishes);
+  updateLimitInputs();
+}
+
+function renderMMList(containerId, type, items) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  el.innerHTML = items.map((item, i) => `
+    <div class="mm-item-row">
+      <input type="text" value="${escHtml(item)}" placeholder="Item name..." oninput="updateMMItem('${type}',${i},this.value)">
+      <button class="btn-icon" onclick="removeMMItem('${type}',${i})">✕</button>
+    </div>
+  `).join('');
+}
+
+function updateLimitInputs() {
+  const caA = document.getElementById('ca-limit-input');
+  const cbB = document.getElementById('cb-limit-input');
+  if (caA) caA.value = menuData.caLimitA;
+  if (cbB) cbB.value = menuData.caLimitB;
+}
+
+document.addEventListener('change', function(e) {
+  if (e.target.id === 'ca-limit-input') { menuData.caLimitA = parseInt(e.target.value) || 5; saveMenus(); updateCanapeLimit('a'); }
+  if (e.target.id === 'cb-limit-input') { menuData.caLimitB = parseInt(e.target.value) || 8; saveMenus(); updateCanapeLimit('b'); }
+});
+
+/* ════════════════════════════════════════════
+   SAVE / LOAD
+════════════════════════════════════════════ */
+function saveMenus() {
+  localStorage.setItem('rr_menus', JSON.stringify(menuData));
+  refreshFoodSelectors();
+}
+
+function loadMenus() {
+  try {
+    const saved = localStorage.getItem('rr_menus');
+    if (saved) menuData = JSON.parse(saved);
+  } catch(e) {}
+}
+
+function autoSave() {
+  const data = getFormData();
+  localStorage.setItem('rr_form', JSON.stringify(data));
+}
+
+function loadFormData() {
+  try {
+    const saved = localStorage.getItem('rr_form');
+    if (!saved) return;
+    const d = JSON.parse(saved);
+    setVal('f-event-name', d.eventName);
+    setVal('f-date', d.date);
+    setVal('f-start', d.start);
+    setVal('f-end', d.end);
+    setVal('f-pax', d.pax);
+    setVal('f-location', d.location);
+    setVal('f-location-note', d.locationNote);
+    setVal('f-client', d.client);
+    setVal('f-contact', d.contact);
+    setVal('f-prepaid', d.prepaid);
+    setVal('f-food-cost', d.foodCost);
+    setVal('f-food-cph', d.foodCph);
+    setVal('f-bev-package', d.bevPackage);
+    setVal('f-notes', d.notes);
+    setVal('misc-notes', d.miscNotes);
+    if (d.menuType) {
+      selectMenuType(d.menuType, true);
+      if (d.menuType === 'canape-a') { selectedCanapeA = d.canapeA || []; }
+      if (d.menuType === 'canape-b') { selectedCanapeB = d.canapeB || []; }
+      if (d.menuType === 'banquet') {
+        setTimeout(() => {
+          setVal('banquet-entree', d.banquetEntree);
+          setVal('banquet-main', d.banquetMain);
+          setVal('banquet-dessert', d.banquetDessert);
+        }, 50);
+      }
+      if (d.menuType === 'bistro') { bistroRows = d.bistroRows || []; renderBistroRows(); }
+    }
+  } catch(e) {}
+}
+
+function setVal(id, val) {
+  const el = document.getElementById(id);
+  if (el && val !== undefined && val !== null) el.value = val;
+}
+
+function getFormData() {
+  return {
+    eventName: v('f-event-name'),
+    date: v('f-date'),
+    start: v('f-start'),
+    end: v('f-end'),
+    pax: v('f-pax'),
+    location: v('f-location'),
+    locationNote: v('f-location-note'),
+    client: v('f-client'),
+    contact: v('f-contact'),
+    prepaid: v('f-prepaid'),
+    foodCost: v('f-food-cost'),
+    foodCph: v('f-food-cph'),
+    bevPackage: v('f-bev-package'),
+    notes: v('f-notes'),
+    miscNotes: v('misc-notes'),
+    menuType: currentMenuType,
+    canapeA: selectedCanapeA,
+    canapeB: selectedCanapeB,
+    banquetEntree: v('banquet-entree'),
+    banquetMain: v('banquet-main'),
+    banquetDessert: v('banquet-dessert'),
+    bistroRows: bistroRows
+  };
+}
+
+function v(id) {
+  const el = document.getElementById(id);
+  return el ? el.value : '';
+}
+
+/* ════════════════════════════════════════════
+   MENU TYPE SELECTION
+════════════════════════════════════════════ */
+function selectMenuType(type, silent) {
+  currentMenuType = type;
+  document.querySelectorAll('.menu-type-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('mt-' + type).classList.add('active');
+  document.querySelectorAll('.menu-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('mp-' + type).classList.add('active');
+  refreshFoodSelectors();
+  if (type === 'canape-a') renderCanapeItems('a');
+  if (type === 'canape-b') renderCanapeItems('b');
+  if (type === 'bistro' && bistroRows.length === 0) addBistroRow();
+  if (!silent) autoSave();
+}
+
+/* ════════════════════════════════════════════
+   CANAPÉ
+════════════════════════════════════════════ */
+function renderCanapeItems(ab) {
+  const items = menuData.canape;
+  const selected = ab === 'a' ? selectedCanapeA : selectedCanapeB;
+  const limit = ab === 'a' ? menuData.caLimitA : menuData.caLimitB;
+  const containerId = ab === 'a' ? 'ca-items' : 'cb-items';
+  const container = document.getElementById(containerId);
+
+  if (!items.length) {
+    container.innerHTML = '<p style="color:var(--text3);font-size:13px;padding:8px 0;">No items added yet — go to Menu Manager to add canapé items.</p>';
+    updateCanapeCount(ab, selected, limit);
+    return;
+  }
+
+  container.innerHTML = items.map((item, i) => {
+    const sel = selected.includes(item);
+    return `<div class="canape-item ${sel ? 'selected' : ''}" onclick="toggleCanape('${ab}','${escJs(item)}',this)">
+      <input type="checkbox" ${sel ? 'checked' : ''} onclick="event.stopPropagation();toggleCanape('${ab}','${escJs(item)}',this.parentElement)">
+      <span>${escHtml(item)}</span>
+    </div>`;
+  }).join('');
+  updateCanapeCount(ab, selected, limit);
+}
+
+function toggleCanape(ab, item, el) {
+  const selected = ab === 'a' ? selectedCanapeA : selectedCanapeB;
+  const limit = ab === 'a' ? menuData.caLimitA : menuData.caLimitB;
+  const idx = selected.indexOf(item);
+  if (idx > -1) {
+    selected.splice(idx, 1);
+    el.classList.remove('selected');
+    el.querySelector('input').checked = false;
+  } else {
+    if (selected.length >= limit) {
+      alert(`Canapé ${ab.toUpperCase()} limit is ${limit} items. Deselect an item first.`);
+      return;
+    }
+    selected.push(item);
+    el.classList.add('selected');
+    el.querySelector('input').checked = true;
+  }
+  if (ab === 'a') selectedCanapeA = selected;
+  else selectedCanapeB = selected;
+  updateCanapeCount(ab, selected, limit);
+  autoSave();
+}
+
+function updateCanapeCount(ab, selected, limit) {
+  const countEl = document.getElementById(ab === 'a' ? 'ca-count' : 'cb-count');
+  const maxEl = document.getElementById(ab === 'a' ? 'ca-max' : 'cb-max');
+  if (countEl) countEl.textContent = selected.length;
+  if (maxEl) maxEl.textContent = limit;
+}
+
+function updateCanapeLimit(ab) {
+  const selected = ab === 'a' ? selectedCanapeA : selectedCanapeB;
+  const limit = ab === 'a' ? menuData.caLimitA : menuData.caLimitB;
+  updateCanapeCount(ab, selected, limit);
+}
+
+/* ════════════════════════════════════════════
+   BISTRO ROWS
+════════════════════════════════════════════ */
+function addBistroRow() {
+  bistroRows.push({ name: '', dish: '' });
+  renderBistroRows();
+  autoSave();
+}
+
+function removeBistroRow(idx) {
+  bistroRows.splice(idx, 1);
+  renderBistroRows();
+  autoSave();
+}
+
+function renderBistroRows() {
+  const tbody = document.getElementById('bistro-rows');
+  const dishes = menuData.bistroDishes;
+  tbody.innerHTML = bistroRows.map((row, i) => `
+    <tr>
+      <td class="rs-bistro-num" style="color:var(--text3);font-size:12px;text-align:center;">${i + 1}</td>
+      <td><input type="text" value="${escHtml(row.name)}" placeholder="Guest name" oninput="bistroRows[${i}].name=this.value;autoSave()"></td>
+      <td>
+        <select onchange="bistroRows[${i}].dish=this.value;autoSave()">
+          <option value="">— Select dish —</option>
+          ${dishes.map(d => `<option value="${escHtml(d)}" ${row.dish === d ? 'selected' : ''}>${escHtml(d)}</option>`).join('')}
+        </select>
+      </td>
+      <td><button class="btn-icon" onclick="removeBistroRow(${i})">✕</button></td>
+    </tr>
+  `).join('');
+}
+
+/* ════════════════════════════════════════════
+   REFRESH SELECTORS AFTER MENU CHANGE
+════════════════════════════════════════════ */
+function refreshFoodSelectors() {
+  if (!currentMenuType) return;
+  if (currentMenuType === 'canape-a') renderCanapeItems('a');
+  if (currentMenuType === 'canape-b') renderCanapeItems('b');
+  if (currentMenuType === 'banquet') populateBanquetDropdowns();
+  if (currentMenuType === 'bistro') renderBistroRows();
+}
+
+function populateBanquetDropdowns() {
+  const selectors = [
+    { id: 'banquet-entree', items: menuData.banquetEntree },
+    { id: 'banquet-main', items: menuData.banquetMain },
+    { id: 'banquet-dessert', items: menuData.banquetDessert }
+  ];
+  selectors.forEach(({ id, items }) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const cur = el.value;
+    const label = { 'banquet-entree': 'entrée', 'banquet-main': 'main', 'banquet-dessert': 'dessert' }[id];
+    el.innerHTML = `<option value="">— Select ${label} —</option>` +
+      items.map(i => `<option value="${escHtml(i)}" ${cur === i ? 'selected' : ''}>${escHtml(i)}</option>`).join('');
+  });
+}
+
+/* ════════════════════════════════════════════
+   RUNSHEET BUILD
+════════════════════════════════════════════ */
+function buildRunsheet() {
+  const d = getFormData();
+  const out = document.getElementById('runsheet-output');
+
+  if (!d.eventName && !d.client) {
+    out.innerHTML = '<div class="empty-state">Fill in event details and click "Preview Runsheet" to generate.</div>';
+    return;
+  }
+
+  const dateStr = d.date ? formatDate(d.date) : '—';
+  const timeStr = [d.start ? formatTime(d.start) : '', d.end ? formatTime(d.end) : ''].filter(Boolean).join(' – ') || '—';
+  const locationStr = [d.location, d.locationNote].filter(Boolean).join(' — ') || '—';
+
+  let foodHtml = '';
+  if (d.menuType === 'canape-a' || d.menuType === 'canape-b') {
+    const sel = d.menuType === 'canape-a' ? d.canapeA : d.canapeB;
+    const label = d.menuType === 'canape-a' ? 'Canapé Menu A' : 'Canapé Menu B';
+    const limit = d.menuType === 'canape-a' ? menuData.caLimitA : menuData.caLimitB;
+    foodHtml = `
+      <div class="rs-section-title">Food Selection</div>
+      <div class="rs-row full">
+        <div class="rs-cell">
+          <div class="rs-food-type">${label}</div>
+          <div style="margin-bottom:6px;font-family:var(--sans);font-size:12px;color:#888;">${sel.length} of ${limit} items selected</div>
+          <div class="rs-canape-list">
+            ${sel.length ? sel.map(i => `<span class="rs-canape-tag">${escHtml(i)}</span>`).join('') : '<em style="color:#aaa;font-size:13px;font-family:var(--sans);">No items selected</em>'}
+          </div>
+        </div>
+      </div>`;
+  } else if (d.menuType === 'banquet') {
+    foodHtml = `
+      <div class="rs-section-title">Food Selection</div>
+      <div class="rs-row full">
+        <div class="rs-cell">
+          <div class="rs-food-type">Banquet Menu</div>
+          <div class="rs-food-courses">
+            <div class="rs-course-row"><span class="rs-course-label">Entrée</span><span class="rs-course-value">${escHtml(d.banquetEntree) || '<em style="color:#aaa;">Not selected</em>'}</span></div>
+            <div class="rs-course-row"><span class="rs-course-label">Main</span><span class="rs-course-value">${escHtml(d.banquetMain) || '<em style="color:#aaa;">Not selected</em>'}</span></div>
+            <div class="rs-course-row"><span class="rs-course-label">Dessert</span><span class="rs-course-value">${escHtml(d.banquetDessert) || '<em style="color:#aaa;">Not selected</em>'}</span></div>
+          </div>
+        </div>
+      </div>`;
+  } else if (d.menuType === 'bistro') {
+    const rows = d.bistroRows || [];
+    foodHtml = `
+      <div class="rs-section-title">Food Selection — Bistro Sit-Down</div>
+      <div class="rs-row full" style="padding:0;">
+        <div style="padding:12px 24px 6px;">
+          <div class="rs-food-type">Bistro Sit-Down</div>
+        </div>
+        <table class="rs-bistro-table">
+          <thead><tr><th class="rs-bistro-num">#</th><th>Guest Name</th><th>Dish</th></tr></thead>
+          <tbody>
+            ${rows.filter(r => r.name || r.dish).map((r, i) => `
+              <tr>
+                <td class="rs-bistro-num">${i + 1}</td>
+                <td>${escHtml(r.name) || '—'}</td>
+                <td>${escHtml(r.dish) || '—'}</td>
+              </tr>`).join('') || '<tr><td colspan="3" style="text-align:center;color:#aaa;padding:16px;font-family:var(--sans);font-size:13px;">No guests added</td></tr>'}
+          </tbody>
+        </table>
+      </div>`;
+  } else if (d.menuType === 'misc') {
+    foodHtml = `
+      <div class="rs-section-title">Food Selection</div>
+      <div class="rs-row full">
+        <div class="rs-cell">
+          <div class="rs-food-type">Miscellaneous</div>
+          <div style="font-size:14px;line-height:1.6;white-space:pre-wrap;">${escHtml(d.miscNotes) || '<em style="color:#aaa;">No details provided</em>'}</div>
+        </div>
+      </div>`;
+  }
+
+  out.innerHTML = `
+    <div class="rs-masthead">
+      <div>
+        <div class="rs-venue">The Republic Bar — Sydney CBD</div>
+        <div class="rs-event-name">${escHtml(d.eventName) || 'Untitled Event'}</div>
+        <div class="rs-date">${dateStr} &nbsp;·&nbsp; ${timeStr}</div>
+      </div>
+      <div class="rs-badge">
+        Guests
+        <span class="rs-pax">${escHtml(d.pax) || '—'}</span>
+      </div>
+    </div>
+
+    <div class="rs-body">
+      <div class="rs-row three">
+        <div class="rs-cell">
+          <div class="rs-label">Location</div>
+          <div class="rs-value">${escHtml(locationStr)}</div>
+        </div>
+        <div class="rs-cell">
+          <div class="rs-label">Client</div>
+          <div class="rs-value large">${escHtml(d.client) || '—'}</div>
+        </div>
+        <div class="rs-cell">
+          <div class="rs-label">Contact</div>
+          <div class="rs-value">${escHtml(d.contact) || '—'}</div>
+        </div>
+      </div>
+
+      <div class="rs-row three">
+        <div class="rs-cell">
+          <div class="rs-label">Prepaid Amount</div>
+          <div class="rs-value large">${escHtml(d.prepaid) || '—'}</div>
+        </div>
+        <div class="rs-cell">
+          <div class="rs-label">Food Cost</div>
+          <div class="rs-value">${escHtml(d.foodCost) || '—'} ${d.foodCph ? '<span style="color:#888;font-size:13px;font-family:var(--sans);">(' + escHtml(d.foodCph) + ')</span>' : ''}</div>
+        </div>
+        <div class="rs-cell">
+          <div class="rs-label">Beverage</div>
+          <div class="rs-value">${escHtml(d.bevPackage) || '—'}</div>
+        </div>
+      </div>
+
+      ${foodHtml}
+
+      <div class="rs-section-title">Notes &amp; Special Requirements</div>
+      <div class="rs-notes">${escHtml(d.notes) || '<em style="color:#aaa;">No notes</em>'}</div>
+
+      <div class="rs-footer">
+        <span>Generated ${new Date().toLocaleDateString('en-AU', { day:'numeric', month:'long', year:'numeric' })}</span>
+        <span>The Republic Bar — Confidential Event Runsheet</span>
+      </div>
+    </div>
+  `;
+}
+
+/* ════════════════════════════════════════════
+   UTILITIES
+════════════════════════════════════════════ */
+function formatDate(str) {
+  if (!str) return '—';
+  const d = new Date(str + 'T12:00:00');
+  return d.toLocaleDateString('en-AU', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+}
+
+function formatTime(str) {
+  if (!str) return '';
+  const [h, m] = str.split(':').map(Number);
+  const ampm = h >= 12 ? 'pm' : 'am';
+  const h12 = h % 12 || 12;
+  return `${h12}:${String(m).padStart(2,'0')}${ampm}`;
+}
+
+function escHtml(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function escJs(str) {
+  return String(str).replace(/'/g,"\\'").replace(/\\/g,'\\\\');
+}
+
+function clearForm() {
+  if (!confirm('Clear all event details? Menu Manager items are preserved.')) return;
+  ['f-event-name','f-date','f-start','f-end','f-pax','f-location','f-location-note',
+   'f-client','f-contact','f-prepaid','f-food-cost','f-food-cph','f-bev-package','f-notes','misc-notes'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  selectedCanapeA = []; selectedCanapeB = []; bistroRows = []; currentMenuType = null;
+  document.querySelectorAll('.menu-type-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.menu-panel').forEach(p => p.classList.remove('active'));
+  localStorage.removeItem('rr_form');
+}
+
+init();
+</script>
+</body>
+</html>
