@@ -1605,7 +1605,8 @@ function renderCanapeItems(ab) {
     if (limits[id] === 0) return ''; // hidden if limit is 0
     const subcatLimit = limits[id];
     const subcatSelected = items.filter(n => selected.includes(n));
-    const countStr = ` <span style="font-weight:600;color:var(--accent);">${subcatSelected.length}/${subcatLimit}</span>`;
+    const countSpanId = `${ab === 'a' ? 'ca' : 'cb'}-subcount-${id}`;
+    const countStr = ` <span id="${countSpanId}" style="font-weight:600;color:var(--accent);">${subcatSelected.length}/${subcatLimit}</span>`;
     const itemsHtml = items.map(name => {
       const sel = selected.includes(name);
       return `<div class="canape-item ${sel ? 'selected' : ''}" onclick="toggleCanape('${ab}','${escJs(name)}',this)">
@@ -1665,6 +1666,20 @@ function toggleCanape(ab, item, el) {
   autoSave();
 }
 
+function updateSubcatCounts(ab) {
+  const selected = ab === 'a' ? selectedCanapeA : selectedCanapeB;
+  const limits = ab === 'a'
+    ? (menuData.caLimitsA || { small: 2, premium: 2, substantial: 1, sliders: 1, dessert: 0 })
+    : (menuData.caLimitsB || { small: 2, premium: 2, substantial: 2, sliders: 2, dessert: 0 });
+  const prefix = ab === 'a' ? 'ca' : 'cb';
+  CANAPE_SUBCATS.forEach(({ key, id }) => {
+    const el = document.getElementById(`${prefix}-subcount-${id}`);
+    if (!el) return;
+    const items = (menuData[key] || []).map(i => typeof i === 'object' ? i.name : i).filter(Boolean);
+    el.textContent = `${items.filter(n => selected.includes(n)).length}/${limits[id]}`;
+  });
+}
+
 function updateCanapeCount(ab, selected) {
   const countEl = document.getElementById(ab === 'a' ? 'ca-count' : 'cb-count');
   const maxEl = document.getElementById(ab === 'a' ? 'ca-max' : 'cb-max');
@@ -1678,6 +1693,7 @@ function updateCanapeCount(ab, selected) {
       maxEl.textContent = Object.values(lims).reduce((a, b) => a + b, 0);
     }
   }
+  updateSubcatCounts(ab);
 }
 
 function updateCanapeLimit(ab) {
