@@ -1933,13 +1933,16 @@ function renderBistroRows() {
   tbody.innerHTML = bistroRows.map((row, i) => {
     const addOns = row.addOns || {};
     const enabledAddons = (menuData.bistroItemAddons || {})[row.dish] || [];
-    const addonSelects = BISTRO_ADDONS
+    const addonCells = BISTRO_ADDONS
       .filter(a => enabledAddons.includes(a.id))
       .map(a => {
         const opts = (menuData[a.key] || []).map(d => { const n = typeof d === 'object' ? (d.name||'') : d; return n ? `<option value="${escHtml(n)}" ${addOns[a.id]===n?'selected':''}>${escHtml(n)}</option>` : ''; }).join('');
-        return opts ? `<select style="margin-top:4px;" onchange="bistroRows[${i}].addOns=bistroRows[${i}].addOns||{};bistroRows[${i}].addOns['${a.id}']=this.value;autoSave()">
+        return opts ? `<select style="width:100%;" onchange="bistroRows[${i}].addOns=bistroRows[${i}].addOns||{};bistroRows[${i}].addOns['${a.id}']=this.value;autoSave()">
           <option value="">— ${escHtml(a.label)} —</option>${opts}</select>` : '';
-      }).join('');
+      }).filter(Boolean);
+    const addonGrid = addonCells.length
+      ? `<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:4px;">${addonCells.join('')}</div>`
+      : '';
     return `
     <tr>
       <td class="rs-bistro-num" style="color:var(--text3);font-size:12px;text-align:center;">${i + 1}</td>
@@ -1949,7 +1952,7 @@ function renderBistroRows() {
           <option value="">— Select dish —</option>
           ${dishOptHtml}
         </select>
-        ${addonSelects}
+        ${addonGrid}
       </td>
       <td><button class="btn-icon" onclick="removeBistroRow(${i})">✕</button></td>
     </tr>`;
