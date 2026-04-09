@@ -335,8 +335,14 @@
     align-items: center;
     gap: 8px;
   }
-  .mm-item-row input {
+  .mm-item-fields {
     flex: 1;
+    display: grid;
+    grid-template-columns: 2fr 3fr 1fr;
+    gap: 6px;
+  }
+  .mm-item-row input {
+    width: 100%;
     border: 1px solid var(--border);
     border-radius: var(--radius);
     padding: 7px 10px;
@@ -344,8 +350,20 @@
     font-size: 13px;
     color: var(--text);
     background: var(--surface);
+    box-sizing: border-box;
   }
   .mm-item-row input:focus { outline: none; border-color: var(--accent-mid); }
+  .mm-items-header {
+    display: grid;
+    grid-template-columns: 2fr 3fr 1fr 28px;
+    gap: 6px;
+    padding: 0 0 2px 0;
+    font-size: 11px;
+    font-family: var(--sans);
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
   .mm-limit-row {
     display: flex;
     align-items: center;
@@ -1200,14 +1218,15 @@ function addMMItem(type, value) {
     'grazing-stations': 'grazingStations',
     'grazing-platters': 'grazingPlatters'
   };
-  menuData[map[type]].push(value || '');
+  menuData[map[type]].push({ name: value || '', description: '', price: '' });
   saveMenus();
   renderMMItems();
-  // focus last input
+  // focus last name input
   setTimeout(() => {
-    const container = document.getElementById('mm-' + type + (type === 'canape' ? '-items' : (type.startsWith('banquet') ? '' : '')));
-    const rows = (container || document.getElementById('mm-' + type + '-items') || document.getElementById('mm-' + type)).querySelectorAll('input');
-    if (rows.length) rows[rows.length - 1].focus();
+    const container = document.getElementById('mm-' + type + (type === 'canape' ? '-items' : (type.startsWith('banquet') ? '' : '-items'))) ||
+                      document.getElementById('mm-' + type + '-items') ||
+                      document.getElementById('mm-' + type);
+    if (container) { const inputs = container.querySelectorAll('input'); if (inputs.length) inputs[inputs.length - 3].focus(); }
   }, 50);
 }
 
@@ -1227,7 +1246,7 @@ function removeMMItem(type, idx) {
   refreshFoodSelectors();
 }
 
-function updateMMItem(type, idx, val) {
+function updateMMItem(type, idx, field, val) {
   const map = {
     'canape': 'canape',
     'banquet-entree': 'banquetEntree',
@@ -1237,7 +1256,8 @@ function updateMMItem(type, idx, val) {
     'grazing-stations': 'grazingStations',
     'grazing-platters': 'grazingPlatters'
   };
-  menuData[map[type]][idx] = val;
+  const item = menuData[map[type]][idx];
+  if (item && typeof item === 'object') item[field] = val;
   saveMenus();
   refreshFoodSelectors();
 }
@@ -1256,12 +1276,21 @@ function renderMMItems() {
 function renderMMList(containerId, type, items) {
   const el = document.getElementById(containerId);
   if (!el) return;
-  el.innerHTML = items.map((item, i) => `
+  const header = items.length ? `<div class="mm-items-header"><span>Name</span><span>Description</span><span>Price</span><span></span></div>` : '';
+  el.innerHTML = header + items.map((item, i) => {
+    const n = escHtml(item.name || '');
+    const d = escHtml(item.description || '');
+    const p = escHtml(item.price || '');
+    return `
     <div class="mm-item-row">
-      <input type="text" value="${escHtml(item)}" placeholder="Item name..." oninput="updateMMItem('${type}',${i},this.value)">
+      <div class="mm-item-fields">
+        <input type="text" value="${n}" placeholder="Item name..." oninput="updateMMItem('${type}',${i},'name',this.value)">
+        <input type="text" value="${d}" placeholder="Description..." oninput="updateMMItem('${type}',${i},'description',this.value)">
+        <input type="text" value="${p}" placeholder="$0.00" oninput="updateMMItem('${type}',${i},'price',this.value)">
+      </div>
       <button class="btn-icon" onclick="removeMMItem('${type}',${i})">✕</button>
-    </div>
-  `).join('');
+    </div>`;
+  }).join('');
 }
 
 function updateLimitInputs() {
@@ -1291,7 +1320,15 @@ function saveMenus() {
 function loadMenus() {
   try {
     const saved = localStorage.getItem('rr_menus');
-    if (saved) menuData = JSON.parse(saved);
+    if (saved) {
+      menuData = JSON.parse(saved);
+      // Migrate legacy string arrays to objects
+      const keys = ['canape','banquetEntree','banquetMain','banquetDessert','bistroDishes','grazingStations','grazingPlatters'];
+      keys.forEach(k => {
+        if (!menuData[k]) menuData[k] = [];
+        menuData[k] = menuData[k].map(i => typeof i === 'string' ? { name: i, description: '', price: '' } : i);
+      });
+    }
   } catch(e) {}
 }
 
@@ -1406,10 +1443,11 @@ function renderCanapeItems(ab) {
   }
 
   container.innerHTML = items.map((item, i) => {
-    const sel = selected.includes(item);
-    return `<div class="canape-item ${sel ? 'selected' : ''}" onclick="toggleCanape('${ab}','${escJs(item)}',this)">
-      <input type="checkbox" ${sel ? 'checked' : ''} onclick="event.stopPropagation();toggleCanape('${ab}','${escJs(item)}',this.parentElement)">
-      <span>${escHtml(item)}</span>
+    const name = typeof item === 'object' ? (item.name || '') : item;
+    const sel = selected.includes(name);
+    return `<div class="canape-item ${sel ? 'selected' : ''}" onclick="toggleCanape('${ab}','${escJs(name)}',this)">
+      <input type="checkbox" ${sel ? 'checked' : ''} onclick="event.stopPropagation();toggleCanape('${ab}','${escJs(name)}',this.parentElement)">
+      <span>${escHtml(name)}</span>
     </div>`;
   }).join('');
   updateCanapeCount(ab, selected, limit);
@@ -1476,7 +1514,7 @@ function renderBistroRows() {
       <td>
         <select onchange="bistroRows[${i}].dish=this.value;autoSave()">
           <option value="">— Select dish —</option>
-          ${dishes.map(d => `<option value="${escHtml(d)}" ${row.dish === d ? 'selected' : ''}>${escHtml(d)}</option>`).join('')}
+          ${dishes.map(d => { const n = typeof d === 'object' ? (d.name || '') : d; return `<option value="${escHtml(n)}" ${row.dish === n ? 'selected' : ''}>${escHtml(n)}</option>`; }).join('')}
         </select>
       </td>
       <td><button class="btn-icon" onclick="removeBistroRow(${i})">✕</button></td>
@@ -1507,7 +1545,7 @@ function populateBanquetDropdowns() {
     const cur = el.value;
     const label = { 'banquet-entree': 'entrée', 'banquet-main': 'main', 'banquet-dessert': 'dessert' }[id];
     el.innerHTML = `<option value="">— Select ${label} —</option>` +
-      items.map(i => `<option value="${escHtml(i)}" ${cur === i ? 'selected' : ''}>${escHtml(i)}</option>`).join('');
+      items.map(i => { const n = typeof i === 'object' ? (i.name || '') : i; return `<option value="${escHtml(n)}" ${cur === n ? 'selected' : ''}>${escHtml(n)}</option>`; }).join('');
   });
 }
 
