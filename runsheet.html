@@ -1025,6 +1025,36 @@
             </div>
           </div>
         </div>
+        <div class="section-card" style="margin-top:1rem;">
+          <div class="section-header"><span class="dot"></span>Add-Ons &amp; Modifiers</div>
+          <div class="section-body">
+            <div class="mm-section">
+              <div class="mm-section-title">Main Sides</div>
+              <div class="mm-items" id="mm-bistro-main-sides"></div>
+              <button class="btn btn-add" onclick="addMMItem('bistro-main-sides','')">+ Add option</button>
+            </div>
+            <div class="mm-section">
+              <div class="mm-section-title">Sauces</div>
+              <div class="mm-items" id="mm-bistro-sauces"></div>
+              <button class="btn btn-add" onclick="addMMItem('bistro-sauces','')">+ Add option</button>
+            </div>
+            <div class="mm-section">
+              <div class="mm-section-title">Steak Temp</div>
+              <div class="mm-items" id="mm-bistro-steak-temp"></div>
+              <button class="btn btn-add" onclick="addMMItem('bistro-steak-temp','')">+ Add option</button>
+            </div>
+            <div class="mm-section">
+              <div class="mm-section-title">Bowl Add Ons</div>
+              <div class="mm-items" id="mm-bistro-bowl-addons"></div>
+              <button class="btn btn-add" onclick="addMMItem('bistro-bowl-addons','')">+ Add option</button>
+            </div>
+            <div class="mm-section">
+              <div class="mm-section-title">Burger Add Ons</div>
+              <div class="mm-items" id="mm-bistro-burger-addons"></div>
+              <button class="btn btn-add" onclick="addMMItem('bistro-burger-addons','')">+ Add option</button>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- Grazing Stations -->
@@ -1093,6 +1123,11 @@ let menuData = {
   bistroBowls: [],
   bistroMains: [],
   bistroSides: [],
+  bistroMainSides: [],
+  bistroSauces: [],
+  bistroSteakTemp: [],
+  bistroBowlAddOns: [],
+  bistroBurgerAddOns: [],
   grazingStations: [],
   grazingPlatters: []
 };
@@ -1297,6 +1332,11 @@ function addMMItem(type, value) {
     'bistro-bowls': 'bistroBowls',
     'bistro-mains': 'bistroMains',
     'bistro-sides': 'bistroSides',
+    'bistro-main-sides': 'bistroMainSides',
+    'bistro-sauces': 'bistroSauces',
+    'bistro-steak-temp': 'bistroSteakTemp',
+    'bistro-bowl-addons': 'bistroBowlAddOns',
+    'bistro-burger-addons': 'bistroBurgerAddOns',
     'grazing-stations': 'grazingStations',
     'grazing-platters': 'grazingPlatters'
   };
@@ -1328,6 +1368,11 @@ function removeMMItem(type, idx) {
     'bistro-bowls': 'bistroBowls',
     'bistro-mains': 'bistroMains',
     'bistro-sides': 'bistroSides',
+    'bistro-main-sides': 'bistroMainSides',
+    'bistro-sauces': 'bistroSauces',
+    'bistro-steak-temp': 'bistroSteakTemp',
+    'bistro-bowl-addons': 'bistroBowlAddOns',
+    'bistro-burger-addons': 'bistroBurgerAddOns',
     'grazing-stations': 'grazingStations',
     'grazing-platters': 'grazingPlatters'
   };
@@ -1353,6 +1398,11 @@ function updateMMItem(type, idx, field, val) {
     'bistro-bowls': 'bistroBowls',
     'bistro-mains': 'bistroMains',
     'bistro-sides': 'bistroSides',
+    'bistro-main-sides': 'bistroMainSides',
+    'bistro-sauces': 'bistroSauces',
+    'bistro-steak-temp': 'bistroSteakTemp',
+    'bistro-bowl-addons': 'bistroBowlAddOns',
+    'bistro-burger-addons': 'bistroBurgerAddOns',
     'grazing-stations': 'grazingStations',
     'grazing-platters': 'grazingPlatters'
   };
@@ -1363,10 +1413,9 @@ function updateMMItem(type, idx, field, val) {
 }
 
 const MM_FIELDS = {
-  all:         { desc: true,  price: true,  options: false },
-  noPrice:     { desc: true,  price: false, options: false },
-  noDesc:      { desc: false, price: true,  options: false },
-  bistro:      { desc: false, price: true,  options: true  }
+  all:     { desc: true,  price: true  },
+  noPrice: { desc: true,  price: false },
+  noDesc:  { desc: false, price: true  }
 };
 
 function renderMMItems() {
@@ -1381,13 +1430,17 @@ function renderMMItems() {
   renderMMList('mm-banquet-mains',      'banquet-mains',      menuData.banquetMains      || [], noPrice);
   renderMMList('mm-banquet-sides',      'banquet-sides',      menuData.banquetSides      || [], noPrice);
   renderMMList('mm-banquet-dessert',    'banquet-dessert',    menuData.banquetDessert    || [], noPrice);
-  const bistroF = MM_FIELDS.bistro;
-  renderMMList('mm-bistro-snacks',      'bistro-snacks',      menuData.bistroSnacks      || [], bistroF);
-  renderMMList('mm-bistro-burgers',     'bistro-burgers',     menuData.bistroBurgers     || [], bistroF);
-  renderMMList('mm-bistro-pub-classics','bistro-pub-classics',menuData.bistroPubClassics || [], bistroF);
-  renderMMList('mm-bistro-bowls',       'bistro-bowls',       menuData.bistroBowls       || [], bistroF);
-  renderMMList('mm-bistro-mains',       'bistro-mains',       menuData.bistroMains       || [], bistroF);
-  renderMMList('mm-bistro-sides',       'bistro-sides',       menuData.bistroSides       || [], bistroF);
+  renderMMList('mm-bistro-snacks',        'bistro-snacks',        menuData.bistroSnacks        || [], noDesc);
+  renderMMList('mm-bistro-burgers',       'bistro-burgers',       menuData.bistroBurgers       || [], noDesc);
+  renderMMList('mm-bistro-pub-classics',  'bistro-pub-classics',  menuData.bistroPubClassics   || [], noDesc);
+  renderMMList('mm-bistro-bowls',         'bistro-bowls',         menuData.bistroBowls         || [], noDesc);
+  renderMMList('mm-bistro-mains',         'bistro-mains',         menuData.bistroMains         || [], noDesc);
+  renderMMList('mm-bistro-sides',         'bistro-sides',         menuData.bistroSides         || [], noDesc);
+  renderMMList('mm-bistro-main-sides',    'bistro-main-sides',    menuData.bistroMainSides     || [], noDesc);
+  renderMMList('mm-bistro-sauces',        'bistro-sauces',        menuData.bistroSauces        || [], noDesc);
+  renderMMList('mm-bistro-steak-temp',    'bistro-steak-temp',    menuData.bistroSteakTemp     || [], noDesc);
+  renderMMList('mm-bistro-bowl-addons',   'bistro-bowl-addons',   menuData.bistroBowlAddOns    || [], noDesc);
+  renderMMList('mm-bistro-burger-addons', 'bistro-burger-addons', menuData.bistroBurgerAddOns  || [], noDesc);
   renderMMList('mm-grazing-stations-items', 'grazing-stations', menuData.grazingStations || [], all);
   renderMMList('mm-grazing-platters-items', 'grazing-platters', menuData.grazingPlatters || [], all);
   updateLimitInputs();
@@ -1397,28 +1450,19 @@ function renderMMList(containerId, type, items, fields) {
   fields = fields || MM_FIELDS.all;
   const el = document.getElementById(containerId);
   if (!el) return;
-  let cols, headerCols;
-  if (fields.desc && fields.price) {
-    cols = '2fr 3fr 1fr'; headerCols = '<span>Name</span><span>Description</span><span>Price</span>';
-  } else if (fields.desc) {
-    cols = '2fr 3fr'; headerCols = '<span>Name</span><span>Description</span>';
-  } else if (fields.price && fields.options) {
-    cols = '2fr 1fr 3fr'; headerCols = '<span>Name</span><span>Price</span><span>Options (comma-separated)</span>';
-  } else if (fields.price) {
-    cols = '2fr 1fr'; headerCols = '<span>Name</span><span>Price</span>';
-  } else {
-    cols = '1fr'; headerCols = '<span>Name</span>';
-  }
+  const cols = `${fields.desc && fields.price ? '2fr 3fr 1fr' : fields.desc ? '2fr 3fr' : fields.price ? '2fr 1fr' : '1fr'}`;
+  const headerCols = fields.desc && fields.price ? '<span>Name</span><span>Description</span><span>Price</span>'
+                   : fields.desc  ? '<span>Name</span><span>Description</span>'
+                   : fields.price ? '<span>Name</span><span>Price</span>'
+                   : '<span>Name</span>';
   const header = items.length ? `<div class="mm-items-header" style="grid-template-columns:${cols} 28px;">${headerCols}<span></span></div>` : '';
   el.innerHTML = header + items.map((item, i) => {
     const n = escHtml(item.name || '');
     const d = escHtml(item.description || '');
     const p = escHtml(item.price || '');
-    const o = escHtml(item.options || '');
     const inputs = `<input type="text" value="${n}" placeholder="Item name..." oninput="updateMMItem('${type}',${i},'name',this.value)">`
-      + (fields.desc    ? `<input type="text" value="${d}" placeholder="Description..." oninput="updateMMItem('${type}',${i},'description',this.value)">` : '')
-      + (fields.price   ? `<input type="text" value="${p}" placeholder="$0.00" oninput="updateMMItem('${type}',${i},'price',this.value)">` : '')
-      + (fields.options ? `<input type="text" value="${o}" placeholder="e.g. Gravy, Pepper Sauce" oninput="updateMMItem('${type}',${i},'options',this.value)">` : '');
+      + (fields.desc  ? `<input type="text" value="${d}" placeholder="Description..." oninput="updateMMItem('${type}',${i},'description',this.value)">` : '')
+      + (fields.price ? `<input type="text" value="${p}" placeholder="$0.00" oninput="updateMMItem('${type}',${i},'price',this.value)">` : '');
     return `
     <div class="mm-item-row">
       <div class="mm-item-fields" style="grid-template-columns:${cols};">${inputs}</div>
@@ -1463,6 +1507,7 @@ function loadMenus() {
       const keys = ['canapeSmall','canapePremium','canapeSubstantial','canapeSliders','canapeDessert',
                     'banquetMains','banquetSides','banquetDessert',
                     'bistroSnacks','bistroBurgers','bistroPubClassics','bistroBowls','bistroMains','bistroSides',
+                    'bistroMainSides','bistroSauces','bistroSteakTemp','bistroBowlAddOns','bistroBurgerAddOns',
                     'grazingStations','grazingPlatters'];
       keys.forEach(k => {
         if (!menuData[k]) menuData[k] = [];
@@ -1787,28 +1832,33 @@ function removeBistroRow(idx) {
   autoSave();
 }
 
-function getBistroItemOptions(dishName) {
-  const keys = ['bistroSnacks','bistroBurgers','bistroPubClassics','bistroBowls','bistroMains','bistroSides'];
-  for (const key of keys) {
-    const item = (menuData[key] || []).find(i => (typeof i === 'object' ? i.name : i) === dishName);
-    if (item && typeof item === 'object' && item.options) {
-      return item.options.split(',').map(o => o.trim()).filter(Boolean);
-    }
+const BISTRO_DISH_CATS = [
+  { label: 'Snacks & Sharing', key: 'bistroSnacks' },
+  { label: 'Burgers',          key: 'bistroBurgers' },
+  { label: 'Pub Classics',     key: 'bistroPubClassics' },
+  { label: 'Bowls',            key: 'bistroBowls' },
+  { label: 'Mains',            key: 'bistroMains' },
+  { label: 'Sides',            key: 'bistroSides' }
+];
+
+const BISTRO_ADDONS = [
+  { id: 'mainSide',   label: 'Main Side',    key: 'bistroMainSides',    appliesTo: ['bistroMains', 'bistroPubClassics'] },
+  { id: 'sauce',      label: 'Sauce',        key: 'bistroSauces',       appliesTo: ['bistroMains', 'bistroPubClassics'] },
+  { id: 'steakTemp',  label: 'Steak Temp',   key: 'bistroSteakTemp',    appliesTo: ['bistroMains'] },
+  { id: 'bowlAddOn',  label: 'Bowl Add On',  key: 'bistroBowlAddOns',   appliesTo: ['bistroBowls'] },
+  { id: 'burgerAddOn',label: 'Burger Add On',key: 'bistroBurgerAddOns', appliesTo: ['bistroBurgers'] }
+];
+
+function getBistroDisCat(dishName) {
+  for (const c of BISTRO_DISH_CATS) {
+    if ((menuData[c.key] || []).some(i => (typeof i === 'object' ? i.name : i) === dishName)) return c.key;
   }
-  return [];
+  return null;
 }
 
 function renderBistroRows() {
   const tbody = document.getElementById('bistro-rows');
-  const subcats = [
-    { label: 'Snacks & Sharing', key: 'bistroSnacks' },
-    { label: 'Burgers',          key: 'bistroBurgers' },
-    { label: 'Pub Classics',     key: 'bistroPubClassics' },
-    { label: 'Bowls',            key: 'bistroBowls' },
-    { label: 'Mains',            key: 'bistroMains' },
-    { label: 'Sides',            key: 'bistroSides' }
-  ];
-  const dishOptHtml = subcats.map(({ label, key }) => {
+  const dishOptHtml = BISTRO_DISH_CATS.map(({ label, key }) => {
     const items = menuData[key] || [];
     if (!items.length) return '';
     const opts = items.map(d => { const n = typeof d === 'object' ? (d.name || '') : d; return n ? `<option value="${escHtml(n)}">${escHtml(n)}</option>` : ''; }).join('');
@@ -1816,28 +1866,30 @@ function renderBistroRows() {
   }).join('');
 
   tbody.innerHTML = bistroRows.map((row, i) => {
-    const itemOptions = getBistroItemOptions(row.dish);
-    const optionSelect = itemOptions.length ? `
-      <select style="margin-top:4px;" onchange="bistroRows[${i}].option=this.value;autoSave()">
-        <option value="">— Choose option —</option>
-        ${itemOptions.map(o => `<option value="${escHtml(o)}" ${row.option === o ? 'selected' : ''}>${escHtml(o)}</option>`).join('')}
-      </select>` : '';
+    const catKey = getBistroDisCat(row.dish);
+    const addOns = row.addOns || {};
+    const addonSelects = BISTRO_ADDONS
+      .filter(a => catKey && a.appliesTo.includes(catKey))
+      .map(a => {
+        const opts = (menuData[a.key] || []).map(d => { const n = typeof d === 'object' ? (d.name||'') : d; return n ? `<option value="${escHtml(n)}" ${addOns[a.id]===n?'selected':''}>${escHtml(n)}</option>` : ''; }).join('');
+        return opts ? `<select style="margin-top:4px;" onchange="bistroRows[${i}].addOns=bistroRows[${i}].addOns||{};bistroRows[${i}].addOns['${a.id}']=this.value;autoSave()">
+          <option value="">— ${escHtml(a.label)} —</option>${opts}</select>` : '';
+      }).join('');
     return `
     <tr>
       <td class="rs-bistro-num" style="color:var(--text3);font-size:12px;text-align:center;">${i + 1}</td>
       <td><input type="text" value="${escHtml(row.name)}" placeholder="Guest name" oninput="bistroRows[${i}].name=this.value;autoSave()"></td>
       <td>
-        <select data-bistro-dish="${i}" onchange="bistroRows[${i}].dish=this.value;bistroRows[${i}].option='';renderBistroRows();autoSave()">
+        <select data-bistro-dish="${i}" onchange="bistroRows[${i}].dish=this.value;bistroRows[${i}].addOns={};renderBistroRows();autoSave()">
           <option value="">— Select dish —</option>
           ${dishOptHtml}
         </select>
-        ${optionSelect}
+        ${addonSelects}
       </td>
       <td><button class="btn-icon" onclick="removeBistroRow(${i})">✕</button></td>
     </tr>`;
   }).join('');
 
-  // Fix selected state for dish dropdowns
   tbody.querySelectorAll('[data-bistro-dish]').forEach(sel => {
     const i = parseInt(sel.dataset.bistroDish);
     if (bistroRows[i]) sel.value = bistroRows[i].dish || '';
@@ -1924,7 +1976,7 @@ function buildRunsheet() {
               <tr>
                 <td class="rs-bistro-num">${i + 1}</td>
                 <td>${escHtml(r.name) || '—'}</td>
-                <td>${escHtml(r.dish) || '—'}${r.option ? `<span style="color:#888;font-size:12px;margin-left:6px;">· ${escHtml(r.option)}</span>` : ''}</td>
+                <td>${escHtml(r.dish) || '—'}${Object.values(r.addOns||{}).filter(Boolean).map(v=>`<span style="color:#888;font-size:12px;margin-left:6px;">· ${escHtml(v)}</span>`).join('')}</td>
               </tr>`).join('') || '<tr><td colspan="3" style="text-align:center;color:#aaa;padding:16px;font-family:var(--sans);font-size:13px;">No guests added</td></tr>'}
           </tbody>
         </table>
