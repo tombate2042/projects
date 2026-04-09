@@ -645,6 +645,49 @@
   .sync-dot.syncing { background: #e8c070; animation: pulse 1s infinite; }
   @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
 
+  /* pin modal */
+  .pin-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.45);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+  }
+  .pin-overlay.visible { display: flex; }
+  .pin-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 32px 36px;
+    width: 320px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+    text-align: center;
+  }
+  .pin-box h3 {
+    font-family: var(--serif);
+    font-size: 18px;
+    color: var(--text);
+    margin: 0 0 6px;
+  }
+  .pin-box p { font-size: 13px; color: var(--text2); margin: 0 0 20px; }
+  .pin-input {
+    width: 100%;
+    text-align: center;
+    font-size: 22px;
+    letter-spacing: 0.3em;
+    padding: 10px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--bg);
+    color: var(--text);
+    box-sizing: border-box;
+    margin-bottom: 14px;
+  }
+  .pin-input:focus { outline: none; border-color: var(--accent-mid); }
+  .pin-error { font-size: 12px; color: var(--danger); min-height: 16px; margin-bottom: 10px; }
+
   /* settings */
   .settings-info {
     background: var(--accent-light);
@@ -699,7 +742,7 @@
   <button class="tab-btn active" onclick="switchTab('form')">Event Details</button>
   <button class="tab-btn" onclick="switchTab('menu')">Menu Manager</button>
   <button class="tab-btn" onclick="switchTab('preview')">Print Preview</button>
-  <button class="tab-btn" onclick="switchTab('settings')" style="margin-left:auto;">⚙ Settings</button>
+  <button class="tab-btn" onclick="openSettingsTab()" style="margin-left:auto;">⚙ Settings</button>
 </div>
 
 <!-- ═══════════════════════════════════════════
@@ -1856,6 +1899,77 @@ function clearForm() {
   localStorage.removeItem('rr_form');
 }
 
+/* ════════════════════════════════════════════
+   SETTINGS PIN
+════════════════════════════════════════════ */
+let settingsUnlocked = false;
+
+function getStoredPin() {
+  return localStorage.getItem('rr_settings_pin') || '';
+}
+
+function openSettingsTab() {
+  const pin = getStoredPin();
+  if (!pin || settingsUnlocked) {
+    doOpenSettings();
+    return;
+  }
+  document.getElementById('pin-input').value = '';
+  document.getElementById('pin-error').textContent = '';
+  document.getElementById('pin-overlay').classList.add('visible');
+  setTimeout(() => document.getElementById('pin-input').focus(), 50);
+}
+
+function closePinModal() {
+  document.getElementById('pin-overlay').classList.remove('visible');
+}
+
+function submitPin() {
+  const entered = document.getElementById('pin-input').value;
+  const stored = getStoredPin();
+  if (entered === stored) {
+    settingsUnlocked = true;
+    closePinModal();
+    doOpenSettings();
+  } else {
+    document.getElementById('pin-error').textContent = 'Incorrect PIN. Try again.';
+    document.getElementById('pin-input').value = '';
+    document.getElementById('pin-input').focus();
+  }
+}
+
+function doOpenSettings() {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('settings-panel').classList.add('active');
+  const btns = document.querySelectorAll('.tab-btn');
+  if (btns[3]) btns[3].classList.add('active');
+  loadSettingsFields();
+}
+
+function savePin() {
+  const n = document.getElementById('pin-new').value;
+  const c = document.getElementById('pin-confirm').value;
+  const msg = document.getElementById('pin-save-msg');
+  if (!n) { msg.style.color = 'var(--danger)'; msg.textContent = 'Enter a PIN or use Remove PIN to clear it.'; return; }
+  if (n !== c) { msg.style.color = 'var(--danger)'; msg.textContent = 'PINs do not match.'; return; }
+  if (!/^\d+$/.test(n)) { msg.style.color = 'var(--danger)'; msg.textContent = 'PIN must be numeric.'; return; }
+  localStorage.setItem('rr_settings_pin', n);
+  document.getElementById('pin-new').value = '';
+  document.getElementById('pin-confirm').value = '';
+  msg.style.color = 'var(--accent)';
+  msg.textContent = 'PIN saved.';
+}
+
+function clearPin() {
+  localStorage.removeItem('rr_settings_pin');
+  document.getElementById('pin-new').value = '';
+  document.getElementById('pin-confirm').value = '';
+  const msg = document.getElementById('pin-save-msg');
+  msg.style.color = 'var(--accent)';
+  msg.textContent = 'PIN removed. Settings are now open access.';
+}
+
 init();
 </script>
 <!-- ═══════════════════════════════════════════
@@ -1910,6 +2024,28 @@ init();
   </div>
 
   <div class="section-card">
+    <div class="section-header"><span class="dot"></span>Settings PIN</div>
+    <div class="section-body">
+      <p style="font-size:13px;color:var(--text2);margin-bottom:16px;">Set a numeric PIN to restrict access to this settings page. Leave blank to remove the PIN.</p>
+      <div class="form-grid" style="gap:14px;">
+        <div class="field">
+          <label>New PIN</label>
+          <input type="password" id="pin-new" placeholder="e.g. 1234" maxlength="8" inputmode="numeric" class="token-field">
+        </div>
+        <div class="field">
+          <label>Confirm PIN</label>
+          <input type="password" id="pin-confirm" placeholder="Repeat PIN" maxlength="8" inputmode="numeric" class="token-field">
+        </div>
+      </div>
+      <div class="btn-row" style="margin-top:1rem;">
+        <button class="btn btn-primary" onclick="savePin()">Save PIN</button>
+        <button class="btn btn-outline" onclick="clearPin()" style="color:var(--danger);border-color:var(--danger);">Remove PIN</button>
+      </div>
+      <div id="pin-save-msg" style="font-size:12px;min-height:16px;margin-top:8px;"></div>
+    </div>
+  </div>
+
+  <div class="section-card">
     <div class="section-header"><span class="dot"></span>Danger Zone</div>
     <div class="section-body">
       <p style="font-size:13px;color:var(--text2);margin-bottom:12px;">Clear saved credentials from this browser. Does not affect your Gist data.</p>
@@ -1918,6 +2054,22 @@ init();
   </div>
 
 </div>
+</div>
+
+<!-- PIN Modal -->
+<div class="pin-overlay" id="pin-overlay">
+  <div class="pin-box">
+    <h3>Settings</h3>
+    <p id="pin-prompt-text">Enter PIN to continue</p>
+    <input class="pin-input" type="password" id="pin-input" maxlength="8" inputmode="numeric" placeholder="••••"
+           oninput="document.getElementById('pin-error').textContent=''"
+           onkeydown="if(event.key==='Enter')submitPin()">
+    <div class="pin-error" id="pin-error"></div>
+    <div style="display:flex;gap:8px;justify-content:center;">
+      <button class="btn btn-outline" onclick="closePinModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="submitPin()">Unlock</button>
+    </div>
+  </div>
 </div>
 
 </body>
