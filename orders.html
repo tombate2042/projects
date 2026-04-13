@@ -1,0 +1,1347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stock Order</title>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f0f0f;
+    --surface: #1a1a1a;
+    --surface2: #222222;
+    --border: #2e2e2e;
+    --border2: #3a3a3a;
+    --text: #e8e8e8;
+    --text2: #888;
+    --text3: #555;
+    --accent: #c8f56a;
+    --accent-dim: rgba(200,245,106,0.08);
+    --accent-dim2: rgba(200,245,106,0.15);
+    --red: #ff6b6b;
+    --red-dim: rgba(255,107,107,0.1);
+    --amber: #ffc14a;
+    --amber-dim: rgba(255,193,74,0.1);
+    --blue: #6ab4ff;
+    --blue-dim: rgba(106,180,255,0.1);
+    --mono: 'Roboto Mono', monospace;
+    --sans: 'DM Sans', sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 14px; min-height: 100vh; }
+
+  /* HEADER */
+  #topBar {
+    position: sticky; top: 0; z-index: 100;
+    background: var(--bg);
+  }
+  #topBar.minimised .nav-tabs,
+  #topBar.minimised #orderFilters { display: none !important; }
+  #btnMinimise .chev { transition: transform 0.2s; }
+  #topBar.minimised #btnMinimise .chev { transform: rotate(180deg); }
+  .header {
+    background: rgba(15,15,15,0.97);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    display: flex; align-items: center; gap: 16px;
+    height: 56px;
+  }
+  .header-title { font-size: 13px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text2); }
+  .header-week { font-family: var(--mono); font-size: 12px; color: var(--accent); background: var(--accent-dim); border: 1px solid rgba(200,245,106,0.2); padding: 4px 10px; border-radius: 4px; }
+  .header-spacer { flex: 1; }
+  .header-stats { display: flex; gap: 20px; align-items: center; }
+  .stat { text-align: right; }
+  .stat-val { font-family: var(--mono); font-size: 15px; font-weight: 500; color: var(--text); }
+  .stat-lbl { font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text3); margin-top: 1px; }
+  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 5px; border: 1px solid var(--border2); background: var(--surface2); color: var(--text); font-family: var(--sans); font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
+  .btn:hover { border-color: var(--text3); color: var(--text); background: #2a2a2a; }
+  .btn-primary { background: var(--accent); color: #0f0f0f; border-color: var(--accent); font-weight: 600; }
+  .btn-primary:hover { background: #d6ff7a; border-color: #d6ff7a; color: #0f0f0f; }
+  .btn svg { width: 13px; height: 13px; }
+
+  /* FILTERS */
+  .filters { padding: 12px 24px; border-bottom: 1px solid var(--border); display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .filter-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text3); margin-right: 4px; }
+  .filter-chip { padding: 4px 12px; border-radius: 20px; border: 1px solid var(--border); background: transparent; color: var(--text2); font-size: 12px; font-family: var(--sans); cursor: pointer; transition: all 0.12s; }
+  .filter-chip:hover { border-color: var(--border2); color: var(--text); }
+  .filter-chip.active { background: var(--accent-dim2); border-color: rgba(200,245,106,0.4); color: var(--accent); }
+  .filter-divider { width: 1px; height: 18px; background: var(--border); margin: 0 4px; }
+  .search-wrap { position: relative; margin-left: auto; }
+  .search-wrap svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); width: 13px; height: 13px; color: var(--text3); pointer-events: none; }
+  .search { background: var(--surface); border: 1px solid var(--border); border-radius: 5px; padding: 5px 10px 5px 30px; color: var(--text); font-family: var(--sans); font-size: 12px; width: 200px; outline: none; }
+  .search:focus { border-color: var(--border2); }
+  .search::placeholder { color: var(--text3); }
+
+  /* CATEGORY SECTION */
+  .category-section { margin-bottom: 0; }
+  .category-header {
+    position: sticky; top: var(--topbar-h, 56px); z-index: 90;
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 24px;
+    background: rgba(22,22,22,0.98);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    cursor: pointer;
+    user-select: none;
+  }
+  .category-header:hover { background: rgba(32,32,32,0.98); }
+  .category-name { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: var(--text); }
+  .category-count { font-family: var(--mono); font-size: 10px; color: var(--text3); }
+  .category-toggle { margin-left: auto; color: var(--text3); transition: transform 0.2s; }
+  .category-toggle.collapsed { transform: rotate(-90deg); }
+  .category-total { font-family: var(--mono); font-size: 11px; color: var(--text3); }
+
+  /* TABLE */
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 12.5px; table-layout: fixed; }
+  thead tr { border-bottom: 1px solid var(--border); }
+  th {
+    padding: 8px 10px;
+    text-align: center;
+    font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em;
+    color: var(--text3);
+    white-space: nowrap;
+    background: var(--surface);
+  }
+  th:first-child { text-align: left; padding-left: 24px; }
+  th.sortable { cursor: pointer; }
+  th.sortable:hover { color: var(--text2); }
+  tbody tr {
+    border-bottom: 1px solid rgba(46,46,46,0.5);
+    transition: background 0.1s;
+  }
+  tbody tr:hover { background: rgba(255,255,255,0.02); }
+  tbody tr:has(input:focus) { outline: 1.5px solid var(--accent); outline-offset: -1px; background: var(--accent-dim); }
+  tbody tr.hidden-row { display: none; }
+  tbody tr.low-avg .item-name { color: #f5c518; }
+  tbody tr.low-avg .item-name.discontinued { color: var(--red); }
+  .pm-table tbody tr.low-avg td:nth-child(2) .pm-input { color: #f5c518; }
+  td { padding: 7px 10px; text-align: center; vertical-align: middle; }
+  td:first-child { text-align: left; padding-left: 24px; }
+  .item-name { font-weight: 500; color: var(--text); font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .item-sub { font-size: 10px; color: var(--text3); margin-top: 1px; }
+  .mono { font-family: var(--mono); }
+
+  /* RISK BADGE */
+  .risk { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; font-family: var(--mono); padding: 2px 6px; border-radius: 3px; }
+  .risk-critical { background: var(--red-dim); color: var(--red); }
+  .risk-normal { background: var(--amber-dim); color: var(--amber); }
+  .risk-low { background: var(--blue-dim); color: var(--blue); }
+
+  /* EDITABLE INPUTS */
+  input[type=number]::-webkit-inner-spin-button,
+  input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+  input[type=number] { -moz-appearance: textfield; appearance: textfield; }
+  .qty-input {
+    width: 62px; text-align: right;
+    background: var(--surface2); border: 1px solid var(--border);
+    color: var(--text); font-family: var(--mono); font-size: 12px;
+    padding: 4px 8px; border-radius: 4px; outline: none;
+    transition: border-color 0.12s, background 0.12s;
+  }
+  .qty-input:focus { border-color: var(--accent); background: rgba(200,245,106,0.04); }
+  .qty-input:hover:not(:focus) { border-color: var(--border2); }
+  .qty-input.changed { border-color: var(--accent); background: var(--accent-dim); }
+
+  /* SUGGESTED ORDER HIGHLIGHT */
+  td.suggested { font-family: var(--mono); }
+  td.suggested .val { color: var(--accent); font-weight: 500; }
+  td.suggested .val.zero { color: var(--text3); }
+
+  /* COMPARISON */
+  .delta { font-size: 11px; font-family: var(--mono); }
+  .delta-up { color: var(--red); }
+  .delta-down { color: #66c97a; }
+  .usage-arrow { font-size: 15px; font-weight: 700; line-height: 1; vertical-align: middle; }
+
+  /* MARGIN */
+  .margin-val { font-family: var(--mono); font-size: 11px; }
+  .margin-high { color: #66c97a; }
+  .margin-mid { color: var(--amber); }
+  .margin-low { color: var(--red); }
+  .margin-na { color: var(--text3); }
+
+  /* COLUMN GROUPS */
+  th.grp-ref { background: rgba(26,26,26,1); }
+  td.grp-ref { background: rgba(26,26,26,0.3); color: var(--text2); }
+  th.count-col { border-left: 2px solid rgba(200,245,106,0.25); border-right: 2px solid rgba(200,245,106,0.25); background: rgba(200,245,106,0.04); }
+  td.count-col { border-left: 2px solid rgba(200,245,106,0.15); border-right: 2px solid rgba(200,245,106,0.15); background: rgba(200,245,106,0.04); font-weight: 600; color: var(--text); }
+
+  /* SAVE INDICATOR */
+  .save-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); display: inline-block; margin-right: 4px; animation: pulse 1.5s infinite; }
+  @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
+
+  /* MODAL */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 200; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+  .modal-overlay.open { opacity: 1; pointer-events: all; }
+  .modal { background: var(--surface); border: 1px solid var(--border2); border-radius: 10px; padding: 28px; width: 420px; max-width: 95vw; }
+  .modal h3 { font-size: 15px; font-weight: 600; margin-bottom: 6px; }
+  .modal p { color: var(--text2); font-size: 13px; line-height: 1.6; margin-bottom: 20px; }
+  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+
+  /* WEEK ADVANCE */
+  .advance-info { background: var(--surface2); border-radius: 6px; padding: 14px; margin-bottom: 20px; font-size: 12px; color: var(--text2); line-height: 1.8; }
+  .advance-info strong { color: var(--text); }
+
+  /* EMPTY */
+  .empty-row td { text-align: center; color: var(--text3); padding: 24px; font-size: 12px; }
+
+  /* PRINT / PDF styles */
+  @media print {
+    body { background: white; color: black; font-size: 11px; }
+    .header, .filters { display: none; }
+    .category-header { background: #f5f5f5; position: static; }
+    table { font-size: 10px; }
+    th { background: #eee; }
+    .btn, .qty-input { display: none; }
+    .hidden-row { display: none !important; }
+    .no-print { display: none; }
+  }
+
+  /* scrollbar */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+  /* NAV TABS */
+  .nav-tabs { display: flex; gap: 2px; padding: 0 24px; background: var(--bg); border-bottom: 1px solid var(--border); }
+  .nav-tab { padding: 10px 16px; font-size: 12px; font-weight: 500; color: var(--text3); cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.15s; background: none; border-top: none; border-left: none; border-right: none; font-family: var(--sans); }
+  .nav-tab:hover { color: var(--text2); }
+  .nav-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  /* VIEWS */
+  .view { display: none; }
+  .view.active { display: block; }
+
+  /* PRODUCT MANAGER */
+  .pm-toolbar { padding: 14px 24px; border-bottom: 1px solid var(--border); display: flex; gap: 10px; align-items: center; }
+  .pm-toolbar .search-wrap { margin-left: 0; }
+  .pm-count { font-size: 12px; color: var(--text3); margin-left: auto; }
+  .pm-table-wrap { overflow-x: auto; }
+  .pm-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .pm-table thead tr { border-bottom: 1px solid var(--border); }
+  .pm-table th { padding: 8px 10px; text-align: left; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text3); background: var(--surface); white-space: nowrap; }
+  .pm-table th.r { text-align: right; }
+  .pm-table tbody tr { border-bottom: 1px solid rgba(46,46,46,0.5); transition: background 0.1s; }
+  .pm-table tbody tr:hover { background: rgba(255,255,255,0.02); }
+  .pm-table tbody tr.pm-hidden { display: none; }
+  .pm-table td { padding: 5px 6px; vertical-align: middle; }
+  .pm-table td:first-child { padding-left: 24px; }
+  .pm-table td:last-child { padding-right: 16px; }
+  .drag-handle { cursor: grab; color: var(--text3); padding: 0 6px; user-select: none; font-size: 14px; }
+  .drag-handle:active { cursor: grabbing; }
+  .pm-table tr.drag-over { border-top: 2px solid var(--accent); }
+  .pm-input { width: 100%; background: transparent; border: 1px solid transparent; color: var(--text); font-family: var(--sans); font-size: 12px; padding: 4px 6px; border-radius: 4px; outline: none; transition: border-color 0.12s, background 0.12s; }
+  .pm-input:hover { border-color: var(--border); background: var(--surface2); }
+  .pm-input:focus { border-color: var(--accent); background: var(--surface2); }
+  .pm-input.narrow { width: 60px; text-align: right; }
+  .pm-input.med { width: 80px; }
+  .pm-select { background: transparent; border: 1px solid transparent; color: var(--text); font-family: var(--sans); font-size: 12px; padding: 4px 6px; border-radius: 4px; outline: none; cursor: pointer; transition: border-color 0.12s, background 0.12s; width: 100%; }
+  .pm-select:hover { border-color: var(--border); background: var(--surface2); }
+  .pm-select:focus { border-color: var(--accent); background: var(--surface2); }
+  .pm-select option { background: var(--surface); }
+  .btn-danger { border-color: rgba(255,107,107,0.3); color: var(--red); }
+  .btn-danger:hover { border-color: var(--red); background: var(--red-dim); color: var(--red); }
+  .btn-icon { padding: 5px 8px; }
+  .btn-disc { border-color: rgba(255,107,107,0.2); color: var(--text3); }
+  .btn-disc:hover { border-color: var(--red); color: var(--red); background: var(--red-dim); }
+  .btn-disc.on { border-color: var(--red); color: var(--red); background: var(--red-dim); }
+  .pm-table tbody tr.pm-disc { background: rgba(255,107,107,0.05); }
+  .pm-table tbody tr.pm-disc:hover { background: rgba(255,107,107,0.08); }
+  .item-name.discontinued { color: var(--red); opacity: 0.7; }
+  .modal-wide { width: 600px; }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px; }
+  .form-group { display: flex; flex-direction: column; gap: 5px; }
+  .form-group.full { grid-column: 1 / -1; }
+  .form-label { font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text3); }
+  .form-input { background: var(--surface2); border: 1px solid var(--border); color: var(--text); font-family: var(--sans); font-size: 13px; padding: 8px 10px; border-radius: 5px; outline: none; transition: border-color 0.12s; }
+  .form-input:focus { border-color: var(--accent); }
+  .form-select { background: var(--surface2); border: 1px solid var(--border); color: var(--text); font-family: var(--sans); font-size: 13px; padding: 8px 10px; border-radius: 5px; outline: none; cursor: pointer; transition: border-color 0.12s; }
+  .form-select:focus { border-color: var(--accent); }
+  .form-select option { background: var(--surface); }
+  .modal-sm { width: 360px; }
+  .delete-item-name { font-weight: 600; color: var(--text); }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR (sticky wrapper) -->
+<div id="topBar">
+<!-- HEADER -->
+<div class="header">
+  <div class="header-title">Stock Order</div>
+  <div class="header-week" id="weekLabel">Week —</div>
+  <div class="header-spacer"></div>
+  <div class="header-stats" id="headerStats">
+    <div class="stat">
+      <div class="stat-val" id="statItems">0</div>
+      <div class="stat-lbl">Items Ordered</div>
+    </div>
+    <div class="stat">
+      <div class="stat-val" id="statCost">$0</div>
+      <div class="stat-lbl">Est. Cost</div>
+    </div>
+  </div>
+  <button class="btn no-print" id="btnNextWeek" onclick="showAdvanceModal()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+    Next Week
+  </button>
+  <button class="btn btn-primary no-print" id="btnExport" onclick="exportPDF()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+    Export PDF
+  </button>
+  <button class="btn btn-icon no-print" id="btnMinimise" onclick="toggleTopBar()" title="Minimise toolbar">
+    <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><polyline points="18 15 12 9 6 15"/></svg>
+  </button>
+</div>
+
+<!-- NAV TABS -->
+<div class="nav-tabs no-print">
+  <button class="nav-tab active" onclick="switchView('order',this)">Order</button>
+  <button class="nav-tab" onclick="switchView('count',this)">Count</button>
+  <button class="nav-tab" onclick="switchView('stock',this)">Stock Data</button>
+  <button class="nav-tab" onclick="switchView('manage',this)">Manage Items</button>
+</div>
+
+<!-- FILTERS -->
+<div class="filters no-print" id="orderFilters">
+  <span class="filter-label">Show</span>
+  <button class="filter-chip active" data-filter="all" onclick="setFilter('all',this)">All</button>
+  <button class="filter-chip" data-filter="ordered" onclick="setFilter('ordered',this)">Has Order</button>
+  <button class="filter-chip" data-filter="critical" onclick="setFilter('critical',this)">Critical</button>
+  <button class="filter-chip" data-filter="suggested" onclick="setFilter('suggested',this)">Needs Order</button>
+  <div class="filter-divider"></div>
+  <span class="filter-label">Supplier</span>
+  <div id="supplierFilters"></div>
+  <div class="search-wrap">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input class="search" type="text" placeholder="Search items…" oninput="searchItems(this.value)">
+  </div>
+</div>
+</div><!-- end topBar -->
+
+<!-- ORDER VIEW -->
+<div class="view active" id="view-order">
+
+<!-- CONTENT -->
+<div id="content"></div>
+
+</div><!-- end view-order -->
+
+<!-- MANAGE VIEW -->
+<div class="view" id="view-manage">
+  <div class="pm-toolbar">
+    <button class="btn btn-primary" onclick="showAddItemModal()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Add Item
+    </button>
+    <div class="search-wrap">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input class="search" type="text" placeholder="Search items…" oninput="pmSearch(this.value)" style="width:240px">
+    </div>
+    <div class="pm-count" id="pmCount"></div>
+  </div>
+  <div id="pmContent"></div>
+</div>
+
+<!-- COUNT VIEW -->
+<div class="view" id="view-count">
+  <div id="countContent"></div>
+</div>
+
+<!-- STOCK DATA VIEW -->
+<div class="view" id="view-stock">
+  <div class="pm-table-wrap">
+    <table class="pm-table" style="table-layout:fixed">
+      <thead>
+        <tr>
+          <th style="width:220px">Item</th>
+          <th style="width:110px;text-align:center">Category</th>
+          <th style="width:90px;text-align:center">Prev Count</th>
+          <th style="width:85px;text-align:center">Used Wk1</th>
+          <th style="width:85px;text-align:center">Used Wk2</th>
+          <th style="width:85px;text-align:center">Used Wk3</th>
+          <th style="width:85px;text-align:center">Used Wk4</th>
+          <th style="width:85px;text-align:center">Received</th>
+          <th style="width:85px;text-align:center">Ordered</th>
+        </tr>
+      </thead>
+      <tbody id="stockTbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ADVANCE MODAL -->
+<div class="modal-overlay" id="advanceModal">
+  <div class="modal">
+    <h3>Advance to Next Week</h3>
+    <div class="advance-info" id="advanceInfo"></div>
+    <p>This will shift all usage and count data forward by one week. Current week becomes last week's reference.</p>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('advanceModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="advanceWeek()">Advance Week</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD ITEM MODAL -->
+<div class="modal-overlay" id="addItemModal">
+  <div class="modal modal-wide">
+    <h3 id="addItemTitle">Add New Item</h3>
+    <div class="form-grid">
+      <div class="form-group full">
+        <label class="form-label">Item Name</label>
+        <input class="form-input" id="fi-item" type="text" placeholder="e.g. Hendricks">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Category</label>
+        <select class="form-select" id="fi-category"></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Size</label>
+        <input class="form-input" id="fi-size" type="text" placeholder="e.g. 700mL">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Supplier</label>
+        <input class="form-input" id="fi-supplier" type="text" placeholder="e.g. ILG">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Risk Tier</label>
+        <select class="form-select" id="fi-risk_tier">
+          <option value="low">Low</option>
+          <option value="normal" selected>Normal</option>
+          <option value="critical">Critical</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Case Size</label>
+        <input class="form-input" id="fi-case" type="number" min="1" value="1">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Baseline (Par)</label>
+        <input class="form-input" id="fi-baseline" type="number" min="0" value="0">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Cost ($)</label>
+        <input class="form-input" id="fi-cost" type="number" step="0.01" min="0" placeholder="0.00">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Sell Price ($)</label>
+        <input class="form-input" id="fi-sell" type="number" step="0.01" min="0" placeholder="0.00">
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('addItemModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveItem()">Save Item</button>
+    </div>
+  </div>
+</div>
+
+<!-- DELETE CONFIRM MODAL -->
+<div class="modal-overlay" id="deleteModal">
+  <div class="modal modal-sm">
+    <h3>Remove Item</h3>
+    <p>Remove <span class="delete-item-name" id="deleteItemName"></span> from your product list? This cannot be undone.</p>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('deleteModal')">Cancel</button>
+      <button class="btn btn-danger" onclick="confirmDelete()">Remove</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── DATA ────────────────────────────────────────────────────────────────────
+const MASTER = [];
+
+// ─── STATE ───────────────────────────────────────────────────────────────────
+let state = loadState();
+let activeFilter = 'all';
+let activeSupplier = 'all';
+let searchQuery = '';
+
+function loadState() {
+  try {
+    const saved = localStorage.getItem('stockorder_v2');
+    if (saved) return JSON.parse(saved);
+  } catch(e) {}
+  return { weekNum: 1, weekStart: getWeekStart(), items: {}, catalog: [] };
+}
+
+function saveState() {
+  localStorage.setItem('stockorder_v2', JSON.stringify(state));
+}
+
+function getWeekStart() {
+  const d = new Date();
+  const day = d.getDay();
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+  d.setDate(diff);
+  return d.toISOString().split('T')[0];
+}
+
+function getItem(id) {
+  const m = MASTER.find(x => x.id === id) || (state.catalog||[]).find(x => x.id === id) || {};
+  const ov = (state.productOverrides || {})[id] || {};
+  return { ...m, ...ov, ...state.items[id] };
+}
+
+// ─── CALCULATIONS ────────────────────────────────────────────────────────────
+function avgUsage(item) {
+  const vals = [item.used_0, item.used_1, item.used_2, item.used_3].map(Number).filter(v => !isNaN(v));
+  if (!vals.length) return 0;
+  const avg = vals.reduce((a, b) => a + b, 0) / vals.length;
+  return Math.max(0, avg);
+}
+
+function suggestedOrder(item) {
+  const avg = avgUsage(item);
+  const target = Math.max(item.baseline, avg);
+  const raw = target - Number(item.count);
+  if (raw <= 0) return 0;
+  return Math.ceil(raw / item.case) * item.case;
+}
+
+function margin(item) {
+  if (!item.sell || !item.cost || item.sell === 0) return null;
+  return (item.sell - item.cost) / item.sell;
+}
+
+function fmt(n, dec = 1) {
+  if (n === null || n === undefined || isNaN(n)) return '—';
+  return Number(n).toFixed(dec);
+}
+
+function fmtMoney(n) {
+  if (!n) return '—';
+  return '$' + Number(n).toFixed(2);
+}
+
+// ─── FILTERS ─────────────────────────────────────────────────────────────────
+function setFilter(f, el) {
+  activeFilter = f;
+  document.querySelectorAll('.filter-chip[data-filter]').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  applyFilters();
+}
+
+function setSupplierFilter(s, el) {
+  activeSupplier = s;
+  document.querySelectorAll('.filter-chip[data-supplier]').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  applyFilters();
+}
+
+function searchItems(q) {
+  searchQuery = q.toLowerCase();
+  applyFilters();
+}
+
+function applyFilters() {
+  getAllItems().forEach(m => {
+    const item = getItem(m.id);
+    const row = document.getElementById('row-' + m.id);
+    if (!row) return;
+    let show = true;
+    if (searchQuery) show = m.item.toLowerCase().includes(searchQuery) || m.supplier.toLowerCase().includes(searchQuery);
+    if (show && activeSupplier !== 'all') show = m.supplier === activeSupplier;
+    if (show && activeFilter === 'ordered') show = Number(item.ordered) > 0;
+    if (show && activeFilter === 'critical') show = m.risk_tier === 'critical';
+    if (show && activeFilter === 'suggested') show = suggestedOrder(item) > 0;
+    row.classList.toggle('hidden-row', !show);
+  });
+  updateCategoryCounts();
+}
+
+function updateCategoryCounts() {
+  const allItems = getAllItems();
+  const cats = [...new Set(allItems.map(m => m.category))];
+  cats.forEach(cat => {
+    const key = cat.replace(/\s+/g, '-');
+    const visible = allItems.filter(m => m.category === cat && !document.getElementById('row-' + m.id)?.classList.contains('hidden-row')).length;
+    const el = document.getElementById('count-' + key);
+    if (el) el.textContent = visible + ' items';
+    const section = document.getElementById('body-' + key)?.closest('.category-section');
+    if (section) section.style.display = visible === 0 ? 'none' : '';
+  });
+}
+
+// ─── RENDER ──────────────────────────────────────────────────────────────────
+function render() {
+  updateWeekLabel();
+  renderSupplierFilters();
+  renderCategories();
+  updateStats();
+}
+
+function updateWeekLabel() {
+  const d = new Date(state.weekStart + 'T00:00:00');
+  const options = { day: 'numeric', month: 'short', year: 'numeric' };
+  document.getElementById('weekLabel').textContent = 'w/c ' + d.toLocaleDateString('en-AU', options);
+}
+
+const SUPPLIER_ORDER = ['ILG','CUB','Lion','Young Henrys','Joval','Bacchus','Bacchant','Fesq & Co.','Air Liquide','QCC','Select Fresh','A1 Chemicals'];
+
+function renderSupplierFilters() {
+  const existing = new Set(getAllItems().map(m => m.supplier).filter(Boolean));
+  const suppliers = [...existing].sort((a, b) => {
+    const ai = SUPPLIER_ORDER.indexOf(a); const bi = SUPPLIER_ORDER.indexOf(b);
+    return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
+  });
+  const wrap = document.getElementById('supplierFilters');
+  wrap.innerHTML = '<button class="filter-chip active" data-supplier="all" onclick="setSupplierFilter(\'all\',this)">All</button>' +
+    suppliers.map(s => `<button class="filter-chip" data-supplier="${s}" onclick="setSupplierFilter('${s.replace(/'/g,"\\'")}',this)">${s}</button>`).join('');
+}
+
+function renderCategories() {
+  const allItems = getAllItems();
+  const cats = [...new Set(allItems.map(m => m.category))].sort((a, b) => {
+    const ai = CATEGORIES.indexOf(a); const bi = CATEGORIES.indexOf(b);
+    return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
+  });
+  const content = document.getElementById('content');
+  content.innerHTML = '';
+
+  cats.forEach(cat => {
+    const items = allItems.filter(m => m.category === cat).sort((a, b) => a.position - b.position || a.item.localeCompare(b.item));
+    const section = document.createElement('div');
+    section.className = 'category-section';
+    section.innerHTML = `
+      <div class="category-header" onclick="toggleCategory('${cat.replace(/'/g,"\\'")}')">
+        <div class="category-name">${cat}</div>
+        <div class="category-count" id="count-${cat.replace(/\s+/g,'-')}">${items.length} items</div>
+        <svg class="category-toggle" id="toggle-${cat.replace(/\s+/g,'-')}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="table-wrap" id="body-${cat.replace(/\s+/g,'-')}">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:220px">Item</th>
+              <th style="width:80px">Size</th>
+              <th class="grp-ref" style="width:90px">Prev Count</th>
+              <th class="grp-ref" style="width:85px">Received</th>
+              <th class="count-col" style="width:105px">Count</th>
+              <th style="width:85px">Used (wk)</th>
+              <th style="width:85px">Avg Usage</th>
+              <th style="width:85px">Suggested</th>
+              <th style="width:100px">Order Qty</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-${cat.replace(/\s+/g,'-')}">
+          </tbody>
+        </table>
+      </div>`;
+    content.appendChild(section);
+
+    const tbody = document.getElementById('tbody-' + cat.replace(/\s+/g, '-'));
+    items.forEach(m => {
+      const item = getItem(m.id);
+      const sugg = suggestedOrder(item);
+      const avg = avgUsage(item);
+      const mg = margin(item);
+      const hasOrder = Number(item.ordered) > 0;
+
+      // margin class
+      let mgClass = 'margin-na';
+      if (mg !== null) {
+        if (mg >= 0.6) mgClass = 'margin-high';
+        else if (mg >= 0.4) mgClass = 'margin-mid';
+        else mgClass = 'margin-low';
+      }
+
+      // usage vs average arrow
+      const used0 = Number(item.used_0);
+      let usageArrow = '';
+      if (avg > 0 && used0 > avg) usageArrow = `<span class="usage-arrow delta-down">↑</span>`;
+      else if (avg > 0 && used0 < avg) usageArrow = `<span class="usage-arrow delta-up">↓</span>`;
+      else if (avg > 0) usageArrow = `<span class="usage-arrow" style="color:var(--text3)">—</span>`;
+
+      const tr = document.createElement('tr');
+      tr.id = 'row-' + m.id;
+      if (avg < 0.25) tr.classList.add('low-avg');
+      tr.innerHTML = `
+        <td>
+          <div class="item-name${m.discontinued ? ' discontinued' : ''}">${m.item}</div>
+          <div class="item-sub">${m.baseline > 0 ? 'par: ' + m.baseline + ' · ' : ''}case: ${m.case}</div>
+        </td>
+        <td class="mono" style="color:var(--text2)">${m.size}</td>
+        <td class="grp-ref mono">${fmt(item.count_prev)}</td>
+        <td class="grp-ref mono">${fmt(item.received)}</td>
+        <td class="mono count-col">${fmt(item.count, 1)}</td>
+        <td class="mono" id="used0-${m.id}">${fmt(item.used_0)}${usageArrow ? ' ' + usageArrow : ''}</td>
+        <td class="mono" style="color:var(--text2)">${fmt(avg)}</td>
+        <td class="suggested"><span class="val ${sugg === 0 ? 'zero' : ''}">${sugg > 0 ? sugg : '—'}</span></td>
+        <td>
+          <input class="qty-input" type="number" step="${m.case}" min="0"
+            value="${Number(item.ordered) || ''}"
+            placeholder="0"
+            onchange="updateField('${m.id}','ordered',this.value,this)"
+            oninput="this.classList.add('changed')" />
+        </td>
+        `;
+      tbody.appendChild(tr);
+    });
+  });
+}
+
+function toggleCategory(cat) {
+  const key = cat.replace(/\s+/g, '-');
+  const body = document.getElementById('body-' + key);
+  const toggle = document.getElementById('toggle-' + key);
+  const hidden = body.style.display === 'none';
+  body.style.display = hidden ? '' : 'none';
+  toggle.classList.toggle('collapsed', !hidden);
+}
+
+// ─── UPDATE ──────────────────────────────────────────────────────────────────
+function updateField(id, field, value, input) {
+  const num = parseFloat(value) || 0;
+  state.items[id][field] = num;
+  saveState();
+  updateStats();
+  if (field === 'count') {
+    // recalculate used_0 = (count_prev + received) - count
+    const s = state.items[id];
+    s.used_0 = Math.max(0, (Number(s.count_prev) || 0) + (Number(s.received) || 0) - num);
+    // update Used (wk) cell in Order tab
+    const used0Cell = document.getElementById('used0-' + id);
+    if (used0Cell) used0Cell.textContent = fmt(s.used_0);
+    // update used_0 input in Stock Data tab if visible
+    const stockInput = document.getElementById(`stk-${id}-used_0`);
+    if (stockInput) stockInput.value = s.used_0;
+    // refresh suggested
+    const item = getItem(id);
+    const sugg = suggestedOrder(item);
+    const row = document.getElementById('row-' + id);
+    if (row) {
+      const suggEl = row.querySelector('.suggested .val');
+      if (suggEl) {
+        suggEl.textContent = sugg > 0 ? sugg : '—';
+        suggEl.className = 'val' + (sugg === 0 ? ' zero' : '');
+      }
+    }
+  }
+}
+
+function updateStats() {
+  let items = 0, cost = 0;
+  getAllItems().forEach(m => {
+    const item = getItem(m.id);
+    const qty = Number(item.ordered) || 0;
+    if (qty > 0) { items++; cost += qty * m.cost; }
+  });
+  document.getElementById('statItems').textContent = items;
+  document.getElementById('statCost').textContent = '$' + cost.toLocaleString('en-AU', {minimumFractionDigits:0, maximumFractionDigits:0});
+}
+
+// ─── WEEK ADVANCE ─────────────────────────────────────────────────────────────
+function showAdvanceModal() {
+  let orderedCount = 0, totalCost = 0;
+  getAllItems().forEach(m => {
+    const item = getItem(m.id);
+    const qty = Number(item.ordered) || 0;
+    if (qty > 0) { orderedCount++; totalCost += qty * m.cost; }
+  });
+  document.getElementById('advanceInfo').innerHTML = `
+    <strong>Current week summary</strong><br>
+    Items ordered: ${orderedCount}<br>
+    Estimated cost: $${totalCost.toLocaleString('en-AU', {minimumFractionDigits:0,maximumFractionDigits:0})}<br><br>
+    After advancing: ordered qty becomes "received", current usage shifts back, counts carry forward.`;
+  document.getElementById('advanceModal').classList.add('open');
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+function advanceWeek() {
+  // Shift week: ordered→received, used_0→used_1→used_2→used_3, count stays
+  getAllItems().forEach(m => {
+    const item = state.items[m.id];
+    const prevCount = Number(item.count_prev) || 0;
+    const received = Number(item.ordered) || 0;
+    const count = Number(item.count) || 0;
+    item.used_3 = item.used_2;
+    item.used_2 = item.used_1;
+    item.used_1 = item.used_0;
+    item.used_0 = Math.max(0, prevCount + received - count);
+    item.count_prev = count;
+    item.received = received;
+    item.ordered = 0;
+    item.count = 0;
+    COUNT_VENUES.forEach((_, i) => { item['cnt_' + i] = 0; });
+  });
+  state.weekNum++;
+  // advance date by 7 days
+  const d = new Date(state.weekStart + 'T00:00:00');
+  d.setDate(d.getDate() + 7);
+  state.weekStart = d.toISOString().split('T')[0];
+  saveState();
+  closeModal('advanceModal');
+  renderCategories();
+  updateWeekLabel();
+  updateStats();
+}
+
+// ─── PDF EXPORT ──────────────────────────────────────────────────────────────
+function exportPDF() {
+  // Build a clean print view
+  const orderedItems = getAllItems().filter(m => (Number(state.items[m.id]?.ordered) || 0) > 0)
+    .sort((a, b) => {
+      const ai = CATEGORIES.indexOf(a.category); const bi = CATEGORIES.indexOf(b.category);
+      return ((ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi)) || a.position - b.position;
+    });
+
+  if (!orderedItems.length) {
+    alert('No items have an order quantity set.');
+    return;
+  }
+
+  const d = new Date(state.weekStart + 'T00:00:00');
+  const dateStr = d.toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' });
+
+  let cats = {};
+  orderedItems.forEach(m => {
+    if (!cats[m.category]) cats[m.category] = [];
+    cats[m.category].push(m);
+  });
+
+  let total = 0;
+  let html = `<html><head><meta charset="UTF-8"><title>Stock Order ${dateStr}</title>
+  <style>
+    body { font-family: Arial, sans-serif; font-size: 11px; color: #111; margin: 20px; }
+    h1 { font-size: 18px; margin-bottom: 4px; }
+    .subtitle { color: #666; font-size: 12px; margin-bottom: 20px; }
+    h2 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; color: #444; border-bottom: 1px solid #ddd; padding-bottom: 4px; margin: 16px 0 6px; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 8px; }
+    th { text-align: left; font-size: 10px; text-transform: uppercase; letter-spacing: 0.04em; color: #666; padding: 4px 8px; border-bottom: 1px solid #ddd; }
+    th.r { text-align: right; }
+    td { padding: 4px 8px; border-bottom: 1px solid #f0f0f0; }
+    td.r { text-align: right; font-family: monospace; }
+    .total { font-weight: bold; font-size: 12px; margin-top: 16px; border-top: 2px solid #333; padding-top: 8px; }
+    @media print { body { margin: 10px; } }
+  </style></head><body>
+  <h1>Stock Order</h1>
+  <div class="subtitle">Week commencing ${dateStr}</div>`;
+
+  Object.entries(cats).forEach(([cat, items]) => {
+    html += `<h2>${cat}</h2><table>
+      <thead><tr><th>Item</th><th>Size</th><th>Supplier</th><th class="r">Count</th><th class="r">Avg Use</th><th class="r">Suggested</th><th class="r">Order Qty</th><th class="r">Cost ea</th><th class="r">Total</th></tr></thead><tbody>`;
+    items.forEach(m => {
+      const item = getItem(m.id);
+      const qty = Number(item.ordered);
+      const sugg = suggestedOrder(item);
+      const lineTotal = qty * m.cost;
+      total += lineTotal;
+      html += `<tr>
+        <td>${m.item}</td>
+        <td>${m.size}</td>
+        <td>${m.supplier || '—'}</td>
+        <td class="r">${fmt(item.count)}</td>
+        <td class="r">${fmt(avgUsage(item))}</td>
+        <td class="r">${sugg > 0 ? sugg : '—'}</td>
+        <td class="r"><strong>${qty}</strong></td>
+        <td class="r">${fmtMoney(m.cost)}</td>
+        <td class="r">$${lineTotal.toFixed(2)}</td>
+      </tr>`;
+    });
+    html += '</tbody></table>';
+  });
+
+  html += `<div class="total">Total estimated cost: $${total.toLocaleString('en-AU', {minimumFractionDigits:2,maximumFractionDigits:2})}</div>`;
+  html += '</body></html>';
+
+  const win = window.open('', '_blank');
+  win.document.write(html);
+  win.document.close();
+  win.focus();
+  setTimeout(() => win.print(), 600);
+}
+
+// ─── INIT ────────────────────────────────────────────────────────────────────
+
+// ─── PRODUCT CATALOG ─────────────────────────────────────────────────────────
+function getAllItems() {
+  const deleted = new Set(state.deletedIds || []);
+  const added = state.catalog || [];
+  const overrides = state.productOverrides || {};
+  const base = MASTER.filter(m => !deleted.has(m.id)).map(m => {
+    const ov = overrides[m.id];
+    return ov ? { ...m, ...ov } : { ...m };
+  });
+  return [...base, ...added];
+}
+
+// ─── TOP BAR ─────────────────────────────────────────────────────────────────
+function toggleTopBar() {
+  document.getElementById('topBar').classList.toggle('minimised');
+}
+new ResizeObserver(() => {
+  document.documentElement.style.setProperty('--topbar-h', document.getElementById('topBar').offsetHeight + 'px');
+}).observe(document.getElementById('topBar'));
+
+// ─── VIEW SWITCHING ──────────────────────────────────────────────────────────
+function switchView(view, tab) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('view-' + view).classList.add('active');
+  tab.classList.add('active');
+  const isOrder = view === 'order';
+  document.getElementById('headerStats').style.display = isOrder ? '' : 'none';
+  document.getElementById('btnNextWeek').style.display = isOrder ? '' : 'none';
+  document.getElementById('btnExport').style.display = isOrder ? '' : 'none';
+  document.getElementById('orderFilters').style.display = isOrder ? '' : 'none';
+  if (view === 'order') { renderCategories(); updateStats(); }
+  if (view === 'count') renderCount();
+  if (view === 'manage') renderPM();
+  if (view === 'stock') renderStock();
+}
+
+const COUNT_VENUES = ['Basement','Republic Bar','Bistro','Sports Bar',"Taylor's Rooftop"];
+
+function renderCount() {
+  const allItems = getAllItems().sort((a, b) => {
+    const ai = CATEGORIES.indexOf(a.category); const bi = CATEGORIES.indexOf(b.category);
+    return ((ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi)) || a.position - b.position || a.item.localeCompare(b.item);
+  });
+  const container = document.getElementById('countContent');
+  container.innerHTML = '';
+  const cats = [...new Set(allItems.map(m => m.category))];
+  cats.forEach(cat => {
+    const key = cat.replace(/\s+/g, '-');
+    const items = allItems.filter(m => m.category === cat);
+    const section = document.createElement('div');
+    section.className = 'category-section';
+    section.innerHTML = `
+      <div class="category-header" onclick="toggleCountCategory('${cat.replace(/'/g,"\\'")}')">
+        <div class="category-name">${cat}</div>
+        <div class="category-count">${items.length} items</div>
+        <svg class="category-toggle" id="cnttoggle-${key}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="table-wrap" id="cntbody-${key}">
+        <table style="table-layout:fixed">
+          <thead><tr>
+            <th style="width:220px;text-align:left">Item</th>
+            ${COUNT_VENUES.map(v => `<th style="width:110px;text-align:center">${v}</th>`).join('')}
+            <th style="width:90px;text-align:center">Total</th>
+          </tr></thead>
+          <tbody id="cnttbody-${key}"></tbody>
+        </table>
+      </div>`;
+    container.appendChild(section);
+    const tbody = document.getElementById('cnttbody-' + key);
+    items.forEach(m => {
+      const s = state.items[m.id];
+      const venues = COUNT_VENUES.map((v, i) => s['cnt_' + i] || 0);
+      const total = venues.reduce((a, b) => a + b, 0);
+      const tr = document.createElement('tr');
+      tr.id = 'cntrow-' + m.id;
+      tr.innerHTML = `
+        <td style="padding-left:24px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+          <div class="item-name">${esc(m.item)}</div>
+        </td>
+        ${COUNT_VENUES.map((v, i) => `
+        <td style="text-align:center;padding:4px 8px">
+          <input class="qty-input" type="number" step="0.1" min="0"
+            value="${s['cnt_' + i] || ''}" placeholder="0"
+            oninput="updateVenueCount('${m.id}',${i},this.value)"
+            style="width:70px;text-align:center">
+        </td>`).join('')}
+        <td class="mono" id="cnttotal-${m.id}" style="text-align:center;font-weight:500">${total > 0 ? fmt(total) : '—'}</td>`;
+      tbody.appendChild(tr);
+    });
+  });
+}
+
+function toggleCountCategory(cat) {
+  const key = cat.replace(/\s+/g, '-');
+  const body = document.getElementById('cntbody-' + key);
+  const toggle = document.getElementById('cnttoggle-' + key);
+  const hidden = body.style.display === 'none';
+  body.style.display = hidden ? '' : 'none';
+  toggle.classList.toggle('collapsed', !hidden);
+}
+
+function updateVenueCount(id, venueIdx, value) {
+  const s = state.items[id];
+  s['cnt_' + venueIdx] = parseFloat(value) || 0;
+  const total = COUNT_VENUES.reduce((sum, _, i) => sum + (Number(s['cnt_' + i]) || 0), 0);
+  // update total cell
+  const totalCell = document.getElementById('cnttotal-' + id);
+  if (totalCell) totalCell.textContent = total > 0 ? fmt(total) : '—';
+  // push total into count and recalculate used_0
+  s.count = total;
+  s.used_0 = Math.max(0, (Number(s.count_prev) || 0) + (Number(s.received) || 0) - total);
+  // update Order tab live if rendered
+  const used0Cell = document.getElementById('used0-' + id);
+  if (used0Cell) used0Cell.textContent = fmt(s.used_0);
+  const countInput = document.querySelector('#row-' + id + ' .qty-input');
+  if (countInput && document.activeElement !== countInput) countInput.value = fmt(total, 1);
+  saveState();
+  updateStats();
+}
+
+function renderStock() {
+  const items = getAllItems().sort((a, b) => {
+    const ai = CATEGORIES.indexOf(a.category); const bi = CATEGORIES.indexOf(b.category);
+    return ((ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi)) || a.item.localeCompare(b.item);
+  });
+  const tbody = document.getElementById('stockTbody');
+  tbody.innerHTML = '';
+  const fields = ['count_prev','used_0','used_1','used_2','used_3','received','ordered'];
+  items.forEach(m => {
+    const item = getItem(m.id);
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td style="padding-left:24px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(m.item)}</td>
+      <td style="color:var(--text3);font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center">${m.category}</td>
+      ${fields.map(f => `
+      <td style="text-align:center;padding:4px 8px">
+        <input id="stk-${m.id}-${f}" class="pm-input narrow" type="number" step="0.1" min="0"
+          value="${item[f] || ''}" placeholder="—"
+          onchange="updateField('${m.id}','${f}',this.value,this)"
+          oninput="this.classList.add('changed')" style="width:60px;text-align:center">
+      </td>`).join('')}`;
+    tbody.appendChild(tr);
+  });
+}
+
+// ─── PRODUCT MANAGER ─────────────────────────────────────────────────────────
+let pmSearchQuery = '';
+let pendingDeleteId = null;
+let editingItemId = null;
+
+const CATEGORIES = [
+  'Vodka','Gin','Tequila & Mezcal','Rum','Scotch','Bourbon & Whiskey',
+  'Liqueurs','Other','Wines','Packaged','Kegs','Gas',
+  'Post-Mix Syrups','Fruit & Juice','Consumables','Chemicals'
+];
+
+function renderPM() {
+  const allItems = getAllItems().sort((a, b) => {
+    const ai = CATEGORIES.indexOf(a.category); const bi = CATEGORIES.indexOf(b.category);
+    return ((ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi)) || a.position - b.position || a.item.localeCompare(b.item);
+  });
+  const container = document.getElementById('pmContent');
+  container.innerHTML = '';
+  const cats = [...new Set(allItems.map(m => m.category))];
+  cats.forEach(cat => {
+    const key = cat.replace(/\s+/g, '-');
+    const items = allItems.filter(m => m.category === cat);
+    const section = document.createElement('div');
+    section.className = 'category-section';
+    section.id = 'pmsection-' + key;
+    section.innerHTML = `
+      <div class="category-header" onclick="togglePMCategory('${cat.replace(/'/g,"\\'")}')">
+        <div class="category-name">${cat}</div>
+        <div class="category-count" id="pmcount-${key}">${items.length} items</div>
+        <svg class="category-toggle" id="pmtoggle-${key}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="pm-table-wrap" id="pmbody-${key}">
+        <table class="pm-table">
+          <thead><tr>
+            <th style="width:28px"></th>
+            <th style="width:220px">Item Name</th>
+            <th style="text-align:center">Category</th>
+            <th style="text-align:center">Size</th>
+            <th style="text-align:center">Supplier</th>
+            <th style="text-align:center">Case</th>
+            <th style="text-align:center">Baseline</th>
+            <th style="text-align:center">Risk Tier</th>
+            <th style="text-align:center">Cost</th>
+            <th style="text-align:center">Sell</th>
+            <th></th>
+          </tr></thead>
+          <tbody id="pmtbody-${key}"></tbody>
+        </table>
+      </div>`;
+    container.appendChild(section);
+    const tbody = document.getElementById('pmtbody-' + key);
+    items.forEach(item => {
+      const tr = document.createElement('tr');
+      tr.id = 'pmrow-' + item.id;
+      if (avgUsage(item) < 0.25) tr.classList.add('low-avg');
+      tr.draggable = true;
+      tr.dataset.id = item.id;
+      tr.dataset.category = item.category;
+      tr.addEventListener('dragstart', pmDragStart);
+      tr.addEventListener('dragover', pmDragOver);
+      tr.addEventListener('dragleave', pmDragLeave);
+      tr.addEventListener('drop', pmDrop);
+      if (item.discontinued) tr.classList.add('pm-disc');
+      tr.innerHTML = `
+        <td style="padding-left:12px"><span class="drag-handle" title="Drag to reorder">⠿</span></td>
+        <td><input class="pm-input" style="min-width:160px" value="${esc(item.item)}" onchange="updateProduct('${item.id}','item',this.value)"></td>
+        <td style="text-align:center"><select class="pm-select" style="min-width:130px;text-align:center" onchange="updateProduct('${item.id}','category',this.value)">
+          ${CATEGORIES.map(c => `<option value="${c}" ${c===item.category?'selected':''}>${c}</option>`).join('')}
+        </select></td>
+        <td style="text-align:center"><input class="pm-input med" style="text-align:center" value="${esc(item.size)}" onchange="updateProduct('${item.id}','size',this.value)"></td>
+        <td style="text-align:center"><input class="pm-input med" style="text-align:center" value="${esc(item.supplier||'')}" onchange="updateProduct('${item.id}','supplier',this.value)"></td>
+        <td style="text-align:center"><input class="pm-input narrow" style="text-align:center" type="number" min="1" value="${item.case}" onchange="updateProduct('${item.id}','case',+this.value)"></td>
+        <td style="text-align:center"><input class="pm-input narrow" style="text-align:center" type="number" min="0" value="${item.baseline}" onchange="updateProduct('${item.id}','baseline',+this.value)"></td>
+        <td style="text-align:center"><select class="pm-select" style="width:90px;text-align:center" onchange="updateProduct('${item.id}','risk_tier',this.value)">
+          <option value="low" ${item.risk_tier==='low'?'selected':''}>low</option>
+          <option value="normal" ${item.risk_tier==='normal'?'selected':''}>normal</option>
+          <option value="critical" ${item.risk_tier==='critical'?'selected':''}>critical</option>
+        </select></td>
+        <td style="text-align:center"><input class="pm-input narrow" style="text-align:center" type="number" step="0.01" min="0" value="${item.cost||''}" placeholder="—" onchange="updateProduct('${item.id}','cost',+this.value)"></td>
+        <td style="text-align:center"><input class="pm-input narrow" style="text-align:center" type="number" step="0.01" min="0" value="${item.sell||''}" placeholder="—" onchange="updateProduct('${item.id}','sell',+this.value)"></td>
+        <td style="display:flex;gap:4px;align-items:center;padding-top:6px">
+          <button class="btn btn-icon btn-disc ${item.discontinued ? 'on' : ''}" title="${item.discontinued ? 'Mark as active' : 'Do not order'}" onclick="toggleDiscontinued('${item.id}')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+          </button>
+          <button class="btn btn-icon btn-danger" onclick="showDeleteModal('${item.id}','${esc(item.item).replace(/'/g,"\\'")}')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+          </button>
+        </td>`;
+      tbody.appendChild(tr);
+    });
+  });
+  document.getElementById('pmCount').textContent = allItems.length + ' items';
+  applyPMSearch();
+}
+
+function togglePMCategory(cat) {
+  const key = cat.replace(/\s+/g, '-');
+  const body = document.getElementById('pmbody-' + key);
+  const toggle = document.getElementById('pmtoggle-' + key);
+  const hidden = body.style.display === 'none';
+  body.style.display = hidden ? '' : 'none';
+  toggle.classList.toggle('collapsed', !hidden);
+}
+
+let pmDragId = null;
+function pmDragStart(e) { pmDragId = this.dataset.id; e.dataTransfer.effectAllowed = 'move'; }
+function pmDragOver(e) { e.preventDefault(); this.classList.add('drag-over'); }
+function pmDragLeave() { this.classList.remove('drag-over'); }
+function pmDrop(e) {
+  e.preventDefault();
+  this.classList.remove('drag-over');
+  const targetId = this.dataset.id;
+  if (!pmDragId || pmDragId === targetId) return;
+  // only allow reorder within same category
+  const dragRow = document.getElementById('pmrow-' + pmDragId);
+  const targetRow = document.getElementById('pmrow-' + targetId);
+  if (!dragRow || !targetRow || dragRow.dataset.category !== targetRow.dataset.category) return;
+  // reorder in DOM
+  targetRow.parentNode.insertBefore(dragRow, targetRow);
+  // save new positions
+  const tbody = targetRow.parentNode;
+  [...tbody.querySelectorAll('tr')].forEach((row, i) => {
+    updateProduct(row.dataset.id, 'position', i + 1);
+  });
+  pmDragId = null;
+}
+
+function esc(str) {
+  return (str||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+}
+
+function updateProduct(id, field, value) {
+  const isMaster = MASTER.some(m => m.id === id);
+  if (isMaster) {
+    if (!state.productOverrides) state.productOverrides = {};
+    if (!state.productOverrides[id]) state.productOverrides[id] = {};
+    state.productOverrides[id][field] = value;
+  } else {
+    const idx = (state.catalog||[]).findIndex(c => c.id === id);
+    if (idx >= 0) state.catalog[idx][field] = value;
+  }
+  saveState();
+  if (document.getElementById('view-order').classList.contains('active')) {
+    renderCategories(); updateStats();
+  }
+}
+
+function toggleDiscontinued(id) {
+  const item = getAllItems().find(i => i.id === id);
+  if (!item) return;
+  updateProduct(id, 'discontinued', !item.discontinued);
+  renderPM();
+}
+
+function pmSearch(q) {
+  pmSearchQuery = q.toLowerCase();
+  applyPMSearch();
+}
+
+function applyPMSearch() {
+  const items = getAllItems();
+  let visible = 0;
+  items.forEach(item => {
+    const row = document.getElementById('pmrow-' + item.id);
+    if (!row) return;
+    const match = !pmSearchQuery ||
+      item.item.toLowerCase().includes(pmSearchQuery) ||
+      item.category.toLowerCase().includes(pmSearchQuery) ||
+      (item.supplier||'').toLowerCase().includes(pmSearchQuery);
+    row.classList.toggle('pm-hidden', !match);
+    if (match) visible++;
+  });
+  // hide/show category sections based on visible rows
+  CATEGORIES.forEach(cat => {
+    const key = cat.replace(/\s+/g, '-');
+    const section = document.getElementById('pmsection-' + key);
+    if (!section) return;
+    const anyVisible = section.querySelectorAll('tr:not(.pm-hidden)').length > 0;
+    section.style.display = anyVisible ? '' : 'none';
+    const countEl = document.getElementById('pmcount-' + key);
+    if (countEl) countEl.textContent = section.querySelectorAll('tr:not(.pm-hidden)').length + ' items';
+  });
+  document.getElementById('pmCount').textContent = visible + ' items';
+}
+
+function showAddItemModal() {
+  editingItemId = null;
+  document.getElementById('addItemTitle').textContent = 'Add New Item';
+  const sel = document.getElementById('fi-category');
+  sel.innerHTML = CATEGORIES.map(c => `<option value="${c}">${c}</option>`).join('');
+  ['item','size','supplier','cost','sell'].forEach(f => document.getElementById('fi-'+f).value = '');
+  document.getElementById('fi-case').value = 1;
+  document.getElementById('fi-baseline').value = 0;
+  document.getElementById('fi-risk_tier').value = 'normal';
+  document.getElementById('fi-category').value = CATEGORIES[0];
+  document.getElementById('addItemModal').classList.add('open');
+  setTimeout(() => document.getElementById('fi-item').focus(), 100);
+}
+
+function saveItem() {
+  const name = document.getElementById('fi-item').value.trim();
+  if (!name) { document.getElementById('fi-item').focus(); return; }
+  const item = {
+    id: editingItemId || crypto.randomUUID(),
+    item: name,
+    category: document.getElementById('fi-category').value,
+    size: document.getElementById('fi-size').value.trim(),
+    supplier: document.getElementById('fi-supplier').value.trim(),
+    risk_tier: document.getElementById('fi-risk_tier').value,
+    case: parseInt(document.getElementById('fi-case').value)||1,
+    baseline: parseInt(document.getElementById('fi-baseline').value)||0,
+    cost: parseFloat(document.getElementById('fi-cost').value)||0,
+    sell: parseFloat(document.getElementById('fi-sell').value)||0,
+    position: 99,
+  };
+  if (!state.catalog) state.catalog = [];
+  if (editingItemId) {
+    const idx = state.catalog.findIndex(c => c.id === editingItemId);
+    if (idx >= 0) state.catalog[idx] = { ...state.catalog[idx], ...item };
+  } else {
+    state.catalog.push(item);
+    state.items[item.id] = { count:0, ordered:0, count_prev:0, used_0:0, used_1:0, used_2:0, used_3:0, received:0 };
+  }
+  saveState();
+  closeModal('addItemModal');
+  renderPM();
+  renderCategories();
+  updateStats();
+}
+
+function showDeleteModal(id, name) {
+  pendingDeleteId = id;
+  document.getElementById('deleteItemName').textContent = name;
+  document.getElementById('deleteModal').classList.add('open');
+}
+
+function confirmDelete() {
+  if (!pendingDeleteId) return;
+  const isMaster = MASTER.some(m => m.id === pendingDeleteId);
+  if (isMaster) {
+    if (!state.deletedIds) state.deletedIds = [];
+    state.deletedIds.push(pendingDeleteId);
+  } else {
+    state.catalog = (state.catalog||[]).filter(c => c.id !== pendingDeleteId);
+  }
+  delete state.items[pendingDeleteId];
+  saveState();
+  pendingDeleteId = null;
+  closeModal('deleteModal');
+  renderPM();
+  renderCategories();
+  updateStats();
+}
+
+render();
+
+// ─── ARROW KEY CELL NAVIGATION ────────────────────────────────────────────────
+document.addEventListener('keydown', function(e) {
+  const input = e.target;
+  if (!input.closest('td')) return;
+
+  // increment/decrement shortcuts
+  if (['=','-',']','['].includes(e.key) && input.type === 'number') {
+    e.preventDefault();
+    const delta = e.key === '=' ? 1 : e.key === '-' ? -1 : e.key === ']' ? 0.1 : -0.1;
+    const newVal = Math.max(0, Math.round(((parseFloat(input.value) || 0) + delta) * 10) / 10);
+    input.value = newVal;
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+    return;
+  }
+
+  if (!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key)) return;
+
+  const td = input.closest('td');
+  const tr = input.closest('tr');
+  const tbody = tr.closest('tbody');
+  if (!tbody) return;
+
+  const isNumber = input.type === 'number';
+  const atStart = isNumber || input.selectionStart === 0;
+  const atEnd   = isNumber || input.selectionStart === input.value.length;
+
+  let targetInput = null;
+
+  if (e.key === 'ArrowLeft' && atStart) {
+    const cells = [...tr.cells];
+    for (let i = cells.indexOf(td) - 1; i >= 0; i--) {
+      const inp = cells[i].querySelector('input:not([type=hidden])');
+      if (inp) { targetInput = inp; break; }
+    }
+  } else if (e.key === 'ArrowRight' && atEnd) {
+    const cells = [...tr.cells];
+    for (let i = cells.indexOf(td) + 1; i < cells.length; i++) {
+      const inp = cells[i].querySelector('input:not([type=hidden])');
+      if (inp) { targetInput = inp; break; }
+    }
+  } else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+    const colIdx = [...tr.cells].indexOf(td);
+    const step = e.key === 'ArrowUp' ? -1 : 1;
+    // collect all visible tbodies in the active view
+    const view = tbody.closest('.view') || document.body;
+    const allTbodies = [...view.querySelectorAll('tbody')].filter(tb => tb.offsetParent !== null);
+    const tbodyIdx = allTbodies.indexOf(tbody);
+    // search within current tbody first
+    const rows = [...tbody.rows].filter(r => !r.classList.contains('pm-hidden') && !r.classList.contains('hidden-row'));
+    const rowIdx = rows.indexOf(tr);
+    for (let i = rowIdx + step; i >= 0 && i < rows.length; i += step) {
+      const inp = rows[i].cells[colIdx]?.querySelector('input:not([type=hidden])');
+      if (inp) { targetInput = inp; break; }
+    }
+    // if still not found, jump to adjacent category tbody
+    if (!targetInput) {
+      for (let ti = tbodyIdx + step; ti >= 0 && ti < allTbodies.length; ti += step) {
+        const nextTbody = allTbodies[ti];
+        const nextRows = [...nextTbody.rows].filter(r => !r.classList.contains('pm-hidden') && !r.classList.contains('hidden-row'));
+        if (!nextRows.length) continue;
+        const searchRows = step === 1 ? nextRows : [...nextRows].reverse();
+        for (const row of searchRows) {
+          const inp = row.cells[colIdx]?.querySelector('input:not([type=hidden])');
+          if (inp) { targetInput = inp; break; }
+        }
+        if (targetInput) break;
+      }
+    }
+  } else {
+    return; // let left/right move cursor normally when not at boundary
+  }
+
+  if (targetInput) {
+    e.preventDefault();
+    targetInput.focus();
+    targetInput.select();
+  }
+});
+</script>
+</body>
+</html>
