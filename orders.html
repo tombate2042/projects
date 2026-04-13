@@ -1048,12 +1048,21 @@ const CSV_FIELDS = ['item','category','size','supplier','risk_tier','case','base
 
 function downloadCSVTemplate() {
   const rows = [CSV_FIELDS.join(',')];
-  // one example row
-  rows.push('Example Item,Vodka,700ml,ILG,normal,6,2,45.00,12.00');
+  const items = getAllItems();
+  if (items.length) {
+    items.forEach(m => {
+      rows.push(CSV_FIELDS.map(f => {
+        const v = m[f] !== undefined ? m[f] : '';
+        return String(v).includes(',') ? '"' + v + '"' : v;
+      }).join(','));
+    });
+  } else {
+    rows.push('Example Item,Vodka,700ml,ILG,normal,6,2,45.00,12.00');
+  }
   const blob = new Blob([rows.join('\n')], { type: 'text/csv' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = 'items_template.csv';
+  a.download = items.length ? 'items_export.csv' : 'items_template.csv';
   a.click();
 }
 
