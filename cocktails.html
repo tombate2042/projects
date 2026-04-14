@@ -354,7 +354,7 @@
     setSyncStatus('syncing', 'Syncing...');
     document.getElementById('btn-sync').disabled = true;
 
-    const filename = 'republic-bar-specs.json';
+    const filename = 'cocktails.json';
     const content = JSON.stringify(cocktails, null, 2);
 
     try {
@@ -411,7 +411,7 @@
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || 'GitHub API error');
 
-      const file = data.files['republic-bar-specs.json'];
+      const file = data.files['cocktails.json'];
       if (!file) throw new Error('Spec file not found in gist');
 
       const pulled = JSON.parse(file.content);
