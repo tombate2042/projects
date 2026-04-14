@@ -850,7 +850,7 @@ async function advanceWeek() {
   if (def && c && c.gistId && c.token) {
     if (btn) btn.disabled = true;
     document.getElementById('gist-status').textContent = 'Syncing…';
-    const result = await syncToGist({ ...def, gistId: c.gistId }, c.token);
+    const result = await syncToGist({ ...def, gistId: c.gistId }, c.token, state);
     const ok = result && typeof result === 'object';
     document.getElementById('gist-status').textContent = ok ? `Synced ✓ (${result.size} bytes)` : 'Sync failed: ' + result;
     await new Promise(r => setTimeout(r, ok ? 1200 : 3000));
@@ -967,12 +967,13 @@ async function pushFromSettings(defId) {
   const def = GIST_DEFS.find(d => d.id === defId);
   const statusEl = document.getElementById('gstatus-' + defId);
   statusEl.textContent = 'Pushing…';
-  const result = await syncToGist({ ...def, gistId }, token);
+  const result = await syncToGist({ ...def, gistId }, token, state);
   statusEl.textContent = result && typeof result === 'object' ? `Pushed ✓ (${itemCount} items) — sent ${result.sent} chars, gist reports ${result.size} bytes` : 'Push failed: ' + result;
 }
 
-async function syncToGist(def, token) {
-  const serialised = JSON.stringify(state, null, 2);
+async function syncToGist(def, token, data) {
+  const snapshot = data !== undefined ? data : state;
+  const serialised = JSON.stringify(snapshot, null, 2);
   const sent = serialised ? serialised.length : 0;
   const body = JSON.stringify({
     files: { [def.filename]: { content: serialised || '{}' } }
