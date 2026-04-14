@@ -390,15 +390,21 @@
     <div class="advance-info" id="advanceInfo"></div>
     <p>This will shift all usage and count data forward by one week. Current week becomes last week's reference.</p>
     <div style="margin-bottom:16px;border-top:1px solid var(--border);padding-top:14px">
-      <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.07em;color:var(--text3);margin-bottom:10px">Gist Sync <span style="font-weight:400;opacity:0.6">(optional)</span></div>
-      <div style="display:flex;flex-direction:column;gap:8px">
-        <input class="form-input" id="gist-id" type="text" placeholder="Gist ID  (e.g. a1b2c3d4e5f6…)" style="font-family:var(--mono);font-size:12px">
-        <input class="form-input" id="gist-token" type="password" placeholder="GitHub Personal Access Token" style="font-family:var(--mono);font-size:12px">
-        <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text2);cursor:pointer">
-          <input type="checkbox" id="gist-save" style="accent-color:var(--accent)"> Remember these settings
-        </label>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.07em;color:var(--text3)">Gist Sync <span style="font-weight:400;opacity:0.6">(optional)</span></div>
+        <button class="btn" style="padding:3px 10px;font-size:11px" onclick="toggleGistForm()">+ Add</button>
       </div>
-      <div id="gist-status" style="font-size:11px;margin-top:8px;min-height:16px;font-family:var(--mono)"></div>
+      <div id="gist-list"></div>
+      <div id="gist-add-form" style="display:none;margin-top:8px;display:none;flex-direction:column;gap:6px">
+        <input class="form-input" id="gnew-name" type="text" placeholder="Label (e.g. Main Venue)" style="font-size:12px">
+        <input class="form-input" id="gnew-id" type="text" placeholder="Gist ID" style="font-family:var(--mono);font-size:12px">
+        <input class="form-input" id="gnew-token" type="password" placeholder="GitHub Personal Access Token" style="font-family:var(--mono);font-size:12px">
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-primary" style="font-size:11px;padding:4px 12px" onclick="saveNewGist()">Save</button>
+          <button class="btn" style="font-size:11px;padding:4px 12px" onclick="toggleGistForm()">Cancel</button>
+        </div>
+      </div>
+      <div id="gist-status" style="font-size:11px;margin-top:8px;min-height:16px;font-family:var(--mono);color:var(--text3)"></div>
     </div>
     <div class="modal-actions">
       <button class="btn" onclick="closeModal('advanceModal')">Cancel</button>
@@ -784,11 +790,9 @@ function showAdvanceModal() {
     Estimated cost: $${totalCost.toLocaleString('en-AU', {minimumFractionDigits:0,maximumFractionDigits:0})}<br><br>
     After advancing: ordered qty becomes "received", current usage shifts back, counts carry forward.`;
   document.getElementById('advanceModal').classList.add('open');
-  const gs = loadGistSettings();
-  document.getElementById('gist-id').value = gs.id || '';
-  document.getElementById('gist-token').value = gs.token || '';
-  document.getElementById('gist-save').checked = !!(gs.id || gs.token);
+  renderGistList();
   document.getElementById('gist-status').textContent = '';
+  document.getElementById('gist-add-form').style.display = 'none';
 }
 
 function closeModal(id) {
@@ -822,22 +826,67 @@ function advanceWeek() {
   renderCategories();
   updateWeekLabel();
   updateStats();
-  const gistId = document.getElementById('gist-id').value.trim();
-  const gistToken = document.getElementById('gist-token').value.trim();
-  if (document.getElementById('gist-save').checked) saveGistSettings(gistId, gistToken);
-  else clearGistSettings();
-  if (gistId && gistToken) syncToGist(gistId, gistToken);
+  const gists = loadGists();
+  const checked = gists.filter(g => {
+    const cb = document.getElementById('gcheck-' + g.id);
+    return cb && cb.checked;
+  });
+  if (checked.length) {
+    document.getElementById('gist-status').textContent = 'Syncing…';
+    Promise.all(checked.map(g => syncToGist(g.gistId, g.token))).then(results => {
+      const failed = results.filter(r => r !== true);
+      if (failed.length) alert('Some gist syncs failed:\n' + failed.join('\n'));
+    });
+  }
 }
 
 // ─── GIST SYNC ───────────────────────────────────────────────────────────────
-function loadGistSettings() {
-  try { return JSON.parse(localStorage.getItem('stockorder_gist') || '{}'); } catch(e) { return {}; }
+function loadGists() {
+  try { return JSON.parse(localStorage.getItem('stockorder_gists') || '[]'); } catch(e) { return []; }
 }
-function saveGistSettings(id, token) {
-  localStorage.setItem('stockorder_gist', JSON.stringify({ id, token }));
+function saveGists(arr) {
+  localStorage.setItem('stockorder_gists', JSON.stringify(arr));
 }
-function clearGistSettings() {
-  localStorage.removeItem('stockorder_gist');
+
+function renderGistList() {
+  const gists = loadGists();
+  const el = document.getElementById('gist-list');
+  if (!gists.length) {
+    el.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:4px 0">No gists configured. Click + Add to set one up.</div>';
+    return;
+  }
+  el.innerHTML = gists.map(g => `
+    <div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border)">
+      <input type="checkbox" id="gcheck-${g.id}" checked style="accent-color:var(--accent)">
+      <span style="flex:1;font-size:12px;color:var(--text)">${esc(g.name)}</span>
+      <span style="font-family:var(--mono);font-size:10px;color:var(--text3)">${g.gistId.slice(0,8)}…</span>
+      <button class="btn btn-danger btn-icon" style="padding:2px 7px;font-size:11px" onclick="removeGist('${g.id}')">✕</button>
+    </div>`).join('');
+}
+
+function toggleGistForm() {
+  const f = document.getElementById('gist-add-form');
+  const visible = f.style.display === 'flex';
+  f.style.display = visible ? 'none' : 'flex';
+  if (!visible) { document.getElementById('gnew-name').focus(); }
+}
+
+function saveNewGist() {
+  const name = document.getElementById('gnew-name').value.trim();
+  const gistId = document.getElementById('gnew-id').value.trim();
+  const token = document.getElementById('gnew-token').value.trim();
+  if (!name || !gistId || !token) { alert('Please fill in all three fields.'); return; }
+  const gists = loadGists();
+  gists.push({ id: crypto.randomUUID(), name, gistId, token });
+  saveGists(gists);
+  ['gnew-name','gnew-id','gnew-token'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('gist-add-form').style.display = 'none';
+  renderGistList();
+}
+
+function removeGist(id) {
+  saveGists(loadGists().filter(g => g.id !== id));
+  renderGistList();
 }
 
 async function syncToGist(gistId, token) {
@@ -852,10 +901,10 @@ async function syncToGist(gistId, token) {
       body
     });
     if (!res.ok) throw new Error(`GitHub API ${res.status}`);
-    console.log('Gist synced successfully');
+    return true;
   } catch(err) {
     console.error('Gist sync failed:', err);
-    alert('Gist sync failed: ' + err.message + '\nData is saved locally — check your Gist ID and token.');
+    return err.message;
   }
 }
 
