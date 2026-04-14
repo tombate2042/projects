@@ -293,6 +293,9 @@
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
     Export PDF
   </button>
+  <button class="btn btn-icon no-print" onclick="openSettings()" title="Gist Settings">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+  </button>
   <button class="btn btn-icon no-print" id="btnMinimise" onclick="toggleTopBar()" title="Minimise toolbar">
     <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><polyline points="18 15 12 9 6 15"/></svg>
   </button>
@@ -389,26 +392,39 @@
     <h3>Advance to Next Week</h3>
     <div class="advance-info" id="advanceInfo"></div>
     <p>This will shift all usage and count data forward by one week. Current week becomes last week's reference.</p>
-    <div style="margin-bottom:16px;border-top:1px solid var(--border);padding-top:14px">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-        <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.07em;color:var(--text3)">Gist Sync <span style="font-weight:400;opacity:0.6">(optional)</span></div>
-        <button class="btn" style="padding:3px 10px;font-size:11px" onclick="toggleGistForm()">+ Add</button>
-      </div>
-      <div id="gist-list"></div>
-      <div id="gist-add-form" style="display:none;margin-top:8px;display:none;flex-direction:column;gap:6px">
-        <input class="form-input" id="gnew-name" type="text" placeholder="Label (e.g. Main Venue)" style="font-size:12px">
-        <input class="form-input" id="gnew-id" type="text" placeholder="Gist ID" style="font-family:var(--mono);font-size:12px">
-        <input class="form-input" id="gnew-token" type="password" placeholder="GitHub Personal Access Token" style="font-family:var(--mono);font-size:12px">
-        <div style="display:flex;gap:6px">
-          <button class="btn btn-primary" style="font-size:11px;padding:4px 12px" onclick="saveNewGist()">Save</button>
-          <button class="btn" style="font-size:11px;padding:4px 12px" onclick="toggleGistForm()">Cancel</button>
-        </div>
-      </div>
-      <div id="gist-status" style="font-size:11px;margin-top:8px;min-height:16px;font-family:var(--mono);color:var(--text3)"></div>
+    <div id="advance-gist-section" style="margin-bottom:16px;border-top:1px solid var(--border);padding-top:14px;display:none">
+      <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.07em;color:var(--text3);margin-bottom:8px">Sync to Gist</div>
+      <div id="advance-gist-list"></div>
+      <div id="gist-status" style="font-size:11px;margin-top:6px;min-height:14px;font-family:var(--mono);color:var(--text3)"></div>
     </div>
     <div class="modal-actions">
       <button class="btn" onclick="closeModal('advanceModal')">Cancel</button>
       <button class="btn btn-primary" id="btnAdvanceWeek" onclick="advanceWeek()">Advance Week</button>
+    </div>
+  </div>
+</div>
+
+<!-- SETTINGS MODAL -->
+<div class="modal-overlay" id="settingsModal">
+  <div class="modal modal-wide">
+    <h3>Gist Settings</h3>
+    <div style="margin-bottom:16px">
+      <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.07em;color:var(--text3);margin-bottom:10px">Configured Gists</div>
+      <div id="settings-gist-list"></div>
+      <div id="settings-add-form" style="display:none;flex-direction:column;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
+        <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.07em;color:var(--text3);margin-bottom:2px">Add Gist</div>
+        <input class="form-input" id="gnew-name" type="text" placeholder="Label (e.g. Main Venue)">
+        <input class="form-input" id="gnew-id" type="text" placeholder="Gist ID" style="font-family:var(--mono)">
+        <input class="form-input" id="gnew-token" type="password" placeholder="GitHub Personal Access Token" style="font-family:var(--mono)">
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-primary" style="font-size:12px" onclick="saveNewGist()">Save Gist</button>
+          <button class="btn" style="font-size:12px" onclick="document.getElementById('settings-add-form').style.display='none'">Cancel</button>
+        </div>
+      </div>
+      <button class="btn" style="margin-top:12px;font-size:12px" onclick="showSettingsAddForm()">+ Add Gist</button>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-primary" onclick="closeModal('settingsModal')">Done</button>
     </div>
   </div>
 </div>
@@ -790,9 +806,8 @@ function showAdvanceModal() {
     Estimated cost: $${totalCost.toLocaleString('en-AU', {minimumFractionDigits:0,maximumFractionDigits:0})}<br><br>
     After advancing: ordered qty becomes "received", current usage shifts back, counts carry forward.`;
   document.getElementById('advanceModal').classList.add('open');
-  renderGistList();
+  renderAdvanceGistList();
   document.getElementById('gist-status').textContent = '';
-  document.getElementById('gist-add-form').style.display = 'none';
 }
 
 function closeModal(id) {
@@ -848,27 +863,48 @@ function saveGists(arr) {
   localStorage.setItem('stockorder_gists', JSON.stringify(arr));
 }
 
-function renderGistList() {
+function openSettings() {
+  renderSettingsGistList();
+  document.getElementById('settings-add-form').style.display = 'none';
+  ['gnew-name','gnew-id','gnew-token'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('settingsModal').classList.add('open');
+}
+
+function showSettingsAddForm() {
+  document.getElementById('settings-add-form').style.display = 'flex';
+  document.getElementById('gnew-name').focus();
+}
+
+function renderSettingsGistList() {
   const gists = loadGists();
-  const el = document.getElementById('gist-list');
+  const el = document.getElementById('settings-gist-list');
   if (!gists.length) {
-    el.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:4px 0">No gists configured. Click + Add to set one up.</div>';
+    el.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:6px 0">No gists configured yet.</div>';
     return;
   }
   el.innerHTML = gists.map(g => `
-    <div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border)">
-      <input type="checkbox" id="gcheck-${g.id}" checked style="accent-color:var(--accent)">
-      <span style="flex:1;font-size:12px;color:var(--text)">${esc(g.name)}</span>
-      <span style="font-family:var(--mono);font-size:10px;color:var(--text3)">${g.gistId.slice(0,8)}…</span>
-      <button class="btn btn-danger btn-icon" style="padding:2px 7px;font-size:11px" onclick="removeGist('${g.id}')">✕</button>
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:500;color:var(--text)">${esc(g.name)}</div>
+        <div style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:2px">${g.gistId}</div>
+      </div>
+      <button class="btn" style="font-size:11px;padding:4px 10px" onclick="pullFromGist('${g.id}')">Pull</button>
+      <button class="btn btn-danger btn-icon" style="padding:4px 9px;font-size:11px" onclick="removeGist('${g.id}')">✕</button>
     </div>`).join('');
 }
 
-function toggleGistForm() {
-  const f = document.getElementById('gist-add-form');
-  const visible = f.style.display === 'flex';
-  f.style.display = visible ? 'none' : 'flex';
-  if (!visible) { document.getElementById('gnew-name').focus(); }
+function renderAdvanceGistList() {
+  const gists = loadGists();
+  const section = document.getElementById('advance-gist-section');
+  const el = document.getElementById('advance-gist-list');
+  if (!gists.length) { section.style.display = 'none'; return; }
+  section.style.display = 'block';
+  el.innerHTML = gists.map(g => `
+    <label style="display:flex;align-items:center;gap:8px;padding:4px 0;font-size:12px;color:var(--text);cursor:pointer">
+      <input type="checkbox" id="gcheck-${g.id}" checked style="accent-color:var(--accent)">
+      <span style="flex:1">${esc(g.name)}</span>
+      <span style="font-family:var(--mono);font-size:10px;color:var(--text3)">${g.gistId.slice(0,8)}…</span>
+    </label>`).join('');
 }
 
 function saveNewGist() {
@@ -880,13 +916,39 @@ function saveNewGist() {
   gists.push({ id: crypto.randomUUID(), name, gistId, token });
   saveGists(gists);
   ['gnew-name','gnew-id','gnew-token'].forEach(id => document.getElementById(id).value = '');
-  document.getElementById('gist-add-form').style.display = 'none';
-  renderGistList();
+  document.getElementById('settings-add-form').style.display = 'none';
+  renderSettingsGistList();
 }
 
 function removeGist(id) {
   saveGists(loadGists().filter(g => g.id !== id));
-  renderGistList();
+  renderSettingsGistList();
+}
+
+async function pullFromGist(id) {
+  const g = loadGists().find(x => x.id === id);
+  if (!g) return;
+  if (!confirm(`Pull data from "${g.name}"? This will overwrite your current local state.`)) return;
+  try {
+    const res = await fetch(`https://api.github.com/gists/${g.gistId}`, {
+      headers: { 'Authorization': `Bearer ${g.token}` }
+    });
+    if (!res.ok) throw new Error(`GitHub API ${res.status}`);
+    const data = await res.json();
+    const file = data.files['stockorder_state.json'];
+    if (!file) throw new Error('stockorder_state.json not found in gist');
+    const pulled = JSON.parse(file.content);
+    localStorage.setItem('stockorder_v2', JSON.stringify(pulled));
+    state = pulled;
+    closeModal('settingsModal');
+    renderCategories();
+    updateWeekLabel();
+    updateStats();
+    alert(`Pulled from "${g.name}" successfully.`);
+  } catch(err) {
+    console.error('Gist pull failed:', err);
+    alert('Pull failed: ' + err.message);
+  }
 }
 
 async function syncToGist(gistId, token) {
