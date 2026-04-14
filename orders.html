@@ -816,7 +816,7 @@ function closeModal(id) {
   document.getElementById(id).classList.remove('open');
 }
 
-function advanceWeek() {
+async function advanceWeek() {
   // Shift week: ordered→received, used_0→used_1→used_2→used_3, count stays
   getAllItems().forEach(m => {
     const item = state.items[m.id];
@@ -839,7 +839,6 @@ function advanceWeek() {
   d.setDate(d.getDate() + 7);
   state.weekStart = localDateISO(d);
   saveState();
-  closeModal('advanceModal');
   renderCategories();
   updateWeekLabel();
   updateStats();
@@ -847,12 +846,16 @@ function advanceWeek() {
   const activeId = cfg.activeGist;
   const def = GIST_DEFS.find(d => d.id === activeId);
   const c = def && cfg[def.id];
+  const btn = document.getElementById('btnAdvanceWeek');
   if (def && c && c.gistId && c.token) {
+    if (btn) btn.disabled = true;
     document.getElementById('gist-status').textContent = 'Syncing…';
-    syncToGist({ ...def, gistId: c.gistId }, c.token).then(result => {
-      document.getElementById('gist-status').textContent = result === true ? 'Synced ✓' : 'Sync failed: ' + result;
-    });
+    const result = await syncToGist({ ...def, gistId: c.gistId }, c.token);
+    document.getElementById('gist-status').textContent = result === true ? 'Synced ✓' : 'Sync failed: ' + result;
+    await new Promise(r => setTimeout(r, result === true ? 1200 : 3000));
+    if (btn) btn.disabled = false;
   }
+  closeModal('advanceModal');
 }
 
 // ─── GIST SYNC ───────────────────────────────────────────────────────────────
