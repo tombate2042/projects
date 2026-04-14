@@ -408,15 +408,21 @@
 <div class="modal-overlay" id="settingsModal">
   <div class="modal modal-wide">
     <h3>Gist Settings</h3>
-    <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px">
-      <input class="form-input" id="g-gistId" type="text" placeholder="Gist ID" style="font-family:var(--mono);font-size:12px">
-      <input class="form-input" id="g-token" type="password" placeholder="GitHub Personal Access Token" style="font-family:var(--mono);font-size:12px">
+    <div style="margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--border)">
+      <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.07em;color:var(--text3);margin-bottom:10px">This session saves to</div>
+      <div style="display:flex;gap:16px">
+        <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text);cursor:pointer">
+          <input type="radio" name="activeGist" id="gactive-lo" value="lo" style="accent-color:var(--accent)"> L&amp;O
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text);cursor:pointer">
+          <input type="radio" name="activeGist" id="gactive-republic" value="republic" style="accent-color:var(--accent)"> Republic
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text2);cursor:pointer">
+          <input type="radio" name="activeGist" id="gactive-none" value="" style="accent-color:var(--accent)"> None
+        </label>
+      </div>
     </div>
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-      <button class="btn" id="g-pull-btn" style="font-size:11px;padding:4px 12px" onclick="pullFromGist()">Pull</button>
-      <button class="btn" id="g-push-btn" style="font-size:11px;padding:4px 12px" onclick="pushFromSettings()">Push</button>
-      <span id="g-status" style="font-size:11px;font-family:var(--mono);color:var(--text3)"></span>
-    </div>
+    <div id="settings-gist-list"></div>
     <div class="modal-actions" style="margin-top:8px">
       <button class="btn btn-primary" onclick="saveGistSettings()">Save</button>
       <button class="btn" onclick="closeModal('settingsModal')">Cancel</button>
@@ -862,11 +868,13 @@ async function advanceWeek() {
   updateWeekLabel();
   updateStats();
   const cfg = loadGistConfig();
+  const def = GIST_DEFS.find(d => d.id === cfg.activeGist);
+  const c = def && cfg[def.id];
   const btn = document.getElementById('btnAdvanceWeek');
-  if (cfg.gistId && cfg.token) {
+  if (def && c && c.gistId && c.token) {
     if (btn) btn.disabled = true;
     document.getElementById('gist-status').textContent = 'Syncing…';
-    const result = await syncToGist({ gistId: cfg.gistId, filename: GIST_FILENAME }, cfg.token, state);
+    const result = await syncToGist({ gistId: c.gistId, filename: def.filename }, c.token, state);
     const ok = result && typeof result === 'object';
     document.getElementById('gist-status').textContent = ok ? 'Synced ✓' : 'Sync failed: ' + result;
     await new Promise(r => setTimeout(r, ok ? 1200 : 3000));
@@ -876,7 +884,10 @@ async function advanceWeek() {
 }
 
 // ─── GIST SYNC ───────────────────────────────────────────────────────────────
-const GIST_FILENAME = 'orders-data.json';
+const GIST_DEFS = [
+  { id: 'lo',       label: 'L&O',     filename: 'lo-data.json' },
+  { id: 'republic', label: 'Republic', filename: 'republic-data.json' }
+];
 
 function loadGistConfig() {
   try { return JSON.parse(localStorage.getItem('stockorder_gist_config') || '{}'); } catch(e) { return {}; }
@@ -887,16 +898,41 @@ function saveGistConfig(cfg) {
 
 function openSettings() {
   const cfg = loadGistConfig();
-  document.getElementById('g-gistId').value = cfg.gistId || '';
-  document.getElementById('g-token').value = cfg.token || '';
-  document.getElementById('g-status').textContent = '';
+  const active = cfg.activeGist || '';
+  document.querySelectorAll('input[name="activeGist"]').forEach(r => { r.checked = r.value === active; });
+  document.getElementById('settings-gist-list').innerHTML = GIST_DEFS.map(def => {
+    const c = cfg[def.id] || {};
+    const disabled = !c.gistId || !c.token;
+    return `
+    <div style="padding:14px 0;border-bottom:1px solid var(--border)">
+      <div style="margin-bottom:8px">
+        <div style="font-size:13px;font-weight:600;color:var(--text)">${def.label}</div>
+        <div style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:2px">${def.filename}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <input class="form-input" id="gid-${def.id}" type="text" placeholder="Gist ID" value="${esc(c.gistId||'')}" style="font-family:var(--mono);font-size:12px">
+        <input class="form-input" id="gtoken-${def.id}" type="password" placeholder="GitHub Personal Access Token" value="${esc(c.token||'')}" style="font-family:var(--mono);font-size:12px">
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;margin-top:8px">
+        <button class="btn" style="font-size:11px;padding:4px 12px;opacity:${disabled?'0.4':'1'}" ${disabled?'disabled':''} onclick="pullFromGist('${def.id}')">Pull</button>
+        <button class="btn" style="font-size:11px;padding:4px 12px;opacity:${disabled?'0.4':'1'}" ${disabled?'disabled':''} onclick="pushFromSettings('${def.id}')">Push</button>
+        <span id="gstatus-${def.id}" style="font-size:11px;font-family:var(--mono);color:var(--text3)"></span>
+      </div>
+    </div>`;
+  }).join('');
   document.getElementById('settingsModal').classList.add('open');
 }
 
 function saveGistSettings() {
   const cfg = loadGistConfig();
-  cfg.gistId = document.getElementById('g-gistId').value.trim();
-  cfg.token  = document.getElementById('g-token').value.trim();
+  const activeRadio = document.querySelector('input[name="activeGist"]:checked');
+  cfg.activeGist = activeRadio ? activeRadio.value : '';
+  GIST_DEFS.forEach(def => {
+    cfg[def.id] = {
+      gistId: document.getElementById('gid-' + def.id).value.trim(),
+      token:  document.getElementById('gtoken-' + def.id).value.trim()
+    };
+  });
   saveGistConfig(cfg);
   closeModal('settingsModal');
 }
@@ -904,17 +940,21 @@ function saveGistSettings() {
 function renderAdvanceGistList() {
   const cfg = loadGistConfig();
   const section = document.getElementById('advance-gist-section');
-  if (!cfg.gistId || !cfg.token) { section.style.display = 'none'; return; }
+  const def = GIST_DEFS.find(d => d.id === cfg.activeGist);
+  const c = def && cfg[def.id];
+  if (!def || !c || !c.gistId || !c.token) { section.style.display = 'none'; return; }
   section.style.display = 'block';
-  document.getElementById('advance-gist-label').textContent = `Will sync to gist (${GIST_FILENAME})`;
+  document.getElementById('advance-gist-label').textContent = `Will sync to: ${def.label} (${def.filename})`;
 }
 
-async function pullFromGist() {
-  const gistId = document.getElementById('g-gistId').value.trim() || loadGistConfig().gistId;
-  const token  = document.getElementById('g-token').value.trim()  || loadGistConfig().token;
+async function pullFromGist(defId) {
+  const def = GIST_DEFS.find(d => d.id === defId);
+  const cfg = loadGistConfig();
+  const gistId = (document.getElementById('gid-' + defId)||{}).value?.trim() || (cfg[defId]||{}).gistId;
+  const token  = (document.getElementById('gtoken-' + defId)||{}).value?.trim() || (cfg[defId]||{}).token;
   if (!gistId || !token) { alert('Enter a Gist ID and token first.'); return; }
-  if (!confirm('Pull from gist? This will overwrite your current local data.')) return;
-  const statusEl = document.getElementById('g-status');
+  if (!confirm(`Pull from ${def.label}? This will overwrite your current local data.`)) return;
+  const statusEl = document.getElementById('gstatus-' + defId);
   statusEl.textContent = 'Pulling…';
   try {
     const res = await fetch(`https://api.github.com/gists/${gistId}`, {
@@ -922,8 +962,8 @@ async function pullFromGist() {
     });
     if (!res.ok) throw new Error(`GitHub API ${res.status}`);
     const data = await res.json();
-    const file = data.files[GIST_FILENAME];
-    if (!file) throw new Error(`${GIST_FILENAME} not found in gist`);
+    const file = data.files[def.filename];
+    if (!file) throw new Error(`${def.filename} not found in gist`);
     const pulled = normaliseState(JSON.parse(file.content));
     localStorage.setItem('stockorder_v2', JSON.stringify(pulled));
     state = pulled;
@@ -938,17 +978,19 @@ async function pullFromGist() {
   }
 }
 
-async function pushFromSettings() {
-  const gistId = document.getElementById('g-gistId').value.trim() || loadGistConfig().gistId;
-  const token  = document.getElementById('g-token').value.trim()  || loadGistConfig().token;
+async function pushFromSettings(defId) {
+  const def = GIST_DEFS.find(d => d.id === defId);
+  const cfg = loadGistConfig();
+  const gistId = (document.getElementById('gid-' + defId)||{}).value?.trim() || (cfg[defId]||{}).gistId;
+  const token  = (document.getElementById('gtoken-' + defId)||{}).value?.trim() || (cfg[defId]||{}).token;
   if (!gistId || !token) { alert('Enter a Gist ID and token first.'); return; }
   const itemCount = (state.catalog || []).length;
   if (itemCount === 0) {
     if (!confirm('Warning: your current state has 0 catalog items. Push anyway?')) return;
   }
-  const statusEl = document.getElementById('g-status');
+  const statusEl = document.getElementById('gstatus-' + defId);
   statusEl.textContent = 'Pushing…';
-  const result = await syncToGist({ gistId, filename: GIST_FILENAME }, token, state);
+  const result = await syncToGist({ gistId, filename: def.filename }, token, state);
   statusEl.textContent = result && typeof result === 'object'
     ? `Pushed ✓ (${itemCount} items)`
     : 'Push failed: ' + result;
