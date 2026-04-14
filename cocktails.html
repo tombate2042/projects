@@ -165,7 +165,8 @@
     body { background: white; }
     main { padding: 20px; }
     .grid { grid-template-columns: repeat(2,1fr); gap: 16px; }
-    .card { break-inside: avoid; box-shadow: none; border: 1px solid #ccc; }
+    .card { break-inside: avoid; page-break-inside: avoid; box-shadow: none; border: 1px solid #ccc; }
+    .card * { break-inside: avoid; page-break-inside: avoid; }
     .card:hover { transform: none; }
   }
 
