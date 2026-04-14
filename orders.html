@@ -1245,43 +1245,47 @@ function parseCSVLine(line) {
 function importCSV(input) {
   const file = input.files[0];
   if (!file) return;
+  input.value = '';
   const reader = new FileReader();
   reader.onload = e => {
-    const lines = e.target.result.split('\n').map(l => l.trim()).filter(Boolean);
-    if (lines.length < 2) { alert('No data rows found.'); return; }
-    const headers = parseCSVLine(lines[0]).map(h => h.toLowerCase());
-    const get = (row, field) => {
-      const i = headers.indexOf(field);
-      return i >= 0 ? (row[i] || '').trim() : '';
-    };
-    let added = 0, skipped = 0;
-    if (!state.catalog) state.catalog = [];
-    for (let i = 1; i < lines.length; i++) {
-      const row = parseCSVLine(lines[i]);
-      const name = get(row, 'item');
-      if (!name) { skipped++; continue; }
-      const item = {
-        id: crypto.randomUUID(),
-        item: name,
-        category: get(row, 'category') || CATEGORIES[0],
-        size: get(row, 'size'),
-        supplier: get(row, 'supplier'),
-        risk_tier: get(row, 'risk_tier') || 'normal',
-        case: parseInt(get(row, 'case')) || 1,
-        baseline: parseInt(get(row, 'baseline')) || 0,
-        cost: parseFloat(get(row, 'cost')) || 0,
-        sell: parseFloat(get(row, 'sell')) || 0,
-        position: 99,
+    try {
+      const lines = e.target.result.split('\n').map(l => l.trim()).filter(Boolean);
+      if (lines.length < 2) { alert('No data rows found.'); return; }
+      const headers = parseCSVLine(lines[0]).map(h => h.toLowerCase());
+      const get = (row, field) => {
+        const i = headers.indexOf(field);
+        return i >= 0 ? (row[i] || '').trim() : '';
       };
-      state.catalog.push(item);
-      state.items[item.id] = { count:0, ordered:0, count_prev:0, used_0:0, used_1:0, used_2:0, used_3:0, received:0 };
-      added++;
+      let added = 0, skipped = 0;
+      if (!state.catalog) state.catalog = [];
+      for (let i = 1; i < lines.length; i++) {
+        const row = parseCSVLine(lines[i]);
+        const name = get(row, 'item');
+        if (!name) { skipped++; continue; }
+        const item = {
+          id: crypto.randomUUID(),
+          item: name,
+          category: get(row, 'category') || CATEGORIES[0],
+          size: get(row, 'size'),
+          supplier: get(row, 'supplier'),
+          risk_tier: get(row, 'risk_tier') || 'normal',
+          case: parseInt(get(row, 'case')) || 1,
+          baseline: parseInt(get(row, 'baseline')) || 0,
+          cost: parseFloat(get(row, 'cost')) || 0,
+          sell: parseFloat(get(row, 'sell')) || 0,
+          position: 99,
+        };
+        state.catalog.push(item);
+        state.items[item.id] = { count:0, ordered:0, count_prev:0, used_0:0, used_1:0, used_2:0, used_3:0, received:0 };
+        added++;
+      }
+      saveState();
+      renderPM();
+      renderSupplierFilters();
+      alert(`Imported ${added} item${added !== 1 ? 's' : ''}${skipped ? `, skipped ${skipped} blank row${skipped !== 1 ? 's' : ''}` : ''}.`);
+    } catch(err) {
+      alert('Import failed: ' + err.message);
     }
-    saveState();
-    renderPM();
-    renderSupplierFilters();
-    input.value = '';
-    alert(`Imported ${added} item${added !== 1 ? 's' : ''}${skipped ? `, skipped ${skipped} blank row${skipped !== 1 ? 's' : ''}` : ''}.`);
   };
   reader.readAsText(file);
 }
