@@ -922,6 +922,7 @@ function renderVenueEditor() {
 
 function addVenueRow() {
   if (!state.venues) state.venues = [];
+  saveVenuesFromEditor();
   state.venues.push('New Area');
   renderVenueEditor();
   const inputs = document.querySelectorAll('#venue-editor input');
@@ -931,6 +932,7 @@ function addVenueRow() {
 
 function removeVenueRow(i) {
   if (state.venues.length <= 1) { alert('At least one storage area is required.'); return; }
+  saveVenuesFromEditor();
   if (!confirm(`Remove "${state.venues[i]}"? Count data for this area will be lost on next save.`)) return;
   state.venues.splice(i, 1);
   renderVenueEditor();
