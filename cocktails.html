@@ -16,542 +16,165 @@
     --amber: #c8760a;
     --muted: #7a6e5f;
     --rule: #d4c9b5;
-    --sig: #1a1208;
-    --classic: #2c3e2d;
-    --na: #2d3a4a;
     --danger: #8b2e2e;
     --card-bg: #ffffff;
-    --section-sig: #fdf8f0;
-    --section-classic: #f5f8f5;
-    --section-na: #f3f6f9;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--paper); color: var(--ink); min-height: 100vh; }
 
-  body {
-    font-family: 'DM Sans', sans-serif;
-    background: var(--paper);
-    color: var(--ink);
-    min-height: 100vh;
-  }
-
-  /* HEADER */
   header {
-    background: var(--ink);
-    padding: 28px 40px 24px;
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-    border-bottom: 3px solid var(--gold);
-    position: sticky;
-    top: 0;
-    z-index: 100;
+    background: var(--ink); padding: 28px 40px 24px;
+    display: flex; align-items: flex-end; justify-content: space-between;
+    border-bottom: 3px solid var(--gold); position: sticky; top: 0; z-index: 100;
   }
 
-  .header-left h1 {
-    font-family: 'Playfair Display', serif;
-    font-size: 22px;
-    color: var(--paper);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-  }
+  .header-left h1 { font-family: 'Playfair Display', serif; font-size: 22px; color: var(--paper); letter-spacing: 0.08em; text-transform: uppercase; }
+  .header-left p { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--gold-light); letter-spacing: 0.15em; text-transform: uppercase; margin-top: 3px; }
+  .header-right { display: flex; gap: 10px; align-items: center; }
 
-  .header-left p {
-    font-family: 'DM Mono', monospace;
-    font-size: 10px;
-    color: var(--gold-light);
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    margin-top: 3px;
+  .sync-status {
+    font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--gold-light);
+    display: flex; align-items: center; gap: 6px; opacity: 0; transition: opacity 0.3s;
   }
-
-  .header-right {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-  }
+  .sync-status.visible { opacity: 1; }
+  .sync-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--gold); }
+  .sync-dot.syncing { background: #f59e0b; animation: pulse 1s infinite; }
+  .sync-dot.success { background: #4ade80; }
+  .sync-dot.error { background: #f87171; }
+  @keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.3} }
 
   .btn {
-    font-family: 'DM Mono', monospace;
-    font-size: 10px;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    padding: 8px 16px;
-    border: 1px solid var(--gold);
-    background: transparent;
-    color: var(--gold-light);
-    cursor: pointer;
-    transition: all 0.2s;
+    font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.12em;
+    text-transform: uppercase; padding: 8px 16px; border: 1px solid var(--gold);
+    background: transparent; color: var(--gold-light); cursor: pointer; transition: all 0.2s;
   }
-
   .btn:hover { background: var(--gold); color: var(--ink); }
-
-  .btn-primary {
-    background: var(--gold);
-    color: var(--ink);
-    font-weight: 500;
-  }
-
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-primary { background: var(--gold); color: var(--ink); font-weight: 500; }
   .btn-primary:hover { background: var(--amber); border-color: var(--amber); color: #fff; }
+  .btn-sm { padding: 6px 12px; font-size: 9px; }
 
-  /* TABS */
-  .tabs {
-    background: var(--cream);
-    border-bottom: 1px solid var(--rule);
-    padding: 0 40px;
-    display: flex;
-    gap: 0;
-  }
-
+  .tabs { background: var(--cream); border-bottom: 1px solid var(--rule); padding: 0 40px; display: flex; }
   .tab {
-    font-family: 'DM Mono', monospace;
-    font-size: 10px;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    padding: 14px 24px;
-    border: none;
-    background: transparent;
-    cursor: pointer;
-    color: var(--muted);
-    border-bottom: 2px solid transparent;
-    margin-bottom: -1px;
-    transition: all 0.2s;
-    display: flex;
-    align-items: center;
-    gap: 8px;
+    font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase;
+    padding: 14px 24px; border: none; background: transparent; cursor: pointer; color: var(--muted);
+    border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all 0.2s;
+    display: flex; align-items: center; gap: 8px;
   }
-
   .tab:hover { color: var(--ink); }
-
-  .tab.active {
-    color: var(--ink);
-    border-bottom-color: var(--gold);
-    font-weight: 500;
-  }
-
-  .tab-count {
-    background: var(--gold);
-    color: var(--ink);
-    font-size: 9px;
-    font-weight: 500;
-    padding: 1px 6px;
-    border-radius: 10px;
-    min-width: 18px;
-    text-align: center;
-  }
-
+  .tab.active { color: var(--ink); border-bottom-color: var(--gold); font-weight: 500; }
+  .tab-count { background: var(--gold); color: var(--ink); font-size: 9px; font-weight: 500; padding: 1px 6px; border-radius: 10px; min-width: 18px; text-align: center; }
   .tab.active .tab-count { background: var(--ink); color: var(--gold); }
 
-  /* MAIN */
   main { padding: 32px 40px; max-width: 1400px; margin: 0 auto; }
+  .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+  .section-title { font-family: 'Playfair Display', serif; font-size: 28px; color: var(--ink); display: flex; align-items: center; gap: 12px; }
+  .section-title span { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); letter-spacing: 0.12em; font-style: normal; text-transform: uppercase; border: 1px solid var(--rule); padding: 3px 10px; }
 
-  /* SECTION HEADER */
-  .section-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 24px;
-  }
+  .empty-state { text-align: center; padding: 80px 40px; border: 1px dashed var(--rule); background: var(--card-bg); grid-column: 1/-1; }
+  .empty-state h3 { font-family: 'Playfair Display', serif; font-size: 22px; color: var(--muted); margin-bottom: 8px; }
+  .empty-state p { font-size: 13px; color: var(--muted); margin-bottom: 20px; font-family: 'DM Mono', monospace; letter-spacing: 0.05em; }
 
-  .section-title {
-    font-family: 'Playfair Display', serif;
-    font-size: 28px;
-    color: var(--ink);
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 20px; }
 
-  .section-title span {
-    font-family: 'DM Mono', monospace;
-    font-size: 11px;
-    color: var(--muted);
-    letter-spacing: 0.12em;
-    font-style: normal;
-    text-transform: uppercase;
-    border: 1px solid var(--rule);
-    padding: 3px 10px;
-  }
-
-  /* EMPTY STATE */
-  .empty-state {
-    text-align: center;
-    padding: 80px 40px;
-    border: 1px dashed var(--rule);
-    background: var(--card-bg);
-  }
-
-  .empty-state h3 {
-    font-family: 'Playfair Display', serif;
-    font-size: 22px;
-    color: var(--muted);
-    margin-bottom: 8px;
-  }
-
-  .empty-state p {
-    font-size: 13px;
-    color: var(--muted);
-    margin-bottom: 20px;
-    font-family: 'DM Mono', monospace;
-    letter-spacing: 0.05em;
-  }
-
-  /* GRID */
-  .grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-    gap: 20px;
-  }
-
-  /* CARD */
-  .card {
-    background: var(--card-bg);
-    border: 1px solid var(--rule);
-    position: relative;
-    overflow: hidden;
-    transition: box-shadow 0.2s, transform 0.2s;
-  }
-
-  .card:hover {
-    box-shadow: 0 8px 32px rgba(26,18,8,0.10);
-    transform: translateY(-2px);
-  }
-
-  .card-accent {
-    height: 3px;
-    width: 100%;
-  }
-
+  .card { background: var(--card-bg); border: 1px solid var(--rule); position: relative; overflow: hidden; transition: box-shadow 0.2s, transform 0.2s; }
+  .card:hover { box-shadow: 0 8px 32px rgba(26,18,8,0.10); transform: translateY(-2px); }
+  .card-accent { height: 3px; width: 100%; }
   .sig .card-accent { background: var(--gold); }
-  .classic .card-accent { background: var(--classic); }
-  .na .card-accent { background: var(--na); }
+  .classic .card-accent { background: #2c3e2d; }
+  .na .card-accent { background: #2d3a4a; }
 
-  .card-header {
-    padding: 18px 20px 14px;
-    border-bottom: 1px solid var(--rule);
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-  }
+  .card-header { padding: 18px 20px 14px; border-bottom: 1px solid var(--rule); display: flex; justify-content: space-between; align-items: flex-start; }
+  .card-name { font-family: 'Playfair Display', serif; font-size: 18px; color: var(--ink); line-height: 1.2; flex: 1; padding-right: 12px; }
+  .card-actions { display: flex; gap: 6px; flex-shrink: 0; }
 
-  .card-name {
-    font-family: 'Playfair Display', serif;
-    font-size: 18px;
-    color: var(--ink);
-    line-height: 1.2;
-    flex: 1;
-    padding-right: 12px;
-  }
-
-  .card-actions {
-    display: flex;
-    gap: 6px;
-    flex-shrink: 0;
-  }
-
-  .icon-btn {
-    width: 28px;
-    height: 28px;
-    border: 1px solid var(--rule);
-    background: var(--paper);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--muted);
-    font-size: 13px;
-    transition: all 0.15s;
-    flex-shrink: 0;
-  }
-
+  .icon-btn { width: 28px; height: 28px; border: 1px solid var(--rule); background: var(--paper); cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 13px; transition: all 0.15s; }
   .icon-btn:hover { border-color: var(--gold); color: var(--gold); background: var(--gold-pale); }
   .icon-btn.delete:hover { border-color: var(--danger); color: var(--danger); background: #fdf2f2; }
 
   .card-body { padding: 16px 20px; }
-
-  .card-meta {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 14px;
-    flex-wrap: wrap;
-  }
-
-  .meta-tag {
-    font-family: 'DM Mono', monospace;
-    font-size: 9px;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    padding: 3px 8px;
-    border: 1px solid var(--rule);
-    color: var(--muted);
-    background: var(--paper);
-  }
-
+  .card-meta { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+  .meta-tag { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; padding: 3px 8px; border: 1px solid var(--rule); color: var(--muted); background: var(--paper); }
   .meta-tag.glass { border-color: var(--gold-light); color: var(--amber); background: var(--gold-pale); }
 
-  .spec-label {
-    font-family: 'DM Mono', monospace;
-    font-size: 9px;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin-bottom: 6px;
-    margin-top: 12px;
-  }
-
+  .spec-label { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; margin-top: 12px; }
   .spec-label:first-child { margin-top: 0; }
 
-  .ingredients-list {
-    list-style: none;
-  }
-
-  .ingredients-list li {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    padding: 4px 0;
-    border-bottom: 1px dotted var(--rule);
-    font-size: 13px;
-  }
-
+  .ingredients-list { list-style: none; }
+  .ingredients-list li { display: flex; align-items: baseline; justify-content: space-between; padding: 4px 0; border-bottom: 1px dotted var(--rule); font-size: 13px; }
   .ingredients-list li:last-child { border-bottom: none; }
-
   .ing-name { color: var(--ink); }
+  .ing-vol { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--gold); font-weight: 500; margin-left: 8px; flex-shrink: 0; }
+  .spec-text { font-size: 13px; color: var(--ink); line-height: 1.5; }
 
-  .ing-vol {
-    font-family: 'DM Mono', monospace;
-    font-size: 11px;
-    color: var(--gold);
-    font-weight: 500;
-    margin-left: 8px;
-    flex-shrink: 0;
-  }
+  .card-footer { padding: 10px 20px; border-top: 1px solid var(--rule); background: var(--paper); }
+  .footer-garnish { font-size: 12px; color: var(--muted); font-style: italic; }
+  .footer-garnish strong { font-family: 'DM Mono', monospace; font-size: 9px; text-transform: uppercase; letter-spacing: 0.1em; font-style: normal; color: var(--muted); margin-right: 4px; }
 
-  .spec-text {
-    font-size: 13px;
-    color: var(--ink);
-    line-height: 1.5;
-  }
-
-  .card-footer {
-    padding: 10px 20px;
-    border-top: 1px solid var(--rule);
-    background: var(--paper);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-
-  .footer-garnish {
-    font-size: 12px;
-    color: var(--muted);
-    font-style: italic;
-  }
-
-  .footer-garnish strong {
-    font-family: 'DM Mono', monospace;
-    font-size: 9px;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    font-style: normal;
-    color: var(--muted);
-    margin-right: 4px;
-  }
+  /* SETTINGS PANEL */
+  .settings-panel { display: none; background: var(--ink); border-bottom: 1px solid #333; padding: 20px 40px; }
+  .settings-panel.open { display: block; }
+  .settings-inner { max-width: 900px; display: grid; grid-template-columns: 1fr 1fr auto; gap: 16px; align-items: end; }
+  .settings-label { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--gold-light); margin-bottom: 6px; display: block; }
+  .settings-input { width: 100%; padding: 8px 12px; background: #2a2015; border: 1px solid #444; color: var(--paper); font-family: 'DM Mono', monospace; font-size: 12px; outline: none; }
+  .settings-input:focus { border-color: var(--gold); }
+  .settings-input::placeholder { color: #555; }
+  .settings-actions { display: flex; gap: 8px; }
+  .settings-note { grid-column: 1/-1; font-family: 'DM Mono', monospace; font-size: 9px; color: #666; letter-spacing: 0.05em; line-height: 1.6; }
+  .settings-note a { color: var(--gold-light); }
 
   /* MODAL */
-  .modal-overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(26,18,8,0.6);
-    z-index: 200;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-  }
-
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(26,18,8,0.6); z-index: 200; align-items: center; justify-content: center; padding: 20px; }
   .modal-overlay.open { display: flex; }
-
-  .modal {
-    background: var(--card-bg);
-    width: 100%;
-    max-width: 560px;
-    max-height: 90vh;
-    overflow-y: auto;
-    border-top: 4px solid var(--gold);
-    box-shadow: 0 24px 80px rgba(26,18,8,0.3);
-  }
-
-  .modal-header {
-    padding: 24px 28px 20px;
-    border-bottom: 1px solid var(--rule);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    position: sticky;
-    top: 0;
-    background: var(--card-bg);
-  }
-
-  .modal-title {
-    font-family: 'Playfair Display', serif;
-    font-size: 20px;
-    color: var(--ink);
-  }
-
-  .modal-close {
-    background: none;
-    border: none;
-    font-size: 20px;
-    color: var(--muted);
-    cursor: pointer;
-    padding: 4px;
-    line-height: 1;
-  }
-
+  .modal { background: var(--card-bg); width: 100%; max-width: 560px; max-height: 90vh; overflow-y: auto; border-top: 4px solid var(--gold); box-shadow: 0 24px 80px rgba(26,18,8,0.3); }
+  .modal-header { padding: 24px 28px 20px; border-bottom: 1px solid var(--rule); display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; background: var(--card-bg); }
+  .modal-title { font-family: 'Playfair Display', serif; font-size: 20px; color: var(--ink); }
+  .modal-close { background: none; border: none; font-size: 20px; color: var(--muted); cursor: pointer; padding: 4px; line-height: 1; }
   .modal-close:hover { color: var(--ink); }
-
   .modal-body { padding: 24px 28px; }
-
   .form-group { margin-bottom: 18px; }
-
-  .form-label {
-    display: block;
-    font-family: 'DM Mono', monospace;
-    font-size: 10px;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin-bottom: 6px;
-  }
-
-  .form-input, .form-select, .form-textarea {
-    width: 100%;
-    padding: 10px 12px;
-    border: 1px solid var(--rule);
-    background: var(--paper);
-    font-family: 'DM Sans', sans-serif;
-    font-size: 14px;
-    color: var(--ink);
-    outline: none;
-    transition: border-color 0.15s;
-  }
-
-  .form-input:focus, .form-select:focus, .form-textarea:focus {
-    border-color: var(--gold);
-    background: #fff;
-  }
-
+  .form-label { display: block; font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+  .form-input, .form-select, .form-textarea { width: 100%; padding: 10px 12px; border: 1px solid var(--rule); background: var(--paper); font-family: 'DM Sans', sans-serif; font-size: 14px; color: var(--ink); outline: none; transition: border-color 0.15s; }
+  .form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--gold); background: #fff; }
   .form-textarea { resize: vertical; min-height: 80px; }
-
   .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 
-  /* INGREDIENTS BUILDER */
   .ing-builder { border: 1px solid var(--rule); background: var(--paper); }
-
-  .ing-builder-header {
-    padding: 10px 12px;
-    border-bottom: 1px solid var(--rule);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-
-  .ing-builder-header span {
-    font-family: 'DM Mono', monospace;
-    font-size: 10px;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--muted);
-  }
-
-  .ing-row {
-    display: grid;
-    grid-template-columns: 1fr 80px 28px;
-    gap: 8px;
-    padding: 8px 12px;
-    border-bottom: 1px solid var(--rule);
-    align-items: center;
-  }
-
+  .ing-builder-header { padding: 10px 12px; border-bottom: 1px solid var(--rule); display: flex; justify-content: space-between; }
+  .ing-builder-header span { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+  .ing-row { display: grid; grid-template-columns: 1fr 80px 28px; gap: 8px; padding: 8px 12px; border-bottom: 1px solid var(--rule); align-items: center; }
   .ing-row:last-of-type { border-bottom: none; }
-
-  .ing-input {
-    padding: 6px 8px;
-    border: 1px solid var(--rule);
-    background: #fff;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 13px;
-    color: var(--ink);
-    outline: none;
-    width: 100%;
-  }
-
+  .ing-input { padding: 6px 8px; border: 1px solid var(--rule); background: #fff; font-family: 'DM Sans', sans-serif; font-size: 13px; color: var(--ink); outline: none; width: 100%; }
   .ing-input:focus { border-color: var(--gold); }
-
-  .ing-remove {
-    width: 28px;
-    height: 28px;
-    border: 1px solid var(--rule);
-    background: none;
-    color: var(--muted);
-    cursor: pointer;
-    font-size: 14px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.15s;
-  }
-
+  .ing-remove { width: 28px; height: 28px; border: 1px solid var(--rule); background: none; color: var(--muted); cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
   .ing-remove:hover { border-color: var(--danger); color: var(--danger); }
-
-  .ing-add-row {
-    padding: 8px 12px;
-  }
-
-  .btn-add-ing {
-    font-family: 'DM Mono', monospace;
-    font-size: 10px;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    padding: 6px 12px;
-    border: 1px dashed var(--rule);
-    background: none;
-    color: var(--muted);
-    cursor: pointer;
-    width: 100%;
-    transition: all 0.15s;
-  }
-
+  .ing-add-row { padding: 8px 12px; }
+  .btn-add-ing { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; padding: 6px 12px; border: 1px dashed var(--rule); background: none; color: var(--muted); cursor: pointer; width: 100%; transition: all 0.15s; }
   .btn-add-ing:hover { border-color: var(--gold); color: var(--gold); }
+  .modal-footer { padding: 16px 28px; border-top: 1px solid var(--rule); display: flex; justify-content: flex-end; gap: 10px; background: var(--paper); position: sticky; bottom: 0; }
 
-  .modal-footer {
-    padding: 16px 28px;
-    border-top: 1px solid var(--rule);
-    display: flex;
-    justify-content: flex-end;
-    gap: 10px;
-    background: var(--paper);
-    position: sticky;
-    bottom: 0;
-  }
+  .toast { position: fixed; bottom: 32px; right: 32px; background: var(--ink); color: var(--paper); padding: 12px 20px; font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.08em; border-left: 3px solid var(--gold); box-shadow: 0 8px 32px rgba(0,0,0,0.3); transform: translateY(80px); opacity: 0; transition: all 0.3s; z-index: 999; max-width: 320px; }
+  .toast.show { transform: translateY(0); opacity: 1; }
+  .toast.error { border-left-color: #f87171; }
+  .toast.success { border-left-color: #4ade80; }
 
-  /* PRINT */
   @media print {
-    header, .tabs, .section-header .btn, .card-actions { display: none !important; }
+    header, .tabs, .section-header .btn, .card-actions, .settings-panel { display: none !important; }
     body { background: white; }
     main { padding: 20px; }
-    .grid { grid-template-columns: repeat(2, 1fr); gap: 16px; }
+    .grid { grid-template-columns: repeat(2,1fr); gap: 16px; }
     .card { break-inside: avoid; box-shadow: none; border: 1px solid #ccc; }
-    .card:hover { transform: none; box-shadow: none; }
+    .card:hover { transform: none; }
   }
 
   @media (max-width: 600px) {
-    header { padding: 20px; }
+    header { padding: 20px; flex-direction: column; align-items: flex-start; gap: 12px; }
     main { padding: 20px; }
-    .tabs { padding: 0 20px; }
+    .tabs { padding: 0 20px; overflow-x: auto; }
     .grid { grid-template-columns: 1fr; }
-    .form-row { grid-template-columns: 1fr; }
+    .form-row, .settings-inner { grid-template-columns: 1fr; }
   }
 </style>
 </head>
@@ -563,24 +186,46 @@
     <p>Cocktail Spec Sheets</p>
   </div>
   <div class="header-right">
+    <div class="sync-status" id="sync-status">
+      <div class="sync-dot" id="sync-dot"></div>
+      <span id="sync-text"></span>
+    </div>
+    <button class="btn" id="btn-pull" onclick="pullFromGist()" style="display:none">↓ Pull</button>
+    <button class="btn" id="btn-sync" onclick="syncToGist()" style="display:none">↑ Sync</button>
+    <button class="btn" onclick="toggleSettings()" id="btn-settings">⚙ Gist</button>
     <button class="btn" onclick="window.print()">⎙ Print</button>
     <button class="btn btn-primary" onclick="openModal()">+ Add Cocktail</button>
   </div>
 </header>
 
+<div class="settings-panel" id="settings-panel">
+  <div class="settings-inner">
+    <div>
+      <label class="settings-label">GitHub Token (gist scope only)</label>
+      <input class="settings-input" id="s-token" type="password" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" />
+    </div>
+    <div>
+      <label class="settings-label">Gist ID <span style="color:#555;font-size:8px">(blank = create new on first sync)</span></label>
+      <input class="settings-input" id="s-gist-id" placeholder="e.g. a1b2c3d4e5f6..." />
+    </div>
+    <div class="settings-actions">
+      <button class="btn btn-primary btn-sm" onclick="saveSettings()">Save</button>
+      <button class="btn btn-sm" onclick="toggleSettings()">Close</button>
+    </div>
+    <div class="settings-note">
+      Token stored locally on this device — sent only to api.github.com. Create at
+      <a href="https://github.com/settings/tokens" target="_blank">github.com/settings/tokens</a>
+      with <strong>gist</strong> scope only. Leave Gist ID blank on first sync to auto-create a new private gist.
+      Copy the Gist ID shown in the toast and save it in settings on any other device to sync across.
+    </div>
+  </div>
+</div>
+
 <div class="tabs">
-  <button class="tab active" onclick="setTab('all')" id="tab-all">
-    All <span class="tab-count" id="count-all">0</span>
-  </button>
-  <button class="tab" onclick="setTab('signatures')" id="tab-signatures">
-    Signatures <span class="tab-count" id="count-signatures">0</span>
-  </button>
-  <button class="tab" onclick="setTab('classics')" id="tab-classics">
-    Classics <span class="tab-count" id="count-classics">0</span>
-  </button>
-  <button class="tab" onclick="setTab('na')" id="tab-na">
-    Non-Alcoholic <span class="tab-count" id="count-na">0</span>
-  </button>
+  <button class="tab active" onclick="setTab('all')" id="tab-all">All <span class="tab-count" id="count-all">0</span></button>
+  <button class="tab" onclick="setTab('signatures')" id="tab-signatures">Signatures <span class="tab-count" id="count-signatures">0</span></button>
+  <button class="tab" onclick="setTab('classics')" id="tab-classics">Classics <span class="tab-count" id="count-classics">0</span></button>
+  <button class="tab" onclick="setTab('na')" id="tab-na">Non-Alcoholic <span class="tab-count" id="count-na">0</span></button>
 </div>
 
 <main>
@@ -592,7 +237,6 @@
   <div class="grid" id="grid"></div>
 </main>
 
-<!-- ADD/EDIT MODAL -->
 <div class="modal-overlay" id="modal">
   <div class="modal">
     <div class="modal-header">
@@ -614,7 +258,6 @@
           </select>
         </div>
       </div>
-
       <div class="form-row">
         <div class="form-group">
           <label class="form-label">Glass *</label>
@@ -625,13 +268,11 @@
           <input class="form-input" id="f-garnish" placeholder="e.g. Dehydrated lemon wheel" />
         </div>
       </div>
-
       <div class="form-group">
         <label class="form-label">Ingredients</label>
         <div class="ing-builder">
           <div class="ing-builder-header">
-            <span>Ingredient</span>
-            <span>mL</span>
+            <span>Ingredient</span><span>mL</span>
           </div>
           <div id="ing-list"></div>
           <div class="ing-add-row">
@@ -639,7 +280,6 @@
           </div>
         </div>
       </div>
-
       <div class="form-group">
         <label class="form-label">Method</label>
         <textarea class="form-textarea" id="f-method" placeholder="e.g. Dry shake aquafab, add ice, shake hard, double strain into chilled coupe."></textarea>
@@ -652,12 +292,151 @@
   </div>
 </div>
 
+<div class="toast" id="toast"></div>
+
 <script>
   let cocktails = JSON.parse(localStorage.getItem('republic-specs') || '[]');
   let currentTab = 'all';
   let editingId = null;
+  let ingredientCount = 0;
 
-  function save() {
+  // ── SETTINGS ──────────────────────────────────
+  function getSettings() {
+    return {
+      token: localStorage.getItem('republic-gh-token') || '',
+      gistId: localStorage.getItem('republic-gist-id') || '',
+    };
+  }
+
+  function toggleSettings() {
+    const panel = document.getElementById('settings-panel');
+    panel.classList.toggle('open');
+    if (panel.classList.contains('open')) {
+      const s = getSettings();
+      document.getElementById('s-token').value = s.token;
+      document.getElementById('s-gist-id').value = s.gistId;
+    }
+  }
+
+  function saveSettings() {
+    const token = document.getElementById('s-token').value.trim();
+    const gistId = document.getElementById('s-gist-id').value.trim();
+    if (token) localStorage.setItem('republic-gh-token', token);
+    else localStorage.removeItem('republic-gh-token');
+    if (gistId) localStorage.setItem('republic-gist-id', gistId);
+    else localStorage.removeItem('republic-gist-id');
+    updateGistButtons();
+    toggleSettings();
+    toast('Settings saved', 'success');
+  }
+
+  function updateGistButtons() {
+    const show = !!getSettings().token;
+    document.getElementById('btn-sync').style.display = show ? '' : 'none';
+    document.getElementById('btn-pull').style.display = show ? '' : 'none';
+  }
+
+  // ── GIST ──────────────────────────────────────
+  function setSyncStatus(state, text) {
+    const status = document.getElementById('sync-status');
+    document.getElementById('sync-dot').className = 'sync-dot ' + state;
+    document.getElementById('sync-text').textContent = text;
+    status.classList.add('visible');
+    if (state === 'success' || state === 'error') {
+      setTimeout(() => status.classList.remove('visible'), 3000);
+    }
+  }
+
+  async function syncToGist() {
+    const { token, gistId } = getSettings();
+    if (!token) { toast('Add your GitHub token in ⚙ Gist first', 'error'); return; }
+
+    setSyncStatus('syncing', 'Syncing...');
+    document.getElementById('btn-sync').disabled = true;
+
+    const filename = 'republic-bar-specs.json';
+    const content = JSON.stringify(cocktails, null, 2);
+
+    try {
+      let response, data;
+      if (gistId) {
+        response = await fetch(`https://api.github.com/gists/${gistId}`, {
+          method: 'PATCH',
+          headers: { 'Authorization': `token ${token}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ files: { [filename]: { content } } }),
+        });
+      } else {
+        response = await fetch('https://api.github.com/gists', {
+          method: 'POST',
+          headers: { 'Authorization': `token ${token}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            description: 'Republic Bar — Cocktail Spec Sheets',
+            public: false,
+            files: { [filename]: { content } },
+          }),
+        });
+      }
+
+      data = await response.json();
+      if (!response.ok) throw new Error(data.message || 'GitHub API error');
+
+      if (!gistId) {
+        localStorage.setItem('republic-gist-id', data.id);
+        toast(`Gist created! ID: ${data.id} — save this in settings on other devices`, 'success');
+      } else {
+        toast('Synced to GitHub ✓', 'success');
+      }
+
+      setSyncStatus('success', 'Synced');
+    } catch (err) {
+      setSyncStatus('error', 'Failed');
+      toast('Sync failed: ' + err.message, 'error');
+    } finally {
+      document.getElementById('btn-sync').disabled = false;
+    }
+  }
+
+  async function pullFromGist() {
+    const { token, gistId } = getSettings();
+    if (!token) { toast('Add your GitHub token in ⚙ Gist first', 'error'); return; }
+    if (!gistId) { toast('No Gist ID set — sync first to create one', 'error'); return; }
+
+    setSyncStatus('syncing', 'Pulling...');
+    document.getElementById('btn-pull').disabled = true;
+
+    try {
+      const response = await fetch(`https://api.github.com/gists/${gistId}`, {
+        headers: { 'Authorization': `token ${token}` },
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || 'GitHub API error');
+
+      const file = data.files['republic-bar-specs.json'];
+      if (!file) throw new Error('Spec file not found in gist');
+
+      const pulled = JSON.parse(file.content);
+      if (!Array.isArray(pulled)) throw new Error('Invalid data format');
+
+      if (cocktails.length === 0 || confirm(`Replace local data with ${pulled.length} specs from GitHub?`)) {
+        cocktails = pulled;
+        localStorage.setItem('republic-specs', JSON.stringify(cocktails));
+        render();
+        setSyncStatus('success', 'Pulled');
+        toast(`Pulled ${pulled.length} specs ✓`, 'success');
+      } else {
+        setSyncStatus('', '');
+        document.getElementById('sync-status').classList.remove('visible');
+      }
+    } catch (err) {
+      setSyncStatus('error', 'Failed');
+      toast('Pull failed: ' + err.message, 'error');
+    } finally {
+      document.getElementById('btn-pull').disabled = false;
+    }
+  }
+
+  // ── DATA ──────────────────────────────────────
+  function saveLocal() {
     localStorage.setItem('republic-specs', JSON.stringify(cocktails));
   }
 
@@ -665,11 +444,11 @@
     return Date.now().toString(36) + Math.random().toString(36).substr(2);
   }
 
+  // ── TABS ──────────────────────────────────────
   function setTab(tab) {
     currentTab = tab;
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     document.getElementById('tab-' + tab).classList.add('active');
-
     const titles = {
       all: ['All Cocktails', '— Spec Reference'],
       signatures: ['Signature Cocktails', '— Seasonal Menu'],
@@ -678,50 +457,39 @@
     };
     document.getElementById('section-title').childNodes[0].textContent = titles[tab][0] + ' ';
     document.getElementById('section-subtitle').textContent = titles[tab][1];
-
     render();
   }
 
+  // ── RENDER ────────────────────────────────────
   function render() {
-    const filtered = currentTab === 'all'
-      ? cocktails
-      : cocktails.filter(c => c.section === currentTab);
+    const filtered = currentTab === 'all' ? cocktails : cocktails.filter(c => c.section === currentTab);
 
-    // Update counts
-    ['all', 'signatures', 'classics', 'na'].forEach(t => {
-      const count = t === 'all' ? cocktails.length : cocktails.filter(c => c.section === t).length;
-      document.getElementById('count-' + t).textContent = count;
+    ['all','signatures','classics','na'].forEach(t => {
+      document.getElementById('count-' + t).textContent =
+        t === 'all' ? cocktails.length : cocktails.filter(c => c.section === t).length;
     });
 
     const grid = document.getElementById('grid');
 
     if (filtered.length === 0) {
-      grid.innerHTML = `
-        <div class="empty-state" style="grid-column:1/-1">
-          <h3>No specs yet</h3>
-          <p>Add your first cocktail to get started</p>
-          <button class="btn btn-primary" onclick="openModal()">+ Add Cocktail</button>
-        </div>`;
+      grid.innerHTML = `<div class="empty-state">
+        <h3>No specs yet</h3>
+        <p>${currentTab === 'all' ? 'Add your first cocktail to get started' : 'No cocktails in this section yet'}</p>
+        <button class="btn btn-primary" onclick="openModal()">+ Add Cocktail</button>
+      </div>`;
       return;
     }
 
-    grid.innerHTML = filtered.map(c => cardHTML(c)).join('');
-  }
-
-  function sectionClass(section) {
-    return { signatures: 'sig', classics: 'classic', na: 'na' }[section] || 'sig';
+    grid.innerHTML = filtered.map(cardHTML).join('');
   }
 
   function cardHTML(c) {
-    const cls = sectionClass(c.section);
-    const sectionLabel = { signatures: 'Signature', classics: 'Classic', na: 'Non-Alcoholic' }[c.section];
-
-    const ings = (c.ingredients || []).map(i =>
-      `<li><span class="ing-name">${i.name}</span><span class="ing-vol">${i.vol ? i.vol + 'mL' : '—'}</span></li>`
+    const cls = { signatures:'sig', classics:'classic', na:'na' }[c.section] || 'sig';
+    const label = { signatures:'Signature', classics:'Classic', na:'Non-Alcoholic' }[c.section];
+    const ings = (c.ingredients||[]).map(i =>
+      `<li><span class="ing-name">${i.name}</span><span class="ing-vol">${i.vol ? i.vol+'mL' : '—'}</span></li>`
     ).join('');
-
-    return `
-    <div class="card ${cls}">
+    return `<div class="card ${cls}">
       <div class="card-accent"></div>
       <div class="card-header">
         <div class="card-name">${c.name}</div>
@@ -732,30 +500,18 @@
       </div>
       <div class="card-body">
         <div class="card-meta">
-          <span class="meta-tag">${sectionLabel}</span>
+          <span class="meta-tag">${label}</span>
           ${c.glass ? `<span class="meta-tag glass">⬡ ${c.glass}</span>` : ''}
         </div>
-        ${c.ingredients && c.ingredients.length > 0 ? `
-          <div class="spec-label">Ingredients</div>
-          <ul class="ingredients-list">${ings}</ul>
-        ` : ''}
-        ${c.method ? `
-          <div class="spec-label">Method</div>
-          <div class="spec-text">${c.method}</div>
-        ` : ''}
+        ${ings ? `<div class="spec-label">Ingredients</div><ul class="ingredients-list">${ings}</ul>` : ''}
+        ${c.method ? `<div class="spec-label">Method</div><div class="spec-text">${c.method}</div>` : ''}
       </div>
-      ${c.garnish ? `
-        <div class="card-footer">
-          <div class="footer-garnish"><strong>Garnish</strong>${c.garnish}</div>
-        </div>
-      ` : ''}
+      ${c.garnish ? `<div class="card-footer"><div class="footer-garnish"><strong>Garnish</strong>${c.garnish}</div></div>` : ''}
     </div>`;
   }
 
-  // INGREDIENT ROWS
-  let ingredientCount = 0;
-
-  function addIngredient(name = '', vol = '') {
+  // ── INGREDIENTS ───────────────────────────────
+  function addIngredient(name='', vol='') {
     ingredientCount++;
     const id = 'ing-' + ingredientCount;
     const row = document.createElement('div');
@@ -764,8 +520,7 @@
     row.innerHTML = `
       <input class="ing-input" placeholder="e.g. Bulleit Bourbon" value="${name}" data-field="name" />
       <input class="ing-input" placeholder="45" value="${vol}" data-field="vol" type="number" min="0" />
-      <button class="ing-remove" onclick="removeIngredient('${id}')">✕</button>
-    `;
+      <button class="ing-remove" onclick="removeIngredient('${id}')">✕</button>`;
     document.getElementById('ing-list').appendChild(row);
   }
 
@@ -781,8 +536,8 @@
     })).filter(i => i.name);
   }
 
-  // MODAL
-  function openModal(id = null) {
+  // ── MODAL ─────────────────────────────────────
+  function openModal(id=null) {
     editingId = id;
     document.getElementById('ing-list').innerHTML = '';
     ingredientCount = 0;
@@ -792,22 +547,19 @@
       document.getElementById('modal-title').textContent = 'Edit Cocktail';
       document.getElementById('f-name').value = c.name;
       document.getElementById('f-section').value = c.section;
-      document.getElementById('f-glass').value = c.glass || '';
-      document.getElementById('f-garnish').value = c.garnish || '';
-      document.getElementById('f-method').value = c.method || '';
-      (c.ingredients || []).forEach(i => addIngredient(i.name, i.vol));
+      document.getElementById('f-glass').value = c.glass||'';
+      document.getElementById('f-garnish').value = c.garnish||'';
+      document.getElementById('f-method').value = c.method||'';
+      (c.ingredients||[]).forEach(i => addIngredient(i.name, i.vol));
     } else {
       document.getElementById('modal-title').textContent = 'Add Cocktail';
-      document.getElementById('f-name').value = '';
+      ['f-name','f-glass','f-garnish','f-method'].forEach(id => document.getElementById(id).value='');
       document.getElementById('f-section').value = 'signatures';
-      document.getElementById('f-glass').value = '';
-      document.getElementById('f-garnish').value = '';
-      document.getElementById('f-method').value = '';
       addIngredient();
     }
 
     document.getElementById('modal').classList.add('open');
-    document.getElementById('f-name').focus();
+    setTimeout(() => document.getElementById('f-name').focus(), 50);
   }
 
   function closeModal() {
@@ -819,7 +571,7 @@
 
   function saveCocktail() {
     const name = document.getElementById('f-name').value.trim();
-    if (!name) { alert('Please enter a cocktail name.'); return; }
+    if (!name) { toast('Please enter a cocktail name', 'error'); return; }
 
     const data = {
       name,
@@ -837,7 +589,7 @@
       cocktails.push({ id: generateId(), ...data });
     }
 
-    save();
+    saveLocal();
     closeModal();
     render();
   }
@@ -845,20 +597,27 @@
   function deleteCocktail(id) {
     if (!confirm('Remove this spec?')) return;
     cocktails = cocktails.filter(c => c.id !== id);
-    save();
+    saveLocal();
     render();
   }
 
-  // Close modal on overlay click
-  document.getElementById('modal').addEventListener('click', function(e) {
-    if (e.target === this) closeModal();
-  });
+  // ── TOAST ─────────────────────────────────────
+  let toastTimer;
+  function toast(msg, type='') {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.className = 'toast show ' + type;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove('show'), 4000);
+  }
 
-  // Keyboard shortcut
-  document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') closeModal();
+  // ── INIT ──────────────────────────────────────
+  document.getElementById('modal').addEventListener('click', e => {
+    if (e.target === document.getElementById('modal')) closeModal();
   });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
 
+  updateGistButtons();
   render();
 </script>
 </body>
