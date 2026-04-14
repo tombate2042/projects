@@ -500,9 +500,9 @@ let activeSupplier = 'all';
 let searchQuery = '';
 
 function normaliseState(s) {
-  if (!s || typeof s !== 'object') return { weekNum: 1, weekStart: getWeekStart(), items: {}, catalog: [] };
-  if (!s.items) s.items = {};
-  if (!s.catalog) s.catalog = [];
+  if (!s || typeof s !== 'object' || Array.isArray(s)) return { weekNum: 1, weekStart: getWeekStart(), items: {}, catalog: [] };
+  if (!s.items || Array.isArray(s.items)) s.items = {};
+  if (!s.catalog || !Array.isArray(s.catalog)) s.catalog = [];
   if (!s.weekStart) s.weekStart = getWeekStart();
   if (!s.weekNum) s.weekNum = 1;
   return s;
