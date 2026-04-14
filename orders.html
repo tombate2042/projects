@@ -424,6 +424,11 @@
     </div>
     <div id="settings-gist-list"></div>
     <div style="padding-top:14px;border-top:1px solid var(--border);margin-top:8px">
+      <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.07em;color:var(--text3);margin-bottom:8px">Storage Areas</div>
+      <div id="venue-editor" style="display:flex;flex-direction:column;gap:4px;margin-bottom:8px"></div>
+      <button class="btn" style="font-size:11px;padding:4px 12px" onclick="addVenueRow()">+ Add Area</button>
+    </div>
+    <div style="padding-top:14px;border-top:1px solid var(--border);margin-top:8px">
       <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.07em;color:var(--text3);margin-bottom:8px">Local Data</div>
       <button class="btn" style="font-size:12px;color:var(--danger,#e05)" onclick="clearLocalData()">Clear local session data</button>
       <div style="font-size:11px;color:var(--text3);margin-top:4px">Removes all local data. Gist is not affected.</div>
@@ -514,6 +519,7 @@ function normaliseState(s) {
   if (!s || typeof s !== 'object' || Array.isArray(s)) return { weekNum: 1, weekStart: getWeekStart(), items: {}, catalog: [] };
   if (!s.items || Array.isArray(s.items)) s.items = {};
   if (!s.catalog || !Array.isArray(s.catalog)) s.catalog = [];
+  if (!s.venues || !Array.isArray(s.venues) || !s.venues.length) s.venues = ['Basement','Republic Bar','Bistro','Sports Bar',"Taylor's Rooftop"];
   if (!s.weekStart) s.weekStart = getWeekStart();
   if (!s.weekNum) s.weekNum = 1;
   return s;
@@ -861,7 +867,7 @@ async function advanceWeek() {
     item.received = received;
     item.ordered = 0;
     item.count = 0;
-    COUNT_VENUES.forEach((_, i) => { item['cnt_' + i] = 0; });
+    state.venues.forEach((_, i) => { item['cnt_' + i] = 0; });
   });
   state.weekNum++;
   // advance date by 7 days
@@ -901,6 +907,42 @@ function saveGistConfig(cfg) {
   localStorage.setItem('stockorder_gist_config', JSON.stringify(cfg));
 }
 
+function renderVenueEditor() {
+  const container = document.getElementById('venue-editor');
+  container.innerHTML = '';
+  (state.venues || []).forEach((v, i) => {
+    const row = document.createElement('div');
+    row.style = 'display:flex;align-items:center;gap:6px';
+    row.innerHTML = `
+      <input class="form-input" id="venue-${i}" type="text" value="${esc(v)}" style="flex:1;font-size:12px">
+      <button class="btn" style="font-size:11px;padding:4px 8px;flex-shrink:0" onclick="removeVenueRow(${i})">✕</button>`;
+    container.appendChild(row);
+  });
+}
+
+function addVenueRow() {
+  if (!state.venues) state.venues = [];
+  state.venues.push('New Area');
+  renderVenueEditor();
+  const inputs = document.querySelectorAll('#venue-editor input');
+  const last = inputs[inputs.length - 1];
+  if (last) { last.focus(); last.select(); }
+}
+
+function removeVenueRow(i) {
+  if (state.venues.length <= 1) { alert('At least one storage area is required.'); return; }
+  if (!confirm(`Remove "${state.venues[i]}"? Count data for this area will be lost on next save.`)) return;
+  state.venues.splice(i, 1);
+  renderVenueEditor();
+}
+
+function saveVenuesFromEditor() {
+  const inputs = document.querySelectorAll('#venue-editor input');
+  const names = [...inputs].map(el => el.value.trim()).filter(Boolean);
+  if (!names.length) return;
+  state.venues = names;
+}
+
 function clearLocalData() {
   if (!confirm('Clear all local session data? This cannot be undone.\nYour gist data is not affected.')) return;
   localStorage.removeItem('stockorder_v2');
@@ -936,6 +978,7 @@ function openSettings() {
       </div>
     </div>`;
   }).join('');
+  renderVenueEditor();
   document.getElementById('settingsModal').classList.add('open');
 }
 
@@ -950,7 +993,10 @@ function saveGistSettings() {
     };
   });
   saveGistConfig(cfg);
+  saveVenuesFromEditor();
+  saveState();
   closeModal('settingsModal');
+  if (document.getElementById('view-count') && document.getElementById('view-count').classList.contains('active')) renderCount();
 }
 
 function renderAdvanceGistList() {
@@ -1169,7 +1215,7 @@ function switchView(view, tab) {
   if (view === 'stock') renderStock();
 }
 
-const COUNT_VENUES = ['Basement','Republic Bar','Bistro','Sports Bar',"Taylor's Rooftop"];
+// state.venues is now state.venues (editable per venue)
 
 function renderCount() {
   const allItems = getAllItems().sort((a, b) => {
@@ -1194,7 +1240,7 @@ function renderCount() {
         <table style="table-layout:fixed">
           <thead><tr>
             <th style="width:220px;text-align:left">Item</th>
-            ${COUNT_VENUES.map(v => `<th style="width:110px;text-align:center">${v}</th>`).join('')}
+            ${state.venues.map(v => `<th style="width:110px;text-align:center">${v}</th>`).join('')}
             <th style="width:90px;text-align:center">Total</th>
           </tr></thead>
           <tbody id="cnttbody-${key}"></tbody>
@@ -1204,7 +1250,7 @@ function renderCount() {
     const tbody = document.getElementById('cnttbody-' + key);
     items.forEach(m => {
       const s = state.items[m.id];
-      const venues = COUNT_VENUES.map((v, i) => s['cnt_' + i] || 0);
+      const venues = state.venues.map((v, i) => s['cnt_' + i] || 0);
       const total = venues.reduce((a, b) => a + b, 0);
       const tr = document.createElement('tr');
       tr.id = 'cntrow-' + m.id;
@@ -1212,7 +1258,7 @@ function renderCount() {
         <td style="padding-left:24px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
           <div class="item-name">${esc(m.item)}</div>
         </td>
-        ${COUNT_VENUES.map((v, i) => `
+        ${state.venues.map((v, i) => `
         <td style="text-align:center;padding:4px 8px">
           <input class="qty-input" type="number" step="0.1" min="0"
             value="${s['cnt_' + i] || ''}" placeholder="0"
@@ -1237,7 +1283,7 @@ function toggleCountCategory(cat) {
 function updateVenueCount(id, venueIdx, value) {
   const s = state.items[id];
   s['cnt_' + venueIdx] = parseFloat(value) || 0;
-  const total = COUNT_VENUES.reduce((sum, _, i) => sum + (Number(s['cnt_' + i]) || 0), 0);
+  const total = state.venues.reduce((sum, _, i) => sum + (Number(s['cnt_' + i]) || 0), 0);
   // update total cell
   const totalCell = document.getElementById('cnttotal-' + id);
   if (totalCell) totalCell.textContent = total > 0 ? fmt(total) : '—';
