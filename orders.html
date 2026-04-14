@@ -851,8 +851,9 @@ async function advanceWeek() {
     if (btn) btn.disabled = true;
     document.getElementById('gist-status').textContent = 'Syncing…';
     const result = await syncToGist({ ...def, gistId: c.gistId }, c.token);
-    document.getElementById('gist-status').textContent = result === true ? 'Synced ✓' : 'Sync failed: ' + result;
-    await new Promise(r => setTimeout(r, result === true ? 1200 : 3000));
+    const ok = result && typeof result === 'object';
+    document.getElementById('gist-status').textContent = ok ? `Synced ✓ (${result.size} bytes)` : 'Sync failed: ' + result;
+    await new Promise(r => setTimeout(r, ok ? 1200 : 3000));
     if (btn) btn.disabled = false;
   }
   closeModal('advanceModal');
@@ -967,12 +968,13 @@ async function pushFromSettings(defId) {
   const statusEl = document.getElementById('gstatus-' + defId);
   statusEl.textContent = 'Pushing…';
   const result = await syncToGist({ ...def, gistId }, token);
-  statusEl.textContent = result === true ? `Pushed ✓ (${itemCount} items)` : 'Push failed: ' + result;
+  statusEl.textContent = result && typeof result === 'object' ? `Pushed ✓ (${itemCount} items, ${result.size} bytes)` : 'Push failed: ' + result;
 }
 
 async function syncToGist(def, token) {
+  const content = JSON.stringify(state, null, 2);
   const body = JSON.stringify({
-    files: { [def.filename]: { content: JSON.stringify(state, null, 2) } }
+    files: { [def.filename]: { content } }
   });
   try {
     const res = await fetch(`https://api.github.com/gists/${def.gistId}`, {
@@ -980,8 +982,14 @@ async function syncToGist(def, token) {
       headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
       body
     });
-    if (!res.ok) throw new Error(`GitHub API ${res.status}`);
-    return true;
+    if (!res.ok) {
+      const errText = await res.text();
+      throw new Error(`GitHub API ${res.status}: ${errText}`);
+    }
+    const data = await res.json();
+    const file = data.files && data.files[def.filename];
+    if (!file) return `Write appeared to succeed but ${def.filename} not found in response`;
+    return { size: file.size || file.content?.length || 0 };
   } catch(err) {
     console.error('Gist sync failed:', err);
     return err.message;
