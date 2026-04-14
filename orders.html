@@ -888,7 +888,11 @@ function openSettings() {
         <input class="form-input" id="gid-${def.id}" type="text" placeholder="Gist ID" value="${esc(c.gistId||'')}" style="font-family:var(--mono);font-size:12px">
         <input class="form-input" id="gtoken-${def.id}" type="password" placeholder="GitHub Personal Access Token" value="${esc(c.token||'')}" style="font-family:var(--mono);font-size:12px">
       </div>
-      <button class="btn" style="margin-top:8px;font-size:11px;padding:4px 12px;opacity:${disabled?'0.4':'1'}" ${disabled?'disabled':''} onclick="pullFromGist('${def.id}')">Pull from Gist</button>
+      <div style="display:flex;align-items:center;gap:8px;margin-top:8px">
+        <button class="btn" style="font-size:11px;padding:4px 12px;opacity:${disabled?'0.4':'1'}" ${disabled?'disabled':''} onclick="pullFromGist('${def.id}')">Pull</button>
+        <button class="btn" style="font-size:11px;padding:4px 12px;opacity:${disabled?'0.4':'1'}" ${disabled?'disabled':''} onclick="pushFromSettings('${def.id}')">Push</button>
+        <span id="gstatus-${def.id}" style="font-size:11px;font-family:var(--mono);color:var(--text3)"></span>
+      </div>
     </div>`;
   }).join('');
   document.getElementById('settingsModal').classList.add('open');
@@ -949,6 +953,17 @@ async function pullFromGist(defId) {
     console.error('Gist pull failed:', err);
     alert('Pull failed: ' + err.message);
   }
+}
+
+async function pushFromSettings(defId) {
+  const gistId = document.getElementById('gid-' + defId).value.trim();
+  const token = document.getElementById('gtoken-' + defId).value.trim();
+  if (!gistId || !token) { alert('Enter a Gist ID and token first.'); return; }
+  const def = GIST_DEFS.find(d => d.id === defId);
+  const statusEl = document.getElementById('gstatus-' + defId);
+  statusEl.textContent = 'Pushing…';
+  const result = await syncToGist({ ...def, gistId }, token);
+  statusEl.textContent = result === true ? 'Pushed ✓' : 'Push failed: ' + result;
 }
 
 async function syncToGist(def, token) {
