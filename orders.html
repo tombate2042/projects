@@ -505,10 +505,19 @@ let activeFilter = 'all';
 let activeSupplier = 'all';
 let searchQuery = '';
 
+function normaliseState(s) {
+  if (!s || typeof s !== 'object') return { weekNum: 1, weekStart: getWeekStart(), items: {}, catalog: [] };
+  if (!s.items) s.items = {};
+  if (!s.catalog) s.catalog = [];
+  if (!s.weekStart) s.weekStart = getWeekStart();
+  if (!s.weekNum) s.weekNum = 1;
+  return s;
+}
+
 function loadState() {
   try {
     const saved = localStorage.getItem('stockorder_v2');
-    if (saved) return JSON.parse(saved);
+    if (saved) return normaliseState(JSON.parse(saved));
   } catch(e) {}
   return { weekNum: 1, weekStart: getWeekStart(), items: {}, catalog: [] };
 }
@@ -942,7 +951,7 @@ async function pullFromGist(defId) {
     const data = await res.json();
     const file = data.files[def.filename];
     if (!file) throw new Error(`${def.filename} not found in gist`);
-    const pulled = JSON.parse(file.content);
+    const pulled = normaliseState(JSON.parse(file.content));
     localStorage.setItem('stockorder_v2', JSON.stringify(pulled));
     state = pulled;
     closeModal('settingsModal');
@@ -1539,6 +1548,7 @@ function saveItem() {
     position: 99,
   };
   if (!state.catalog) state.catalog = [];
+  if (!state.items) state.items = {};
   if (editingItemId) {
     const idx = state.catalog.findIndex(c => c.id === editingItemId);
     if (idx >= 0) state.catalog[idx] = { ...state.catalog[idx], ...item };
@@ -1568,6 +1578,7 @@ function confirmDelete() {
   } else {
     state.catalog = (state.catalog||[]).filter(c => c.id !== pendingDeleteId);
   }
+  if (!state.items) state.items = {};
   delete state.items[pendingDeleteId];
   saveState();
   pendingDeleteId = null;
