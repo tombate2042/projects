@@ -389,9 +389,20 @@
     <h3>Advance to Next Week</h3>
     <div class="advance-info" id="advanceInfo"></div>
     <p>This will shift all usage and count data forward by one week. Current week becomes last week's reference.</p>
+    <div style="margin-bottom:16px;border-top:1px solid var(--border);padding-top:14px">
+      <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.07em;color:var(--text3);margin-bottom:10px">Gist Sync <span style="font-weight:400;opacity:0.6">(optional)</span></div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <input class="form-input" id="gist-id" type="text" placeholder="Gist ID  (e.g. a1b2c3d4e5f6…)" style="font-family:var(--mono);font-size:12px">
+        <input class="form-input" id="gist-token" type="password" placeholder="GitHub Personal Access Token" style="font-family:var(--mono);font-size:12px">
+        <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text2);cursor:pointer">
+          <input type="checkbox" id="gist-save" style="accent-color:var(--accent)"> Remember these settings
+        </label>
+      </div>
+      <div id="gist-status" style="font-size:11px;margin-top:8px;min-height:16px;font-family:var(--mono)"></div>
+    </div>
     <div class="modal-actions">
       <button class="btn" onclick="closeModal('advanceModal')">Cancel</button>
-      <button class="btn btn-primary" onclick="advanceWeek()">Advance Week</button>
+      <button class="btn btn-primary" id="btnAdvanceWeek" onclick="advanceWeek()">Advance Week</button>
     </div>
   </div>
 </div>
@@ -773,6 +784,11 @@ function showAdvanceModal() {
     Estimated cost: $${totalCost.toLocaleString('en-AU', {minimumFractionDigits:0,maximumFractionDigits:0})}<br><br>
     After advancing: ordered qty becomes "received", current usage shifts back, counts carry forward.`;
   document.getElementById('advanceModal').classList.add('open');
+  const gs = loadGistSettings();
+  document.getElementById('gist-id').value = gs.id || '';
+  document.getElementById('gist-token').value = gs.token || '';
+  document.getElementById('gist-save').checked = !!(gs.id || gs.token);
+  document.getElementById('gist-status').textContent = '';
 }
 
 function closeModal(id) {
@@ -806,6 +822,41 @@ function advanceWeek() {
   renderCategories();
   updateWeekLabel();
   updateStats();
+  const gistId = document.getElementById('gist-id').value.trim();
+  const gistToken = document.getElementById('gist-token').value.trim();
+  if (document.getElementById('gist-save').checked) saveGistSettings(gistId, gistToken);
+  else clearGistSettings();
+  if (gistId && gistToken) syncToGist(gistId, gistToken);
+}
+
+// ─── GIST SYNC ───────────────────────────────────────────────────────────────
+function loadGistSettings() {
+  try { return JSON.parse(localStorage.getItem('stockorder_gist') || '{}'); } catch(e) { return {}; }
+}
+function saveGistSettings(id, token) {
+  localStorage.setItem('stockorder_gist', JSON.stringify({ id, token }));
+}
+function clearGistSettings() {
+  localStorage.removeItem('stockorder_gist');
+}
+
+async function syncToGist(gistId, token) {
+  const filename = 'stockorder_state.json';
+  const body = JSON.stringify({
+    files: { [filename]: { content: JSON.stringify(state, null, 2) } }
+  });
+  try {
+    const res = await fetch(`https://api.github.com/gists/${gistId}`, {
+      method: 'PATCH',
+      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body
+    });
+    if (!res.ok) throw new Error(`GitHub API ${res.status}`);
+    console.log('Gist synced successfully');
+  } catch(err) {
+    console.error('Gist sync failed:', err);
+    alert('Gist sync failed: ' + err.message + '\nData is saved locally — check your Gist ID and token.');
+  }
 }
 
 // ─── PDF EXPORT ──────────────────────────────────────────────────────────────
