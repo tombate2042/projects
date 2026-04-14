@@ -959,11 +959,15 @@ async function pushFromSettings(defId) {
   const gistId = document.getElementById('gid-' + defId).value.trim();
   const token = document.getElementById('gtoken-' + defId).value.trim();
   if (!gistId || !token) { alert('Enter a Gist ID and token first.'); return; }
+  const itemCount = (state.catalog || []).length;
+  if (itemCount === 0) {
+    if (!confirm('Warning: your current state has 0 catalog items. Push anyway?')) return;
+  }
   const def = GIST_DEFS.find(d => d.id === defId);
   const statusEl = document.getElementById('gstatus-' + defId);
   statusEl.textContent = 'Pushing…';
   const result = await syncToGist({ ...def, gistId }, token);
-  statusEl.textContent = result === true ? 'Pushed ✓' : 'Push failed: ' + result;
+  statusEl.textContent = result === true ? `Pushed ✓ (${itemCount} items)` : 'Push failed: ' + result;
 }
 
 async function syncToGist(def, token) {
