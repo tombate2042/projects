@@ -511,13 +511,29 @@ function normaliseState(s) {
 function loadState() {
   try {
     const saved = localStorage.getItem('stockorder_v2');
-    if (saved) return normaliseState(JSON.parse(saved));
-  } catch(e) {}
+    if (saved) {
+      const parsed = normaliseState(JSON.parse(saved));
+      console.log('loadState: loaded', parsed.catalog.length, 'catalog items from localStorage');
+      return parsed;
+    }
+  } catch(e) {
+    console.error('loadState error:', e);
+  }
+  console.log('loadState: no saved data, starting fresh');
   return { weekNum: 1, weekStart: getWeekStart(), items: {}, catalog: [] };
 }
 
 function saveState() {
-  localStorage.setItem('stockorder_v2', JSON.stringify(state));
+  try {
+    const serialised = JSON.stringify(state);
+    localStorage.setItem('stockorder_v2', serialised);
+    // Verify the write succeeded by reading back
+    const verify = localStorage.getItem('stockorder_v2');
+    if (!verify) console.error('saveState: write appeared to succeed but read-back returned null');
+  } catch(e) {
+    alert('Failed to save data: ' + e.message + '\nData may be lost on refresh.');
+    console.error('saveState error:', e);
+  }
 }
 
 function localDateISO(d) {
