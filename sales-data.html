@@ -939,19 +939,15 @@
       <div class="panel-title">
         <div class="dot"></div>
         <h2>Machines</h2>
+        <button class="mach-import-btn" onclick="triggerMachPDF()">⬆ Import PDF</button>
+        <span class="mach-toast" id="mach-toast"></span>
+        <input type="file" id="mach-pdf-input" accept=".pdf" style="display:none" onchange="handleMachPDF(this)">
       </div>
       <div class="panel-total">
         <div class="total-label">Net Variance</div>
         <div class="total-amount" id="mach-total">—</div>
       </div>
     </div>
-
-    <div class="mach-btn-row">
-      <button class="mach-import-btn" onclick="triggerMachPDF()">⬆ Import PDF</button>
-      <button class="reset-btn" onclick="resetMachines()">↺ Reset</button>
-      <span class="mach-toast" id="mach-toast"></span>
-    </div>
-    <input type="file" id="mach-pdf-input" accept=".pdf" style="display:none" onchange="handleMachPDF(this)">
 
     <div class="mach-table-wrap">
     <table class="mach-table">
@@ -974,6 +970,8 @@
       </tfoot>
     </table>
     </div>
+
+    <button class="reset-btn" style="margin-top:12px" onclick="resetMachines()">↺ Reset</button>
   </div>
   </div>
 
