@@ -21,6 +21,8 @@
     --accent-till-dim: rgba(184,122,58,0.10);
     --accent-safe-dim: rgba(90,138,106,0.10);
     --green: #5a8f5a;
+    --accent-float: #7272b0;
+    --accent-float-dim: rgba(114,114,176,0.10);
     --mono: 'Courier Prime', monospace;
     --sans: 'Nunito', sans-serif;
   }
@@ -109,6 +111,12 @@
     background: var(--accent-safe-dim);
   }
 
+  .tab-btn.active-float {
+    border-color: var(--accent-float);
+    color: var(--accent-float);
+    background: var(--accent-float-dim);
+  }
+
   .layout {
     min-height: calc(100vh - 61px);
   }
@@ -142,8 +150,9 @@
     flex-shrink: 0;
   }
 
-  .till .dot { background: var(--accent-till); box-shadow: 0 0 8px var(--accent-till); }
-  .safe .dot { background: var(--accent-safe); box-shadow: 0 0 8px var(--accent-safe); }
+  .till .dot  { background: var(--accent-till);  box-shadow: 0 0 8px var(--accent-till); }
+  .safe .dot  { background: var(--accent-safe);  box-shadow: 0 0 8px var(--accent-safe); }
+  .float .dot { background: var(--accent-float); box-shadow: 0 0 8px var(--accent-float); }
 
   .panel-title h2 {
     font-size: 13px;
@@ -172,8 +181,9 @@
     transition: all 0.2s ease;
   }
 
-  .till .total-amount { color: var(--accent-till); }
-  .safe .total-amount { color: var(--accent-safe); }
+  .till .total-amount  { color: var(--accent-till); }
+  .safe .total-amount  { color: var(--accent-safe); }
+  .float .total-amount { color: var(--accent-float); }
 
   /* Section headers */
   .section-label {
@@ -396,8 +406,109 @@
     font-weight: 700;
   }
 
-  .till .grand-total-bar .gt-amount { color: var(--accent-till); }
-  .safe .grand-total-bar .gt-amount { color: var(--accent-safe); }
+  .till .grand-total-bar .gt-amount  { color: var(--accent-till); }
+  .safe .grand-total-bar .gt-amount  { color: var(--accent-safe); }
+  .float .grand-total-bar .gt-amount { color: var(--accent-float); }
+
+  /* ── FLOAT RECONCILIATION TABLE ── */
+  .float-recon-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 4px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .float-recon-table th {
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 8px 14px;
+    font-family: var(--sans);
+    font-weight: 600;
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    text-align: right;
+  }
+
+  .float-recon-table th:first-child { text-align: left; }
+
+  .float-recon-table td {
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+
+  .float-recon-table tfoot td {
+    background: var(--surface2);
+    border-bottom: none;
+  }
+
+  .frt-name {
+    padding: 10px 14px;
+    font-family: var(--sans);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--text);
+  }
+
+  .frt-expected {
+    padding: 10px 14px;
+    font-family: var(--mono);
+    font-size: 15px;
+    color: var(--muted);
+    text-align: right;
+  }
+
+  .frt-input-cell {
+    padding: 5px 8px;
+    text-align: right;
+  }
+
+  .frt-input-cell input {
+    font-family: var(--mono);
+    font-size: 16px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 5px 10px;
+    text-align: right;
+    width: 130px;
+    color: var(--text);
+    outline: none;
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
+
+  .frt-input-cell input::-webkit-outer-spin-button,
+  .frt-input-cell input::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+  .frt-input-cell input:focus { border-color: var(--accent-float); }
+
+  .frt-variance {
+    padding: 10px 14px;
+    font-family: var(--mono);
+    font-size: 15px;
+    font-weight: 700;
+    text-align: right;
+    min-width: 90px;
+    color: var(--muted);
+  }
+
+  .frt-variance.var-pos  { color: #5a8f5a; }
+  .frt-variance.var-neg  { color: #c0504a; }
+  .frt-variance.var-zero { color: var(--accent-float); }
+
+  .float-note {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 8px;
+    letter-spacing: 0.05em;
+  }
 
   /* Reset button */
   .reset-btn {
@@ -547,6 +658,7 @@
   <div class="tabs">
     <button class="tab-btn active-till" id="tab-till" onclick="switchTab('till')">Till</button>
     <button class="tab-btn" id="tab-safe" onclick="switchTab('safe')">Safe</button>
+    <button class="tab-btn" id="tab-float" onclick="switchTab('float')">Float Rec</button>
   </div>
 </header>
 
@@ -642,6 +754,46 @@
       <button class="breakdown-btn" onclick="toggleBreakdown('safe')">▾ Breakdown</button>
     </div>
     <div class="breakdown" id="safe-breakdown"></div>
+  </div>
+  </div>
+
+  <!-- ===== FLOAT RECONCILIATION ===== -->
+  <div class="panel float" id="float-panel">
+  <div class="panel-inner" style="max-width:560px;margin:0 auto;">
+    <div class="panel-header">
+      <div class="panel-title">
+        <div class="dot"></div>
+        <h2>Float Reconciliation</h2>
+      </div>
+      <div class="panel-total">
+        <div class="total-label">Net Variance</div>
+        <div class="total-amount" id="float-total">—</div>
+      </div>
+    </div>
+
+    <table class="float-recon-table">
+      <thead>
+        <tr>
+          <th>Till</th>
+          <th>Expected Float</th>
+          <th>Returned</th>
+          <th>Variance</th>
+        </tr>
+      </thead>
+      <tbody id="float-rows"></tbody>
+      <tfoot>
+        <tr>
+          <td class="frt-name" style="color:var(--muted);">Total</td>
+          <td class="frt-expected" id="frt-total-expected">—</td>
+          <td class="frt-expected" id="frt-total-returned">—</td>
+          <td class="frt-variance" id="frt-total-variance">—</td>
+        </tr>
+      </tfoot>
+    </table>
+
+    <p class="float-note">Enter the total cash returned for each float at end of shift.</p>
+
+    <button class="reset-btn" onclick="resetFloat()">↺ Reset Float Rec</button>
   </div>
   </div>
 
@@ -990,14 +1142,114 @@ function selectTill(el) {
   calcTill();
 }
 
+// ─── Float Reconciliation ────────────────────────────────────────────────────
+
+const FLOAT_LABELS = { bar: 'Bar', tab: 'TAB', ccu: 'CCU' };
+
+function calcFloatExpected(key) {
+  const preset = FLOAT_PRESETS[key] || {};
+  let total = 0;
+  NOTES.forEach(d => { total += (preset[`tn-${d.value}`] || 0) * d.value; });
+  COINS.forEach(d => { total += (preset[`tc-${d.value}`] || 0) * d.value; });
+  return Math.round(total * 100) / 100;
+}
+
+function buildFloat() {
+  const tbody = document.getElementById('float-rows');
+  Object.entries(FLOAT_LABELS).forEach(([key, label]) => {
+    const expected = calcFloatExpected(key);
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="frt-name">${label}</td>
+      <td class="frt-expected" id="fre-${key}">${fmt(expected)}</td>
+      <td class="frt-input-cell">
+        <input type="number" id="frr-${key}" min="0" step="0.01" placeholder="0.00"
+          oninput="calcFloat()">
+      </td>
+      <td class="frt-variance" id="frv-${key}">—</td>`;
+    tbody.appendChild(tr);
+  });
+  // initialise totals row
+  let totalExpected = 0;
+  Object.keys(FLOAT_LABELS).forEach(k => { totalExpected += calcFloatExpected(k); });
+  document.getElementById('frt-total-expected').textContent = fmt(totalExpected);
+}
+
+function calcFloat() {
+  let totalExpected = 0;
+  let totalReturned = 0;
+  let anyInput = false;
+
+  Object.keys(FLOAT_LABELS).forEach(key => {
+    const expected = calcFloatExpected(key);
+    totalExpected += expected;
+
+    const retEl = document.getElementById(`frr-${key}`);
+    const hasValue = retEl && retEl.value !== '';
+    const returned = hasValue ? (parseFloat(retEl.value) || 0) : null;
+    if (hasValue) { totalReturned += returned; anyInput = true; }
+
+    const varEl = document.getElementById(`frv-${key}`);
+    if (!varEl) return;
+    if (returned === null) {
+      varEl.textContent = '—';
+      varEl.className = 'frt-variance';
+    } else {
+      const v = Math.round((returned - expected) * 100) / 100;
+      if (v === 0) {
+        varEl.textContent = '✓';
+        varEl.className = 'frt-variance var-zero';
+      } else {
+        varEl.textContent = (v > 0 ? '+' : '') + fmt(v);
+        varEl.className = 'frt-variance ' + (v > 0 ? 'var-pos' : 'var-neg');
+      }
+    }
+  });
+
+  // totals row
+  document.getElementById('frt-total-expected').textContent = fmt(totalExpected);
+  document.getElementById('frt-total-returned').textContent = anyInput ? fmt(totalReturned) : '—';
+
+  const tvEl = document.getElementById('frt-total-variance');
+  const headerEl = document.getElementById('float-total');
+  if (!anyInput) {
+    tvEl.textContent = '—';
+    tvEl.className = 'frt-variance';
+    headerEl.textContent = '—';
+  } else {
+    const totalV = Math.round((totalReturned - totalExpected) * 100) / 100;
+    if (totalV === 0) {
+      tvEl.textContent = '✓';
+      tvEl.className = 'frt-variance var-zero';
+      headerEl.textContent = '✓ Balanced';
+    } else {
+      const sign = totalV > 0 ? '+' : '';
+      tvEl.textContent = sign + fmt(totalV);
+      tvEl.className = 'frt-variance ' + (totalV > 0 ? 'var-pos' : 'var-neg');
+      headerEl.textContent = sign + fmt(totalV);
+    }
+  }
+}
+
+function resetFloat() {
+  Object.keys(FLOAT_LABELS).forEach(key => {
+    const el = document.getElementById(`frr-${key}`);
+    if (el) el.value = '';
+  });
+  calcFloat();
+}
+
 // ─── Tabs ────────────────────────────────────────────────────────────────────
 
 function switchTab(which) {
   document.getElementById('till-panel').classList.toggle('active', which === 'till');
   document.getElementById('safe-panel').classList.toggle('active', which === 'safe');
-  document.getElementById('tab-till').className = 'tab-btn' + (which === 'till' ? ' active-till' : '');
-  document.getElementById('tab-safe').className = 'tab-btn' + (which === 'safe' ? ' active-safe' : '');
-  document.getElementById('header-title').textContent = which === 'till' ? 'Till' : 'Safe';
+  document.getElementById('float-panel').classList.toggle('active', which === 'float');
+  document.getElementById('tab-till').className  = 'tab-btn' + (which === 'till'  ? ' active-till'  : '');
+  document.getElementById('tab-safe').className  = 'tab-btn' + (which === 'safe'  ? ' active-safe'  : '');
+  document.getElementById('tab-float').className = 'tab-btn' + (which === 'float' ? ' active-float' : '');
+  const titles = { till: 'Till', safe: 'Safe', float: 'Float Rec' };
+  document.getElementById('header-title').textContent = titles[which] || which;
 }
 
 // ─── Keyboard navigation ─────────────────────────────────────────────────────
@@ -1046,6 +1298,7 @@ function setupNavigation() {
 
 buildTill();
 buildSafe();
+buildFloat();
 setupNavigation();
 selectTill(document.querySelector('.till-check-label[data-key="bar"]'));
 </script>
