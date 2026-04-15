@@ -1,0 +1,1053 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cash Counter</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;500;600;700&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f0ebe0;
+    --surface: #faf7f2;
+    --surface2: #e8e2d6;
+    --border: #cdc3b0;
+    --border-active: #a09080;
+    --text: #2c2318;
+    --muted: #9a8a76;
+    --accent-till: #b87a3a;
+    --accent-safe: #5a8a6a;
+    --accent-till-dim: rgba(184,122,58,0.10);
+    --accent-safe-dim: rgba(90,138,106,0.10);
+    --green: #5a8f5a;
+    --mono: 'Courier Prime', monospace;
+    --sans: 'Nunito', sans-serif;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+    padding: 0;
+  }
+
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 18px 32px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  header .logo {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.25em;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+
+  header .logo span {
+    color: var(--text);
+  }
+
+  header .divider {
+    width: 1px;
+    height: 20px;
+    background: var(--border);
+  }
+
+  header h1 {
+    font-family: var(--sans);
+    font-weight: 700;
+    font-size: 22px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  .tabs {
+    display: flex;
+    gap: 4px;
+    margin-left: auto;
+  }
+
+  .tab-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 6px 18px;
+    border-radius: 4px;
+    font-family: var(--sans);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .tab-btn:hover {
+    border-color: var(--border-active);
+    color: var(--text);
+  }
+
+  .tab-btn.active-till {
+    border-color: var(--accent-till);
+    color: var(--accent-till);
+    background: var(--accent-till-dim);
+  }
+
+  .tab-btn.active-safe {
+    border-color: var(--accent-safe);
+    color: var(--accent-safe);
+    background: var(--accent-safe-dim);
+  }
+
+  .layout {
+    min-height: calc(100vh - 61px);
+  }
+
+  .panel {
+    padding: 16px 32px;
+    display: none;
+  }
+
+  .panel.active { display: block; }
+
+  .panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .panel-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .panel-title .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .till .dot { background: var(--accent-till); box-shadow: 0 0 8px var(--accent-till); }
+  .safe .dot { background: var(--accent-safe); box-shadow: 0 0 8px var(--accent-safe); }
+
+  .panel-title h2 {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .panel-total {
+    text-align: right;
+  }
+
+  .total-label {
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 2px;
+  }
+
+  .total-amount {
+    font-family: var(--mono);
+    font-size: 22px;
+    font-weight: 700;
+    transition: all 0.2s ease;
+  }
+
+  .till .total-amount { color: var(--accent-till); }
+  .safe .total-amount { color: var(--accent-safe); }
+
+  /* Section headers */
+  .section-label {
+    font-size: 10px;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 10px 0 6px;
+    padding-left: 2px;
+  }
+
+  .section-label:first-of-type { margin-top: 0; }
+
+  /* Denomination rows */
+  .denom-group {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    margin-bottom: 3px;
+  }
+
+  .denom-row {
+    display: grid;
+    align-items: center;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+    transition: border-color 0.15s;
+  }
+
+  .denom-row:focus-within {
+    border-color: var(--border-active);
+  }
+
+  .till .panel-inner,
+  .safe .panel-inner {
+    max-width: 520px;
+    margin: 0 auto;
+  }
+
+  .till .panel-inner {
+    max-width: 540px;
+  }
+
+  /* Till rows: label | qty | subtotal | float | balance */
+  .till .denom-row {
+    grid-template-columns: 110px 120px 150px 70px 90px;
+  }
+
+  .variance-cell {
+    justify-content: center;
+    font-size: 17px;
+    font-weight: 600;
+  }
+  .variance-cell.var-pos { color: #5a8f5a; }
+  .variance-cell.var-neg { color: #c0504a; }
+
+  /* Safe rows: 4 cols — label | stacks | bundles | singles | subtotal */
+  .safe .denom-row {
+    grid-template-columns: 80px 1fr 1fr 1fr 135px;
+  }
+
+  .denom-label {
+    padding: 0 14px;
+    font-family: var(--mono);
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    background: var(--surface2);
+  }
+
+  .note-pill {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 3px;
+    font-size: 14px;
+    font-family: var(--mono);
+  }
+
+  /* Note colour coding */
+  .n-100 { background: #b3d3b4; color: #000000; }
+  .n-50  { background: #cfd4b4; color: #000000; }
+  .n-20  { background: #d49393; color: #000000; }
+  .n-10  { background: #82a2b1; color: #000000; }
+  .n-5   { background: #a389af; color: #000000; }
+  .n-2   { background: #1e2828; color: #4ab8a8; }
+  .n-1   { background: #282828; color: #aaaaaa; }
+
+  /* Coin colour coding */
+  .c-200 { background: #2e2a1a; color: #d4a843; }
+  .c-100 { background: #2e2a1a; color: #d4a843; }
+  .c-50  { background: #2a2a2a; color: #aaa; }
+  .c-20  { background: #2a2a2a; color: #aaa; }
+  .c-10  { background: #2a2a2a; color: #aaa; }
+  .c-5   { background: #2a2a2a; color: #aaa; }
+  .c-2   { background: #2a2a2a; color: #aaa; }
+  .c-1   { background: #2a2a2a; color: #aaa; }
+
+  .input-cell {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 4px 8px;
+    border-left: 1px solid var(--border);
+    gap: 1px;
+  }
+
+  .input-cell.readonly {
+    background: var(--surface2);
+    pointer-events: none;
+  }
+
+  .input-cell.readonly input,
+  .input-cell.readonly .cell-label {
+    opacity: 0.5;
+  }
+
+  .input-cell .cell-label {
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .input-cell input {
+    width: 100%;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 17px;
+    text-align: center;
+    padding: 0;
+    -moz-appearance: textfield;
+  }
+
+  .input-cell input::-webkit-outer-spin-button,
+  .input-cell input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+  }
+
+  .input-cell input::placeholder {
+    color: #3a3a3a;
+  }
+
+  .subtotal-cell {
+    padding: 0 14px;
+    border-left: 1px solid var(--border);
+    font-family: var(--mono);
+    font-size: 15px;
+    color: var(--muted);
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    min-height: 38px;
+    transition: color 0.15s;
+    background: var(--surface2);
+  }
+
+  .subtotal-cell.has-value {
+    color: var(--text);
+  }
+
+  /* Divider between notes/coins */
+  .section-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 8px 0;
+  }
+
+  /* Safe column headers */
+  .safe-col-headers {
+    display: grid;
+    grid-template-columns: 80px 1fr 1fr 1fr 135px;
+    margin-bottom: 6px;
+    padding: 0 1px;
+  }
+
+  .safe-col-headers span {
+    font-size: 9px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-align: center;
+  }
+
+  .safe-col-headers span:first-child { text-align: left; padding-left: 14px; }
+  .safe-col-headers span:last-child  { text-align: right; padding-right: 14px; }
+
+  /* Grand total bar */
+  .grand-total-bar {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 16px;
+    margin-top: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .grand-total-bar .gt-label {
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .grand-total-bar .gt-amount {
+    font-family: var(--mono);
+    font-size: 16px;
+    font-weight: 700;
+  }
+
+  .till .grand-total-bar .gt-amount { color: var(--accent-till); }
+  .safe .grand-total-bar .gt-amount { color: var(--accent-safe); }
+
+  /* Reset button */
+  .reset-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 5px 12px;
+    border-radius: 4px;
+    font-family: var(--sans);
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.15s;
+    margin-top: 8px;
+  }
+
+  .reset-btn:hover {
+    border-color: var(--border-active);
+    color: var(--text);
+  }
+
+  /* Breakdown toggle */
+  .breakdown-btn {
+    background: transparent;
+    border: none;
+    color: var(--muted);
+    font-family: var(--sans);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    padding: 0;
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .breakdown-btn:hover { color: var(--text); }
+
+  .breakdown {
+    display: none;
+    margin-top: 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+
+  .breakdown.open { display: block; }
+
+  .breakdown-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 16px;
+    border-bottom: 1px solid var(--border);
+    font-family: var(--mono);
+    font-size: 12px;
+  }
+
+  .breakdown-row:last-child { border-bottom: none; }
+  .breakdown-row .br-label { color: var(--muted); }
+  .breakdown-row .br-value { color: var(--text); }
+
+  /* Till checkboxes */
+  .till-checks {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .till-checks-left { display: flex; gap: 8px; }
+
+
+  .till-check-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: var(--sans);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    transition: all 0.15s;
+    user-select: none;
+  }
+
+  .till-check-label:hover {
+    border-color: var(--border-active);
+    color: var(--text);
+  }
+
+  .till-check-label.checked-bar {
+    border-color: #5a7fa0;
+    color: #5a7fa0;
+    background: rgba(90,127,160,0.12);
+  }
+
+  .till-check-label.checked-tab {
+    border-color: #5a8f5a;
+    color: #5a8f5a;
+    background: rgba(90,143,90,0.12);
+  }
+
+  .till-check-label.checked-ccu {
+    border-color: #c0504a;
+    color: #c0504a;
+    background: rgba(192,80,74,0.12);
+  }
+
+  /* Till table theming */
+  .till.theme-bar .denom-row:focus-within { border-color: #5a7fa0; }
+  .till.theme-bar .subtotal-cell.has-value { color: #5a7fa0; }
+  .till.theme-bar .total-amount,
+  .till.theme-bar .grand-total-bar .gt-amount { color: #5a7fa0; }
+
+  .till.theme-tab .denom-row:focus-within { border-color: #5a8f5a; }
+  .till.theme-tab .subtotal-cell.has-value { color: #5a8f5a; }
+  .till.theme-tab .total-amount,
+  .till.theme-tab .grand-total-bar .gt-amount { color: #5a8f5a; }
+
+  .till.theme-ccu .denom-row:focus-within { border-color: #c0504a; }
+  .till.theme-ccu .subtotal-cell.has-value { color: #c0504a; }
+  .till.theme-ccu .total-amount,
+  .till.theme-ccu .grand-total-bar .gt-amount { color: #c0504a; }
+
+  @media (max-width: 600px) {
+    header { padding: 14px 16px; }
+    .panel { padding: 20px 16px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo"><span>CASH</span> COUNTER</div>
+  <div class="divider"></div>
+  <h1 id="header-title">Till</h1>
+  <div class="tabs">
+    <button class="tab-btn active-till" id="tab-till" onclick="switchTab('till')">Till</button>
+    <button class="tab-btn" id="tab-safe" onclick="switchTab('safe')">Safe</button>
+  </div>
+</header>
+
+<div class="layout">
+
+  <!-- ===== TILL ===== -->
+  <div class="panel till active" id="till-panel">
+  <div class="panel-inner">
+    <div class="panel-header">
+      <div class="panel-title">
+        <div class="dot"></div>
+        <h2>Till Count</h2>
+      </div>
+      <div class="panel-total">
+        <div class="total-label">Count − Float</div>
+        <div class="total-amount" id="till-total">$0.00</div>
+      </div>
+    </div>
+
+    <div class="till-checks">
+      <div class="till-checks-left">
+        <div class="till-check-label" data-key="bar" onclick="selectTill(this)">Bar</div>
+        <div class="till-check-label" data-key="tab" onclick="selectTill(this)">TAB</div>
+        <div class="till-check-label" data-key="ccu" onclick="selectTill(this)">CCU</div>
+      </div>
+    </div>
+
+    <div class="section-label">Notes</div>
+    <div class="denom-group" id="till-notes"></div>
+
+    <div class="section-divider"></div>
+
+    <div class="section-label">Coins</div>
+    <div class="denom-group" id="till-coins"></div>
+
+    <div class="grand-total-bar">
+      <div class="gt-label">Till Total</div>
+      <div class="gt-amount" id="till-grand">$0.00</div>
+    </div>
+
+    <div style="display:flex; gap:12px; align-items:center;">
+      <button class="reset-btn" onclick="resetTill()">↺ Reset Till</button>
+      <button class="breakdown-btn" onclick="toggleBreakdown('till')">▾ Breakdown</button>
+    </div>
+    <div class="breakdown" id="till-breakdown"></div>
+  </div>
+  </div>
+
+  <!-- ===== SAFE ===== -->
+  <div class="panel safe" id="safe-panel">
+  <div class="panel-inner">
+    <div class="panel-header">
+      <div class="panel-title">
+        <div class="dot"></div>
+        <h2>Safe Count</h2>
+      </div>
+      <div class="panel-total">
+        <div class="total-label">Total</div>
+        <div class="total-amount" id="safe-total">$0.00</div>
+      </div>
+    </div>
+
+    <!-- Notes with stacks/bundles/singles -->
+    <div class="section-label">Notes</div>
+    <div class="safe-col-headers">
+      <span>Denom</span>
+      <span>×100</span>
+      <span>×10</span>
+      <span>×1</span>
+      <span>Subtotal</span>
+    </div>
+    <div class="denom-group" id="safe-notes"></div>
+
+    <div class="section-divider"></div>
+
+    <!-- Coins — singles only in safe too -->
+    <div class="section-label">Coins</div>
+    <div class="safe-col-headers" style="grid-template-columns: 80px 1fr 1fr 135px;">
+      <span>Denom</span>
+      <span>Rolls</span>
+      <span>Singles</span>
+      <span>Subtotal</span>
+    </div>
+    <div class="denom-group" id="safe-coins"></div>
+
+    <div class="grand-total-bar">
+      <div class="gt-label">Safe Total</div>
+      <div class="gt-amount" id="safe-grand">$0.00</div>
+    </div>
+
+    <div style="display:flex; gap:12px; align-items:center;">
+      <button class="reset-btn" onclick="resetSafe()">↺ Reset Safe</button>
+      <button class="breakdown-btn" onclick="toggleBreakdown('safe')">▾ Breakdown</button>
+    </div>
+    <div class="breakdown" id="safe-breakdown"></div>
+  </div>
+  </div>
+
+</div>
+
+<script>
+// ─── Data ───────────────────────────────────────────────────────────────────
+
+const NOTES = [
+  { value: 100, label: '$100', cls: 'n-100' },
+  { value:  50, label:  '$50', cls: 'n-50'  },
+  { value:  20, label:  '$20', cls: 'n-20'  },
+  { value:  10, label:  '$10', cls: 'n-10'  },
+  { value:   5, label:   '$5', cls: 'n-5'   },
+];
+
+const COINS = [
+  { value: 2.00, label: '$2',   cls: 'c-200', safeRoll: 25 },
+  { value: 1.00, label: '$1',   cls: 'c-100', safeRoll: 20 },
+  { value: 0.50, label: '50¢',  cls: 'c-50',  safeRoll: 20 },
+  { value: 0.20, label: '20¢',  cls: 'c-20',  safeRoll: 20 },
+  { value: 0.10, label: '10¢',  cls: 'c-10',  safeRoll: 40 },
+  { value: 0.05, label:  '5¢',  cls: 'c-5',   safeRoll:  0 },
+];
+
+// ─── Float presets ───────────────────────────────────────────────────────────
+// Keys match denomination input IDs (prefix-value)
+
+const FLOAT_PRESETS = {
+  bar: {
+    'tn-100': 0,  'tn-50': 0,  'tn-20': 10, 'tn-10': 10, 'tn-5': 20,
+    'tc-2':  26,  'tc-1':  20, 'tc-0.5': 40, 'tc-0.2': 20, 'tc-0.1': 40, 'tc-0.05': 0,
+  },
+  tab: {
+    'tn-100': 0,  'tn-50': 11, 'tn-20': 12, 'tn-10': 10, 'tn-5': 10,
+    'tc-2':  12,  'tc-1':  20, 'tc-0.5': 20, 'tc-0.2': 20, 'tc-0.1': 20, 'tc-0.05': 0,
+  },
+  ccu: {
+    'tn-100': 0,  'tn-50': 11, 'tn-20': 14, 'tn-10': 10, 'tn-5': 10,
+    'tc-2':   0,  'tc-1':  20, 'tc-0.5':  0, 'tc-0.2':  0, 'tc-0.1':  0, 'tc-0.05': 0,
+  },
+};
+
+// ─── Build Till ──────────────────────────────────────────────────────────────
+
+function buildTill() {
+  const notesEl = document.getElementById('till-notes');
+  const coinsEl = document.getElementById('till-coins');
+
+  NOTES.forEach(d => {
+    notesEl.appendChild(makeTillRow(d, 'tn'));
+  });
+
+  COINS.forEach(d => {
+    coinsEl.appendChild(makeTillRow(d, 'tc'));
+  });
+}
+
+function makeTillRow(d, prefix) {
+  const id = `${prefix}-${d.value}`;
+  const row = document.createElement('div');
+  row.className = 'denom-row';
+  row.innerHTML = `
+    <div class="denom-label"><span class="note-pill ${d.cls}">${d.label}</span></div>
+    <div class="input-cell">
+      <span class="cell-label">Count</span>
+      <input type="number" id="${id}" min="0" oninput="calcTill()">
+    </div>
+    <div class="subtotal-cell" id="${id}-sub">—</div>
+    <div class="input-cell readonly">
+      <span class="cell-label">Float</span>
+      <input type="number" id="${id}-f" min="0" placeholder="—" readonly tabindex="-1">
+    </div>
+    <div class="subtotal-cell variance-cell" id="${id}-var">—</div>
+  `;
+  return row;
+}
+
+// ─── Build Safe ──────────────────────────────────────────────────────────────
+
+function buildSafe() {
+  const notesEl = document.getElementById('safe-notes');
+  const coinsEl = document.getElementById('safe-coins');
+
+  NOTES.forEach(d => {
+    notesEl.appendChild(makeSafeNoteRow(d));
+  });
+
+  COINS.forEach(d => {
+    coinsEl.appendChild(makeSafeCoinRow(d));
+  });
+}
+
+function makeSafeNoteRow(d) {
+  const base = `sn-${d.value}`;
+  const row = document.createElement('div');
+  row.className = 'denom-row';
+  row.innerHTML = `
+    <div class="denom-label"><span class="note-pill ${d.cls}">${d.label}</span></div>
+    <div class="input-cell">
+      <span class="cell-label">×100</span>
+      <input type="number" id="${base}-s" min="0" oninput="calcSafe()" title="Stacks of 100">
+    </div>
+    <div class="input-cell">
+      <span class="cell-label">×10</span>
+      <input type="number" id="${base}-b" min="0" oninput="calcSafe()" title="Bundles of 10">
+    </div>
+    <div class="input-cell">
+      <span class="cell-label">×1</span>
+      <input type="number" id="${base}-n" min="0" oninput="calcSafe()" title="Singles">
+    </div>
+    <div class="subtotal-cell" id="${base}-sub">—</div>
+  `;
+  return row;
+}
+
+function makeSafeCoinRow(d) {
+  const id = `sc-${d.value}`;
+  const row = document.createElement('div');
+  row.className = 'denom-row';
+  row.style.gridTemplateColumns = '80px 1fr 1fr 135px';
+  const rollCell = d.safeRoll > 0
+    ? `<div class="input-cell">
+        <span class="cell-label">×${d.safeRoll}</span>
+        <input type="number" id="${id}-r" min="0" oninput="calcSafe()">
+       </div>`
+    : `<div class="input-cell readonly">
+        <span class="cell-label">—</span>
+        <input type="number" id="${id}-r" placeholder="—" disabled>
+       </div>`;
+  row.innerHTML = `
+    <div class="denom-label"><span class="note-pill ${d.cls}">${d.label}</span></div>
+    ${rollCell}
+    <div class="input-cell">
+      <span class="cell-label">×1</span>
+      <input type="number" id="${id}-n" min="0" oninput="calcSafe()">
+    </div>
+    <div class="subtotal-cell" id="${id}-sub">—</div>
+  `;
+  return row;
+}
+
+// ─── Calculations ────────────────────────────────────────────────────────────
+
+function fmt(n) {
+  return '$' + n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+}
+
+function getVal(id) {
+  const el = document.getElementById(id);
+  return el ? Math.max(0, parseInt(el.value) || 0) : 0;
+}
+
+function setSub(id, val) {
+  const el = document.getElementById(id + '-sub');
+  if (!el) return;
+  if (val === 0) {
+    el.textContent = '—';
+    el.classList.remove('has-value');
+  } else {
+    el.textContent = fmt(val);
+    el.classList.add('has-value');
+  }
+}
+
+function setVar(id, countQty, floatQty) {
+  const el = document.getElementById(id + '-var');
+  if (!el) return;
+  if (floatQty === 0 && countQty === 0) {
+    el.textContent = '—';
+    el.className = 'subtotal-cell variance-cell';
+    return;
+  }
+  const variance = countQty - floatQty;
+  const sign = variance > 0 ? '+' : '';
+  el.textContent = sign + variance;
+  el.className = 'subtotal-cell variance-cell ' + (variance >= 0 ? 'var-pos' : 'var-neg');
+}
+
+function calcTill() {
+  let total = 0;
+  let floatTotal = 0;
+  let breakdown = [];
+
+  NOTES.forEach(d => {
+    const id = `tn-${d.value}`;
+    const qty = getVal(id);
+    const floatQty = getVal(`${id}-f`);
+    const sub = qty * d.value;
+    setSub(id, sub);
+    setVar(id, qty, floatQty);
+    if (qty > 0) breakdown.push({ label: `${d.label} × ${qty}`, value: sub });
+    total += sub;
+    floatTotal += floatQty * d.value;
+  });
+
+  COINS.forEach(d => {
+    const id = `tc-${d.value}`;
+    const qty = getVal(id);
+    const floatQty = getVal(`${id}-f`);
+    const sub = qty * d.value;
+    setSub(id, sub);
+    setVar(id, qty, floatQty);
+    if (qty > 0) breakdown.push({ label: `${d.label} × ${qty}`, value: sub });
+    total += sub;
+    floatTotal += floatQty * d.value;
+  });
+
+  const net = Math.round((total - floatTotal) * 100) / 100;
+  document.getElementById('till-total').textContent = fmt(net);
+  document.getElementById('till-grand').textContent = fmt(total);
+  updateBreakdown('till', breakdown, total);
+}
+
+function calcSafe() {
+  let total = 0;
+  let breakdown = [];
+
+  NOTES.forEach(d => {
+    const base = `sn-${d.value}`;
+    const stacks  = getVal(`${base}-s`);
+    const bundles = getVal(`${base}-b`);
+    const singles = getVal(`${base}-n`);
+    const qty = stacks * 100 + bundles * 10 + singles;
+    const sub = qty * d.value;
+    setSub(base, sub);
+    if (qty > 0) {
+      let parts = [];
+      if (stacks)  parts.push(`${stacks}×100`);
+      if (bundles) parts.push(`${bundles}×10`);
+      if (singles) parts.push(`${singles}×1`);
+      breakdown.push({ label: `${d.label}  (${parts.join(' + ')})`, value: sub });
+    }
+    total += sub;
+  });
+
+  COINS.forEach(d => {
+    const id = `sc-${d.value}`;
+    const rolls   = getVal(`${id}-r`);
+    const singles = getVal(`${id}-n`);
+    const qty = rolls * d.safeRoll + singles;
+    const sub = qty * d.value;
+    setSub(id, sub);
+    if (qty > 0) {
+      let parts = [];
+      if (rolls && d.safeRoll > 0) parts.push(`${rolls}×${d.safeRoll}`);
+      if (singles) parts.push(`${singles}×1`);
+      breakdown.push({ label: `${d.label}  (${parts.join(' + ')})`, value: sub });
+    }
+    total += sub;
+  });
+
+  document.getElementById('safe-total').textContent = fmt(total);
+  document.getElementById('safe-grand').textContent = fmt(total);
+  updateBreakdown('safe', breakdown, total);
+}
+
+// ─── Breakdown panel ─────────────────────────────────────────────────────────
+
+function updateBreakdown(which, rows, total) {
+  const el = document.getElementById(`${which}-breakdown`);
+  if (!el.classList.contains('open')) return;
+  renderBreakdown(which, rows, total);
+}
+
+function renderBreakdown(which, rows, total) {
+  const el = document.getElementById(`${which}-breakdown`);
+  if (rows.length === 0) {
+    el.innerHTML = '<div class="breakdown-row"><span class="br-label">No entries yet</span></div>';
+    return;
+  }
+  el.innerHTML = rows.map(r =>
+    `<div class="breakdown-row"><span class="br-label">${r.label}</span><span class="br-value">${fmt(r.value)}</span></div>`
+  ).join('') +
+  `<div class="breakdown-row" style="border-top:1px solid #333; margin-top:2px;">
+    <span class="br-label" style="color:#aaa; font-weight:700;">TOTAL</span>
+    <span class="br-value" style="font-weight:700;">${fmt(total)}</span>
+   </div>`;
+}
+
+function toggleBreakdown(which) {
+  const el = document.getElementById(`${which}-breakdown`);
+  el.classList.toggle('open');
+  if (el.classList.contains('open')) {
+    // force a re-render with current state
+    if (which === 'till') calcTill();
+    else calcSafe();
+    // but also handle empty state
+    const totEl = document.getElementById(`${which}-total`).textContent;
+    if (totEl === '$0.00') {
+      el.innerHTML = '<div class="breakdown-row"><span class="br-label">No entries yet</span></div>';
+    }
+  }
+}
+
+// ─── Reset ───────────────────────────────────────────────────────────────────
+
+function resetTill() {
+  ['tn', 'tc'].forEach(prefix => {
+    const denoms = prefix === 'tn' ? NOTES : COINS;
+    denoms.forEach(d => {
+      const el = document.getElementById(`${prefix}-${d.value}`);
+      if (el) el.value = '';
+    });
+  });
+  calcTill();
+}
+
+function resetSafe() {
+  NOTES.forEach(d => {
+    ['s','b','n'].forEach(suf => {
+      const el = document.getElementById(`sn-${d.value}-${suf}`);
+      if (el) el.value = '';
+    });
+  });
+  COINS.forEach(d => {
+    ['r','n'].forEach(suf => {
+      const el = document.getElementById(`sc-${d.value}-${suf}`);
+      if (el) el.value = '';
+    });
+  });
+  calcSafe();
+}
+
+// ─── Till checkboxes ─────────────────────────────────────────────────────────
+
+function selectTill(el) {
+  if (el.classList.contains('checked-' + el.dataset.key)) return;
+  document.querySelectorAll('.till-check-label').forEach(l => l.className = 'till-check-label');
+  const panel = document.getElementById('till-panel');
+  panel.classList.remove('theme-bar', 'theme-tab', 'theme-ccu');
+
+  // Clear all float inputs first
+  [...NOTES.map(d => `tn-${d.value}`), ...COINS.map(d => `tc-${d.value}`)].forEach(id => {
+    const el = document.getElementById(`${id}-f`);
+    if (el) el.value = '';
+  });
+
+  el.classList.add('checked-' + el.dataset.key);
+  panel.classList.add('theme-' + el.dataset.key);
+  const presets = FLOAT_PRESETS[el.dataset.key] || {};
+  Object.entries(presets).forEach(([id, qty]) => {
+    const input = document.getElementById(`${id}-f`);
+    if (input) input.value = qty > 0 ? qty : '';
+  });
+  calcTill();
+}
+
+// ─── Tabs ────────────────────────────────────────────────────────────────────
+
+function switchTab(which) {
+  document.getElementById('till-panel').classList.toggle('active', which === 'till');
+  document.getElementById('safe-panel').classList.toggle('active', which === 'safe');
+  document.getElementById('tab-till').className = 'tab-btn' + (which === 'till' ? ' active-till' : '');
+  document.getElementById('tab-safe').className = 'tab-btn' + (which === 'safe' ? ' active-safe' : '');
+  document.getElementById('header-title').textContent = which === 'till' ? 'Till' : 'Safe';
+}
+
+// ─── Keyboard navigation ─────────────────────────────────────────────────────
+
+function setupNavigation() {
+  document.addEventListener('keydown', function(e) {
+    if (document.activeElement.tagName !== 'INPUT') return;
+
+    // Block non-numeric keys on denom-row inputs
+    if (document.activeElement.closest('.denom-row') && !document.activeElement.readOnly && !document.activeElement.disabled) {
+      const allowed = ['Backspace','Delete','Tab','ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Home','End'];
+      if (!allowed.includes(e.key) && !/^\d$/.test(e.key)) {
+        e.preventDefault();
+        return;
+      }
+    }
+
+    if (!['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)) return;
+    e.preventDefault();
+
+    const input = document.activeElement;
+    const row = input.closest('.denom-row');
+    const panel = input.closest('.panel');
+
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+      const rowInputs = Array.from(row.querySelectorAll('input'));
+      const idx = rowInputs.indexOf(input);
+      const next = e.key === 'ArrowRight' ? rowInputs[idx + 1] : rowInputs[idx - 1];
+      if (next) next.focus();
+      return;
+    }
+
+    // Up/Down — keep same column across rows
+    const allRows = Array.from(panel.querySelectorAll('.denom-row'));
+    const rowIdx = allRows.indexOf(row);
+    const colIdx = Array.from(row.querySelectorAll('input')).indexOf(input);
+    const targetRow = allRows[rowIdx + (e.key === 'ArrowDown' ? 1 : -1)];
+    if (!targetRow) return;
+    const targetInputs = Array.from(targetRow.querySelectorAll('input'));
+    const target = targetInputs[Math.min(colIdx, targetInputs.length - 1)];
+    if (target) target.focus();
+  });
+}
+
+// ─── Init ────────────────────────────────────────────────────────────────────
+
+buildTill();
+buildSafe();
+setupNavigation();
+selectTill(document.querySelector('.till-check-label[data-key="bar"]'));
+</script>
+</body>
+</html>
