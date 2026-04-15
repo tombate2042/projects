@@ -656,13 +656,16 @@
   /* ── MACHINES TABLE ── */
   .mach .panel-inner { max-width: 680px; margin: 0 auto; }
 
+  .mach-table-wrap {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
   .mach-table {
     width: 100%;
     border-collapse: collapse;
     background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    overflow: hidden;
   }
 
   .mach-table thead th {
@@ -678,10 +681,8 @@
     font-weight: 600;
     background: var(--surface2);
     border-bottom: 2px solid var(--border);
-    text-align: right;
+    text-align: center;
   }
-
-  .mach-table thead th:first-child { text-align: center; }
 
   .mach-table tbody tr {
     border-bottom: 1px solid var(--border);
@@ -710,7 +711,7 @@
 
   .mach-input-cell {
     padding: 3px 8px;
-    text-align: right;
+    text-align: center;
   }
 
   .mach-input-cell input {
@@ -720,7 +721,7 @@
     border: 1px solid transparent;
     border-radius: 4px;
     padding: 4px 8px;
-    text-align: right;
+    text-align: center;
     width: 100%;
     color: var(--text);
     outline: none;
@@ -740,7 +741,7 @@
     font-family: var(--mono);
     font-size: 13px;
     font-weight: 600;
-    text-align: right;
+    text-align: center;
     color: var(--muted);
     white-space: nowrap;
     width: 100px;
@@ -766,7 +767,7 @@
     font-family: var(--mono);
     font-size: 14px;
     color: var(--text);
-    text-align: right;
+    text-align: center;
   }
 
   @media (max-width: 600px) {
@@ -898,6 +899,7 @@
       </div>
     </div>
 
+    <div class="mach-table-wrap">
     <table class="mach-table">
       <thead>
         <tr>
@@ -917,6 +919,7 @@
         </tr>
       </tfoot>
     </table>
+    </div>
 
     <button class="reset-btn" style="margin-top:12px" onclick="resetMachines()">↺ Reset Machines</button>
   </div>
