@@ -671,7 +671,7 @@
 
   .mach-table thead th {
     position: sticky;
-    top: 56px; /* clear the app header */
+    top: 65px; /* clear the app header */
     z-index: 10;
     font-size: 10px;
     letter-spacing: 0.18em;
@@ -736,6 +736,13 @@
 
   .mach-input-cell input:hover { border-color: var(--border); background: var(--surface2); }
   .mach-input-cell input:focus { border-color: var(--accent-mach); background: var(--accent-mach-dim); }
+
+  .mach-input-cell input.mach-pdf-locked {
+    cursor: default;
+    color: var(--muted);
+  }
+  .mach-input-cell input.mach-pdf-locked:hover { border-color: transparent; background: transparent; }
+  .mach-input-cell input.mach-pdf-locked.has-value { color: var(--text); }
 
   .mach-variance {
     padding: 5px 14px;
@@ -939,6 +946,13 @@
       </div>
     </div>
 
+    <div class="mach-btn-row">
+      <button class="mach-import-btn" onclick="triggerMachPDF()">⬆ Import PDF</button>
+      <button class="reset-btn" onclick="resetMachines()">↺ Reset</button>
+      <span class="mach-toast" id="mach-toast"></span>
+    </div>
+    <input type="file" id="mach-pdf-input" accept=".pdf" style="display:none" onchange="handleMachPDF(this)">
+
     <div class="mach-table-wrap">
     <table class="mach-table">
       <thead>
@@ -960,13 +974,6 @@
       </tfoot>
     </table>
     </div>
-
-    <div class="mach-btn-row">
-      <button class="reset-btn" onclick="resetMachines()">↺ Reset</button>
-      <button class="mach-import-btn" onclick="triggerMachPDF()">⬆ Import PDF</button>
-      <span class="mach-toast" id="mach-toast"></span>
-    </div>
-    <input type="file" id="mach-pdf-input" accept=".pdf" style="display:none" onchange="handleMachPDF(this)">
   </div>
   </div>
 
@@ -1365,7 +1372,7 @@ function buildMachines() {
       <td class="mach-num">${i}</td>
       <td class="mach-input-cell">
         <input type="number" id="ms-${i}" min="0" step="0.01" placeholder="—"
-          oninput="calcMachines()">
+          class="mach-pdf-locked" readonly tabindex="-1">
       </td>
       <td class="mach-input-cell">
         <input type="number" id="mc-${i}" min="0" step="0.01" placeholder="—"
@@ -1434,7 +1441,7 @@ function resetMachines() {
   for (let i = 1; i <= 26; i++) {
     const s = document.getElementById(`ms-${i}`);
     const c = document.getElementById(`mc-${i}`);
-    if (s) s.value = '';
+    if (s) { s.value = ''; s.classList.remove('has-value'); }
     if (c) c.value = '';
   }
   calcMachines();
@@ -1513,7 +1520,7 @@ async function handleMachPDF(input) {
 
     Object.entries(machineData).forEach(([houseNo, value]) => {
       const el = document.getElementById(`ms-${houseNo}`);
-      if (el) el.value = value;
+      if (el) { el.value = value; el.classList.add('has-value'); }
     });
     calcMachines();
     showMachToast(`Imported ${count} machine${count !== 1 ? 's' : ''} ✓`, 'ok');
