@@ -655,7 +655,21 @@
   .till.theme-ccu .grand-total-bar .gt-amount { color: #c0504a; }
 
   /* ── MACHINES TABLE ── */
-  .mach .panel-inner { max-width: 680px; margin: 0 auto; }
+  .mach-columns {
+    display: flex;
+    gap: 24px;
+    align-items: flex-start;
+  }
+
+  .mach-col-left {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  .mach-col-right {
+    flex: 0 0 340px;
+    min-width: 0;
+  }
 
   .mach-table-wrap {
     border: 1px solid var(--border);
@@ -777,6 +791,99 @@
     color: var(--text);
     text-align: center;
   }
+
+  /* ── TOTAL CASH COUNT TABLE ── */
+  .cc-table-wrap {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: clip;
+    margin-top: 8px;
+  }
+
+  .cc-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--surface);
+  }
+
+  .cc-table thead th {
+    position: sticky;
+    top: 65px;
+    z-index: 10;
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 8px 12px;
+    font-family: var(--sans);
+    font-weight: 600;
+    background: var(--surface2);
+    border-bottom: 2px solid var(--border);
+    text-align: center;
+  }
+
+  .cc-table tbody tr { border-bottom: 1px solid var(--border); }
+  .cc-table tbody tr:last-child { border-bottom: none; }
+  .cc-table tbody tr:hover { background: rgba(58,143,168,0.04); }
+
+  .cc-table tfoot tr td {
+    background: var(--surface2);
+    border-top: 2px solid var(--border);
+    font-weight: 700;
+    text-align: center;
+    padding: 8px 12px;
+    font-family: var(--mono);
+    font-size: 14px;
+    color: var(--text);
+  }
+
+  .cc-denom {
+    padding: 5px 12px;
+    font-family: var(--mono);
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+    text-align: center;
+    background: var(--surface2);
+    border-right: 1px solid var(--border);
+    width: 100px;
+  }
+
+  .cc-input-cell {
+    padding: 3px 8px;
+    text-align: center;
+  }
+
+  .cc-input-cell input {
+    font-family: var(--mono);
+    font-size: 14px;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    padding: 4px 8px;
+    text-align: center;
+    width: 100%;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.12s, background 0.12s;
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
+  .cc-input-cell input::-webkit-outer-spin-button,
+  .cc-input-cell input::-webkit-inner-spin-button { -webkit-appearance: none; }
+  .cc-input-cell input:hover { border-color: var(--border); background: var(--surface2); }
+  .cc-input-cell input:focus { border-color: var(--accent-mach); background: var(--accent-mach-dim); }
+
+  .cc-value {
+    padding: 5px 14px;
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 600;
+    text-align: center;
+    color: var(--muted);
+    width: 120px;
+  }
+  .cc-value.has-val { color: var(--text); }
 
   .mach-btn-row {
     display: flex;
@@ -949,29 +1056,86 @@
       </div>
     </div>
 
-    <div class="mach-table-wrap">
-    <table class="mach-table">
-      <thead>
-        <tr>
-          <th>#</th>
-          <th>Cash Value ($)</th>
-          <th>Cash Count ($)</th>
-          <th>Variance</th>
-        </tr>
-      </thead>
-      <tbody id="mach-rows"></tbody>
-      <tfoot>
-        <tr>
-          <td class="mach-total-label">Total</td>
-          <td class="mach-total-val" id="mt-system">—</td>
-          <td class="mach-total-val" id="mt-count">—</td>
-          <td class="mach-variance" id="mt-variance">—</td>
-        </tr>
-      </tfoot>
-    </table>
-    </div>
+    <div class="mach-columns">
 
-    <button class="reset-btn" style="margin-top:12px" onclick="resetMachines()">↺ Reset</button>
+      <!-- Left: Machines table -->
+      <div class="mach-col-left">
+        <div class="mach-table-wrap">
+        <table class="mach-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Cash Value ($)</th>
+              <th>Cash Count ($)</th>
+              <th>Variance</th>
+            </tr>
+          </thead>
+          <tbody id="mach-rows"></tbody>
+          <tfoot>
+            <tr>
+              <td class="mach-total-label">Total</td>
+              <td class="mach-total-val" id="mt-system">—</td>
+              <td class="mach-total-val" id="mt-count">—</td>
+              <td class="mach-variance" id="mt-variance">—</td>
+            </tr>
+          </tfoot>
+        </table>
+        </div>
+        <button class="reset-btn" style="margin-top:12px" onclick="resetMachines()">↺ Reset</button>
+      </div>
+
+      <!-- Right: Total Cash Count table -->
+      <div class="mach-col-right">
+        <div class="section-label">Total Cash Count</div>
+        <div class="cc-table-wrap">
+          <table class="cc-table">
+            <thead>
+              <tr>
+                <th>Denomination</th>
+                <th>Notes Counted</th>
+                <th>Value</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="cc-denom">$100</td>
+                <td class="cc-input-cell"><input type="number" id="cc-100" min="0" step="1" placeholder="—" oninput="calcCashCount()"></td>
+                <td class="cc-value" id="cv-100">—</td>
+              </tr>
+              <tr>
+                <td class="cc-denom">$50</td>
+                <td class="cc-input-cell"><input type="number" id="cc-50" min="0" step="1" placeholder="—" oninput="calcCashCount()"></td>
+                <td class="cc-value" id="cv-50">—</td>
+              </tr>
+              <tr>
+                <td class="cc-denom">$20</td>
+                <td class="cc-input-cell"><input type="number" id="cc-20" min="0" step="1" placeholder="—" oninput="calcCashCount()"></td>
+                <td class="cc-value" id="cv-20">—</td>
+              </tr>
+              <tr>
+                <td class="cc-denom">$10</td>
+                <td class="cc-input-cell"><input type="number" id="cc-10" min="0" step="1" placeholder="—" oninput="calcCashCount()"></td>
+                <td class="cc-value" id="cv-10">—</td>
+              </tr>
+              <tr>
+                <td class="cc-denom">$5</td>
+                <td class="cc-input-cell"><input type="number" id="cc-5" min="0" step="1" placeholder="—" oninput="calcCashCount()"></td>
+                <td class="cc-value" id="cv-5">—</td>
+              </tr>
+            </tbody>
+            <tfoot>
+              <tr>
+                <td>Total</td>
+                <td id="cc-total-notes">—</td>
+                <td id="cc-total-value">—</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+        <button class="reset-btn" style="margin-top:8px" onclick="resetCashCount()">↺ Reset</button>
+      </div>
+
+    </div>
   </div>
   </div>
 
@@ -1526,6 +1690,46 @@ async function handleMachPDF(input) {
     console.error(err);
     showMachToast('Failed to read PDF', 'error');
   }
+}
+
+// ─── Total Cash Count ────────────────────────────────────────────────────────
+
+const CC_DENOMS = [100, 50, 20, 10, 5];
+
+function calcCashCount() {
+  let totalNotes = 0, totalValue = 0, anyInput = false;
+  CC_DENOMS.forEach(d => {
+    const input = document.getElementById(`cc-${d}`);
+    const valueEl = document.getElementById(`cv-${d}`);
+    if (!input || !valueEl) return;
+    const n = parseFloat(input.value);
+    if (!isNaN(n) && input.value !== '') {
+      anyInput = true;
+      const v = n * d;
+      totalNotes += n;
+      totalValue += v;
+      valueEl.textContent = fmt(v);
+      valueEl.classList.add('has-val');
+    } else {
+      valueEl.textContent = '—';
+      valueEl.classList.remove('has-val');
+    }
+  });
+  const notesEl = document.getElementById('cc-total-notes');
+  const valueEl = document.getElementById('cc-total-value');
+  if (notesEl) notesEl.textContent = anyInput ? totalNotes : '—';
+  if (valueEl) valueEl.textContent = anyInput ? fmt(totalValue) : '—';
+}
+
+function resetCashCount() {
+  CC_DENOMS.forEach(d => {
+    const input = document.getElementById(`cc-${d}`);
+    const valueEl = document.getElementById(`cv-${d}`);
+    if (input) input.value = '';
+    if (valueEl) { valueEl.textContent = '—'; valueEl.classList.remove('has-val'); }
+  });
+  document.getElementById('cc-total-notes').textContent = '—';
+  document.getElementById('cc-total-value').textContent = '—';
 }
 
 // ─── Float Reconciliation ────────────────────────────────────────────────────
