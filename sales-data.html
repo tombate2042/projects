@@ -759,6 +759,39 @@
   .mach-input-cell input.mach-pdf-locked:hover { border-color: transparent; background: transparent; }
   .mach-input-cell input.mach-pdf-locked.has-value { color: var(--text); }
 
+  .mach-rakes-cell {
+    padding: 3px 8px;
+    text-align: center;
+  }
+
+  .mach-rakes-cell input {
+    font-family: var(--mono);
+    font-size: 14px;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    padding: 4px 8px;
+    text-align: center;
+    width: 100%;
+    color: var(--muted);
+    outline: none;
+    cursor: default;
+    transition: border-color 0.12s, background 0.12s, color 0.12s;
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
+  .mach-rakes-cell input::-webkit-outer-spin-button,
+  .mach-rakes-cell input::-webkit-inner-spin-button { -webkit-appearance: none; }
+  .mach-rakes-cell input:hover { border-color: transparent; background: transparent; }
+
+  .mach-rakes-cell input.unlocked {
+    cursor: text;
+    color: var(--text);
+    border-color: var(--accent-mach);
+    background: var(--accent-mach-dim);
+  }
+  .mach-rakes-cell input.has-value { color: var(--text); }
+
   .mach-variance {
     padding: 5px 14px;
     font-family: var(--mono);
@@ -1067,6 +1100,7 @@
             <tr>
               <th>#</th>
               <th>Cash Value ($)</th>
+              <th>Rakes</th>
               <th>Cash Count ($)</th>
               <th>Variance</th>
             </tr>
@@ -1076,6 +1110,7 @@
             <tr>
               <td class="mach-total-label">Total</td>
               <td class="mach-total-val" id="mt-system">—</td>
+              <td class="mach-total-val" id="mt-rakes">—</td>
               <td class="mach-total-val" id="mt-count">—</td>
               <td class="mach-variance" id="mt-variance">—</td>
             </tr>
@@ -1537,6 +1572,14 @@ function buildMachines() {
         <input type="number" id="ms-${i}" min="0" step="0.01" placeholder="—"
           class="mach-pdf-locked" readonly tabindex="-1">
       </td>
+      <td class="mach-rakes-cell">
+        <input type="number" id="mr-${i}" min="0" step="0.01" placeholder="—"
+          readonly tabindex="-1"
+          ondblclick="unlockRakes(this)"
+          onblur="lockRakes(this)"
+          onkeydown="rakesKeydown(event,this)"
+          oninput="calcMachines()">
+      </td>
       <td class="mach-input-cell">
         <input type="number" id="mc-${i}" min="0" step="0.01" placeholder="—"
           oninput="calcMachines()">
@@ -1547,30 +1590,32 @@ function buildMachines() {
 }
 
 function calcMachines() {
-  let totalSystem = 0, totalCount = 0, anyInput = false;
+  let totalSystem = 0, totalRakes = 0, totalCount = 0, anyInput = false;
 
   for (let i = 1; i <= 26; i++) {
     const sEl = document.getElementById(`ms-${i}`);
+    const rEl = document.getElementById(`mr-${i}`);
     const cEl = document.getElementById(`mc-${i}`);
     const vEl = document.getElementById(`mv-${i}`);
     const hasS = sEl && sEl.value !== '';
+    const hasR = rEl && rEl.value !== '';
     const hasC = cEl && cEl.value !== '';
     const s = hasS ? (parseFloat(sEl.value) || 0) : 0;
+    const r = hasR ? (parseFloat(rEl.value) || 0) : 0;
     const c = hasC ? (parseFloat(cEl.value) || 0) : 0;
     if (hasS) { totalSystem += s; anyInput = true; }
-    if (hasC) { totalCount += c; anyInput = true; }
+    if (hasR) { totalRakes  += r; anyInput = true; }
+    if (hasC) { totalCount  += c; anyInput = true; }
     if (!vEl) continue;
-    if (!hasS && !hasC) {
-      vEl.textContent = '—';
-      vEl.className = 'mach-variance';
-    } else if (!hasS || !hasC) {
-      vEl.textContent = '—';
-      vEl.className = 'mach-variance';
+    // Variance = Cash Count + Rakes - Cash Value (need at least value + one of count/rakes)
+    if (!hasS && !hasC && !hasR) {
+      vEl.textContent = '—'; vEl.className = 'mach-variance';
+    } else if (!hasS || (!hasC && !hasR)) {
+      vEl.textContent = '—'; vEl.className = 'mach-variance';
     } else {
-      const v = Math.round((c - s) * 100) / 100;
+      const v = Math.round((c + r - s) * 100) / 100;
       if (v === 0) {
-        vEl.textContent = '✓';
-        vEl.className = 'mach-variance var-zero';
+        vEl.textContent = '✓'; vEl.className = 'mach-variance var-zero';
       } else {
         vEl.textContent = (v > 0 ? '+' : '') + fmt(v);
         vEl.className = 'mach-variance ' + (v > 0 ? 'var-pos' : 'var-neg');
@@ -1579,6 +1624,7 @@ function calcMachines() {
   }
 
   document.getElementById('mt-system').textContent = anyInput ? fmt(totalSystem) : '—';
+  document.getElementById('mt-rakes').textContent  = anyInput ? fmt(totalRakes)  : '—';
   document.getElementById('mt-count').textContent  = anyInput ? fmt(totalCount)  : '—';
 
   const tvEl = document.getElementById('mt-variance');
@@ -1587,7 +1633,7 @@ function calcMachines() {
     tvEl.textContent = '—'; tvEl.className = 'mach-variance';
     headerEl.textContent = '—';
   } else {
-    const totalV = Math.round((totalCount - totalSystem) * 100) / 100;
+    const totalV = Math.round((totalCount + totalRakes - totalSystem) * 100) / 100;
     if (totalV === 0) {
       tvEl.textContent = '✓'; tvEl.className = 'mach-variance var-zero';
       headerEl.textContent = '✓ Balanced';
@@ -1603,11 +1649,37 @@ function calcMachines() {
 function resetMachines() {
   for (let i = 1; i <= 26; i++) {
     const s = document.getElementById(`ms-${i}`);
+    const r = document.getElementById(`mr-${i}`);
     const c = document.getElementById(`mc-${i}`);
     if (s) { s.value = ''; s.classList.remove('has-value'); }
+    if (r) { r.value = ''; r.classList.remove('has-value', 'unlocked'); r.readOnly = true; r.tabIndex = -1; }
     if (c) c.value = '';
   }
   calcMachines();
+}
+
+function unlockRakes(input) {
+  input.readOnly = false;
+  input.tabIndex = 0;
+  input.classList.add('unlocked');
+  input.focus();
+  input.select();
+}
+
+function lockRakes(input) {
+  input.readOnly = true;
+  input.tabIndex = -1;
+  input.classList.remove('unlocked');
+  if (input.value !== '') input.classList.add('has-value');
+  else input.classList.remove('has-value');
+  calcMachines();
+}
+
+function rakesKeydown(e, input) {
+  if (e.key === 'Enter' || e.key === 'Escape') {
+    if (e.key === 'Escape') { input.value = ''; input.classList.remove('has-value'); }
+    input.blur();
+  }
 }
 
 // ─── Machines PDF Import ─────────────────────────────────────────────────────
