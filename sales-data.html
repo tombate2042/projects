@@ -23,6 +23,8 @@
     --green: #5a8f5a;
     --accent-float: #7272b0;
     --accent-float-dim: rgba(114,114,176,0.10);
+    --accent-mach: #3a8fa8;
+    --accent-mach-dim: rgba(58,143,168,0.10);
     --mono: 'Courier Prime', monospace;
     --sans: 'Nunito', sans-serif;
   }
@@ -117,6 +119,12 @@
     background: var(--accent-float-dim);
   }
 
+  .tab-btn.active-mach {
+    border-color: var(--accent-mach);
+    color: var(--accent-mach);
+    background: var(--accent-mach-dim);
+  }
+
   .layout {
     min-height: calc(100vh - 61px);
   }
@@ -153,6 +161,7 @@
   .till .dot  { background: var(--accent-till);  box-shadow: 0 0 8px var(--accent-till); }
   .safe .dot  { background: var(--accent-safe);  box-shadow: 0 0 8px var(--accent-safe); }
   .float .dot { background: var(--accent-float); box-shadow: 0 0 8px var(--accent-float); }
+  .mach .dot  { background: var(--accent-mach);  box-shadow: 0 0 8px var(--accent-mach); }
 
   .panel-title h2 {
     font-size: 13px;
@@ -184,6 +193,7 @@
   .till .total-amount  { color: var(--accent-till); }
   .safe .total-amount  { color: var(--accent-safe); }
   .float .total-amount { color: var(--accent-float); }
+  .mach .total-amount  { color: var(--accent-mach); }
 
   /* Section headers */
   .section-label {
@@ -643,6 +653,122 @@
   .till.theme-ccu .total-amount,
   .till.theme-ccu .grand-total-bar .gt-amount { color: #c0504a; }
 
+  /* ── MACHINES TABLE ── */
+  .mach .panel-inner { max-width: 680px; margin: 0 auto; }
+
+  .mach-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .mach-table thead th {
+    position: sticky;
+    top: 56px; /* clear the app header */
+    z-index: 10;
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 8px 12px;
+    font-family: var(--sans);
+    font-weight: 600;
+    background: var(--surface2);
+    border-bottom: 2px solid var(--border);
+    text-align: right;
+  }
+
+  .mach-table thead th:first-child { text-align: center; }
+
+  .mach-table tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.1s;
+  }
+
+  .mach-table tbody tr:hover { background: rgba(58,143,168,0.04); }
+  .mach-table tbody tr:last-child { border-bottom: none; }
+
+  .mach-table tfoot tr td {
+    background: var(--surface2);
+    border-top: 2px solid var(--border);
+    font-weight: 700;
+  }
+
+  .mach-num {
+    padding: 5px 12px;
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--muted);
+    text-align: center;
+    width: 52px;
+    background: var(--surface2);
+    border-right: 1px solid var(--border);
+  }
+
+  .mach-input-cell {
+    padding: 3px 8px;
+    text-align: right;
+  }
+
+  .mach-input-cell input {
+    font-family: var(--mono);
+    font-size: 14px;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    padding: 4px 8px;
+    text-align: right;
+    width: 100%;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.12s, background 0.12s;
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
+
+  .mach-input-cell input::-webkit-outer-spin-button,
+  .mach-input-cell input::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+  .mach-input-cell input:hover { border-color: var(--border); background: var(--surface2); }
+  .mach-input-cell input:focus { border-color: var(--accent-mach); background: var(--accent-mach-dim); }
+
+  .mach-variance {
+    padding: 5px 14px;
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 600;
+    text-align: right;
+    color: var(--muted);
+    white-space: nowrap;
+    width: 100px;
+  }
+
+  .mach-variance.var-pos  { color: #5a8f5a; }
+  .mach-variance.var-neg  { color: #c0504a; }
+  .mach-variance.var-zero { color: var(--accent-mach); }
+
+  .mach-total-label {
+    padding: 8px 12px;
+    font-family: var(--sans);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-align: center;
+  }
+
+  .mach-total-val {
+    padding: 8px 14px;
+    font-family: var(--mono);
+    font-size: 14px;
+    color: var(--text);
+    text-align: right;
+  }
+
   @media (max-width: 600px) {
     header { padding: 14px 16px; }
     .panel { padding: 20px 16px; }
@@ -659,6 +785,7 @@
     <button class="tab-btn active-till" id="tab-till" onclick="switchTab('till')">Till</button>
     <button class="tab-btn" id="tab-safe" onclick="switchTab('safe')">Safe</button>
     <button class="tab-btn" id="tab-float" onclick="switchTab('float')">Float Rec</button>
+    <button class="tab-btn" id="tab-mach" onclick="switchTab('mach')">Machines</button>
   </div>
 </header>
 
@@ -754,6 +881,44 @@
       <button class="breakdown-btn" onclick="toggleBreakdown('safe')">▾ Breakdown</button>
     </div>
     <div class="breakdown" id="safe-breakdown"></div>
+  </div>
+  </div>
+
+  <!-- ===== MACHINES ===== -->
+  <div class="panel mach" id="mach-panel">
+  <div class="panel-inner">
+    <div class="panel-header">
+      <div class="panel-title">
+        <div class="dot"></div>
+        <h2>Machines</h2>
+      </div>
+      <div class="panel-total">
+        <div class="total-label">Net Variance</div>
+        <div class="total-amount" id="mach-total">—</div>
+      </div>
+    </div>
+
+    <table class="mach-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Cash Value ($)</th>
+          <th>Cash Count ($)</th>
+          <th>Variance</th>
+        </tr>
+      </thead>
+      <tbody id="mach-rows"></tbody>
+      <tfoot>
+        <tr>
+          <td class="mach-total-label">Total</td>
+          <td class="mach-total-val" id="mt-system">—</td>
+          <td class="mach-total-val" id="mt-count">—</td>
+          <td class="mach-variance" id="mt-variance">—</td>
+        </tr>
+      </tfoot>
+    </table>
+
+    <button class="reset-btn" style="margin-top:12px" onclick="resetMachines()">↺ Reset Machines</button>
   </div>
   </div>
 
@@ -1142,6 +1307,91 @@ function selectTill(el) {
   calcTill();
 }
 
+// ─── Machines ────────────────────────────────────────────────────────────────
+
+function buildMachines() {
+  const tbody = document.getElementById('mach-rows');
+  for (let i = 1; i <= 26; i++) {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="mach-num">${i}</td>
+      <td class="mach-input-cell">
+        <input type="number" id="ms-${i}" min="0" step="0.01" placeholder="—"
+          oninput="calcMachines()">
+      </td>
+      <td class="mach-input-cell">
+        <input type="number" id="mc-${i}" min="0" step="0.01" placeholder="—"
+          oninput="calcMachines()">
+      </td>
+      <td class="mach-variance" id="mv-${i}">—</td>`;
+    tbody.appendChild(tr);
+  }
+}
+
+function calcMachines() {
+  let totalSystem = 0, totalCount = 0, anyInput = false;
+
+  for (let i = 1; i <= 26; i++) {
+    const sEl = document.getElementById(`ms-${i}`);
+    const cEl = document.getElementById(`mc-${i}`);
+    const vEl = document.getElementById(`mv-${i}`);
+    const hasS = sEl && sEl.value !== '';
+    const hasC = cEl && cEl.value !== '';
+    const s = hasS ? (parseFloat(sEl.value) || 0) : 0;
+    const c = hasC ? (parseFloat(cEl.value) || 0) : 0;
+    if (hasS) { totalSystem += s; anyInput = true; }
+    if (hasC) { totalCount += c; anyInput = true; }
+    if (!vEl) continue;
+    if (!hasS && !hasC) {
+      vEl.textContent = '—';
+      vEl.className = 'mach-variance';
+    } else if (!hasS || !hasC) {
+      vEl.textContent = '—';
+      vEl.className = 'mach-variance';
+    } else {
+      const v = Math.round((c - s) * 100) / 100;
+      if (v === 0) {
+        vEl.textContent = '✓';
+        vEl.className = 'mach-variance var-zero';
+      } else {
+        vEl.textContent = (v > 0 ? '+' : '') + fmt(v);
+        vEl.className = 'mach-variance ' + (v > 0 ? 'var-pos' : 'var-neg');
+      }
+    }
+  }
+
+  document.getElementById('mt-system').textContent = anyInput ? fmt(totalSystem) : '—';
+  document.getElementById('mt-count').textContent  = anyInput ? fmt(totalCount)  : '—';
+
+  const tvEl = document.getElementById('mt-variance');
+  const headerEl = document.getElementById('mach-total');
+  if (!anyInput) {
+    tvEl.textContent = '—'; tvEl.className = 'mach-variance';
+    headerEl.textContent = '—';
+  } else {
+    const totalV = Math.round((totalCount - totalSystem) * 100) / 100;
+    if (totalV === 0) {
+      tvEl.textContent = '✓'; tvEl.className = 'mach-variance var-zero';
+      headerEl.textContent = '✓ Balanced';
+    } else {
+      const sign = totalV > 0 ? '+' : '';
+      tvEl.textContent = sign + fmt(totalV);
+      tvEl.className = 'mach-variance ' + (totalV > 0 ? 'var-pos' : 'var-neg');
+      headerEl.textContent = sign + fmt(totalV);
+    }
+  }
+}
+
+function resetMachines() {
+  for (let i = 1; i <= 26; i++) {
+    const s = document.getElementById(`ms-${i}`);
+    const c = document.getElementById(`mc-${i}`);
+    if (s) s.value = '';
+    if (c) c.value = '';
+  }
+  calcMachines();
+}
+
 // ─── Float Reconciliation ────────────────────────────────────────────────────
 
 const FLOAT_LABELS = { bar: 'Bar', tab: 'TAB', ccu: 'CCU' };
@@ -1242,13 +1492,14 @@ function resetFloat() {
 // ─── Tabs ────────────────────────────────────────────────────────────────────
 
 function switchTab(which) {
-  document.getElementById('till-panel').classList.toggle('active', which === 'till');
-  document.getElementById('safe-panel').classList.toggle('active', which === 'safe');
-  document.getElementById('float-panel').classList.toggle('active', which === 'float');
+  ['till','safe','mach','float'].forEach(t => {
+    document.getElementById(t + '-panel').classList.toggle('active', which === t);
+  });
   document.getElementById('tab-till').className  = 'tab-btn' + (which === 'till'  ? ' active-till'  : '');
   document.getElementById('tab-safe').className  = 'tab-btn' + (which === 'safe'  ? ' active-safe'  : '');
+  document.getElementById('tab-mach').className  = 'tab-btn' + (which === 'mach'  ? ' active-mach'  : '');
   document.getElementById('tab-float').className = 'tab-btn' + (which === 'float' ? ' active-float' : '');
-  const titles = { till: 'Till', safe: 'Safe', float: 'Float Rec' };
+  const titles = { till: 'Till', safe: 'Safe', mach: 'Machines', float: 'Float Rec' };
   document.getElementById('header-title').textContent = titles[which] || which;
 }
 
@@ -1298,6 +1549,7 @@ function setupNavigation() {
 
 buildTill();
 buildSafe();
+buildMachines();
 buildFloat();
 setupNavigation();
 selectTill(document.querySelector('.till-check-label[data-key="bar"]'));
