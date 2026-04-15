@@ -246,6 +246,29 @@
   .bistro-table td input:focus, .bistro-table td select:focus {
     outline: none; border-color: var(--accent-mid);
   }
+
+  /* ── BISTRO DISH AUTOCOMPLETE ── */
+  .dish-ac-wrap { position: relative; }
+  .dish-ac-dropdown {
+    position: absolute; top: calc(100% + 2px); left: 0; right: 0;
+    background: var(--surface); border: 1px solid var(--border-strong);
+    border-radius: var(--radius); box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+    max-height: 200px; overflow-y: auto; z-index: 50; display: none;
+  }
+  .dish-ac-dropdown.open { display: block; }
+  .dish-ac-option {
+    padding: 7px 10px; font-size: 13px; cursor: pointer;
+    color: var(--text); transition: background 0.08s;
+  }
+  .dish-ac-option:hover, .dish-ac-option.highlighted {
+    background: var(--accent-light); color: var(--accent);
+  }
+  .dish-ac-optgroup {
+    padding: 5px 10px 3px; font-size: 10px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.05em; color: var(--text3);
+    background: var(--surface2); border-top: 1px solid var(--border);
+  }
+  .dish-ac-optgroup:first-child { border-top: none; }
   .btn-icon {
     background: none;
     border: 1px solid var(--border);
@@ -1150,6 +1173,7 @@ let selectedCanapeB = [];
 let selectedBanquet = [];
 let bistroRows = [];
 let currentMenuType = null;
+let bistroDishHighlight = {};
 
 /* ════════════════════════════════════════════
    GIST SYNC
@@ -1921,14 +1945,105 @@ function getBistroDisCat(dishName) {
   return null;
 }
 
+function getBistroAllDishes() {
+  const out = [];
+  BISTRO_DISH_CATS.forEach(({ label, key }) => {
+    const items = (menuData[key] || []).map(i => typeof i === 'object' ? (i.name || '') : i).filter(Boolean);
+    if (items.length) out.push({ label, items });
+  });
+  return out;
+}
+
+function bistroDishInput(i, input) {
+  const q = input.value.toLowerCase();
+  const dd = document.getElementById('dish-dd-' + i);
+  if (!dd) return;
+  const allCats = getBistroAllDishes();
+  let html = '';
+  allCats.forEach(({ label, items }) => {
+    const matching = items.filter(n => n.toLowerCase().includes(q));
+    if (!matching.length) return;
+    html += `<div class="dish-ac-optgroup">${escHtml(label)}</div>`;
+    matching.forEach(name => {
+      html += `<div class="dish-ac-option" data-dish="${escHtml(name)}"
+        onmousedown="event.preventDefault()"
+        onclick="bistroDishSelect(${i},'${escJs(name)}')">${escHtml(name)}</div>`;
+    });
+  });
+  dd.innerHTML = html;
+  bistroDishHighlight[i] = -1;
+  dd.classList.toggle('open', !!html);
+}
+
+function bistroDishKeydown(i, e, input) {
+  const dd = document.getElementById('dish-dd-' + i);
+  if (!dd) return;
+  const opts = [...dd.querySelectorAll('.dish-ac-option')];
+  let hi = bistroDishHighlight[i] ?? -1;
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    hi = Math.min(hi + 1, opts.length - 1);
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    hi = Math.max(hi - 1, 0);
+  } else if (e.key === 'Enter') {
+    e.preventDefault();
+    if (hi >= 0 && opts[hi]) {
+      bistroDishSelect(i, opts[hi].dataset.dish);
+    } else {
+      const q = input.value.trim().toLowerCase();
+      const all = getBistroAllDishes().flatMap(c => c.items);
+      const exact = all.find(n => n.toLowerCase() === q);
+      if (exact) bistroDishSelect(i, exact);
+      else dd.classList.remove('open');
+    }
+    return;
+  } else if (e.key === 'Escape') {
+    dd.classList.remove('open');
+    return;
+  } else {
+    return;
+  }
+  bistroDishHighlight[i] = hi;
+  opts.forEach((o, j) => o.classList.toggle('highlighted', j === hi));
+  if (hi >= 0 && opts[hi]) opts[hi].scrollIntoView({ block: 'nearest' });
+}
+
+function bistroDishBlur(i, input) {
+  setTimeout(() => {
+    const dd = document.getElementById('dish-dd-' + i);
+    if (dd) dd.classList.remove('open');
+    const q = input.value.trim();
+    if (!q) {
+      if (bistroRows[i] && bistroRows[i].dish) {
+        bistroRows[i].dish = '';
+        bistroRows[i].addOns = {};
+        renderBistroRows();
+        autoSave();
+      }
+      return;
+    }
+    const all = getBistroAllDishes().flatMap(c => c.items);
+    const exact = all.find(n => n.toLowerCase() === q.toLowerCase());
+    if (exact) {
+      if (bistroRows[i] && exact !== bistroRows[i].dish) bistroDishSelect(i, exact);
+    } else {
+      // not a valid dish — revert to last saved value
+      if (bistroRows[i]) input.value = bistroRows[i].dish || '';
+    }
+  }, 150);
+}
+
+function bistroDishSelect(i, dishName) {
+  if (!bistroRows[i]) return;
+  bistroRows[i].dish = dishName;
+  bistroRows[i].addOns = {};
+  renderBistroRows();
+  autoSave();
+}
+
 function renderBistroRows() {
   const tbody = document.getElementById('bistro-rows');
-  const dishOptHtml = BISTRO_DISH_CATS.map(({ label, key }) => {
-    const items = menuData[key] || [];
-    if (!items.length) return '';
-    const opts = items.map(d => { const n = typeof d === 'object' ? (d.name || '') : d; return n ? `<option value="${escHtml(n)}">${escHtml(n)}</option>` : ''; }).join('');
-    return opts ? `<optgroup label="${label}">${opts}</optgroup>` : '';
-  }).join('');
 
   tbody.innerHTML = bistroRows.map((row, i) => {
     const addOns = row.addOns || {};
@@ -1948,20 +2063,18 @@ function renderBistroRows() {
       <td class="rs-bistro-num" style="color:var(--text3);font-size:12px;text-align:center;">${i + 1}</td>
       <td><input type="text" value="${escHtml(row.name)}" placeholder="Guest name" oninput="bistroRows[${i}].name=this.value;autoSave()"></td>
       <td>
-        <select data-bistro-dish="${i}" onchange="bistroRows[${i}].dish=this.value;bistroRows[${i}].addOns={};renderBistroRows();autoSave()">
-          <option value="">— Select dish —</option>
-          ${dishOptHtml}
-        </select>
+        <div class="dish-ac-wrap">
+          <input type="text" id="dish-input-${i}" value="${escHtml(row.dish)}" placeholder="Type to search dishes…"
+            oninput="bistroDishInput(${i},this)"
+            onkeydown="bistroDishKeydown(${i},event,this)"
+            onblur="bistroDishBlur(${i},this)">
+          <div class="dish-ac-dropdown" id="dish-dd-${i}"></div>
+        </div>
         ${addonGrid}
       </td>
       <td><button class="btn-icon" onclick="removeBistroRow(${i})">✕</button></td>
     </tr>`;
   }).join('');
-
-  tbody.querySelectorAll('[data-bistro-dish]').forEach(sel => {
-    const i = parseInt(sel.dataset.bistroDish);
-    if (bistroRows[i]) sel.value = bistroRows[i].dish || '';
-  });
 }
 
 /* ════════════════════════════════════════════
