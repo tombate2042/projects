@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Cash Counter</title>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;500;600;700&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -770,6 +771,45 @@
     text-align: center;
   }
 
+  .mach-btn-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .mach-import-btn {
+    background: var(--accent-mach-dim);
+    border: 1px solid var(--accent-mach);
+    color: var(--accent-mach);
+    padding: 7px 16px;
+    border-radius: 5px;
+    font-family: var(--sans);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .mach-import-btn:hover { background: var(--accent-mach); color: #fff; }
+
+  .mach-toast {
+    font-family: var(--sans);
+    font-size: 12px;
+    font-weight: 600;
+    padding: 5px 12px;
+    border-radius: 4px;
+    opacity: 0;
+    transition: opacity 0.25s;
+    pointer-events: none;
+  }
+  .mach-toast.show { opacity: 1; }
+  .mach-toast.t-ok    { color: #5a8f5a; background: rgba(90,143,90,0.12); border: 1px solid rgba(90,143,90,0.3); }
+  .mach-toast.t-info  { color: var(--muted); }
+  .mach-toast.t-error { color: #c0504a; background: rgba(192,80,74,0.10); border: 1px solid rgba(192,80,74,0.3); }
+
   @media (max-width: 600px) {
     header { padding: 14px 16px; }
     .panel { padding: 20px 16px; }
@@ -921,7 +961,12 @@
     </table>
     </div>
 
-    <button class="reset-btn" style="margin-top:12px" onclick="resetMachines()">↺ Reset Machines</button>
+    <div class="mach-btn-row">
+      <button class="reset-btn" onclick="resetMachines()">↺ Reset</button>
+      <button class="mach-import-btn" onclick="triggerMachPDF()">⬆ Import PDF</button>
+      <span class="mach-toast" id="mach-toast"></span>
+    </div>
+    <input type="file" id="mach-pdf-input" accept=".pdf" style="display:none" onchange="handleMachPDF(this)">
   </div>
   </div>
 
@@ -1393,6 +1438,89 @@ function resetMachines() {
     if (c) c.value = '';
   }
   calcMachines();
+}
+
+// ─── Machines PDF Import ─────────────────────────────────────────────────────
+
+pdfjsLib.GlobalWorkerOptions.workerSrc =
+  'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+function triggerMachPDF() {
+  document.getElementById('mach-pdf-input').click();
+}
+
+function showMachToast(msg, type) {
+  const el = document.getElementById('mach-toast');
+  if (!el) return;
+  el.textContent = msg;
+  el.className = 'mach-toast t-' + type + ' show';
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.classList.remove('show'), 3500);
+}
+
+async function handleMachPDF(input) {
+  const file = input.files[0];
+  if (!file) return;
+  input.value = '';
+  showMachToast('Reading PDF…', 'info');
+  try {
+    const arrayBuffer = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+
+    // Collect all text items with their x/y positions
+    const allItems = [];
+    for (let p = 1; p <= pdf.numPages; p++) {
+      const page = await pdf.getPage(p);
+      const content = await page.getTextContent();
+      content.items.forEach(item => {
+        const text = item.str.trim();
+        if (text) allItems.push({ x: item.transform[4], y: item.transform[5], text });
+      });
+    }
+
+    // Group items into rows by Y position (tolerance ±3 units)
+    allItems.sort((a, b) => b.y - a.y);
+    const rows = [];
+    let curRow = [], curY = null;
+    for (const item of allItems) {
+      if (curY === null || Math.abs(item.y - curY) <= 3) {
+        curRow.push(item);
+        if (curY === null) curY = item.y;
+      } else {
+        if (curRow.length) rows.push(curRow.sort((a, b) => a.x - b.x));
+        curRow = [item];
+        curY = item.y;
+      }
+    }
+    if (curRow.length) rows.push(curRow.sort((a, b) => a.x - b.x));
+
+    // Parse each row: House No | Serial (X…) | Name… | 1c | Tickets In | Bank Notes In | …
+    const machineData = {};
+    for (const row of rows) {
+      const tokens = row.map(r => r.text).join(' ').split(/\s+/).filter(Boolean);
+      const houseNo = parseInt(tokens[0]);
+      if (isNaN(houseNo) || houseNo < 1 || houseNo > 26) continue;
+      if (!tokens[1] || !/^X[A-Z0-9]+/.test(tokens[1])) continue;
+      const denomIdx = tokens.findIndex(t => t === '1c');
+      if (denomIdx < 0) continue;
+      // denomIdx+1 = Tickets In, denomIdx+2 = Bank Notes In
+      const bankNotes = parseFloat((tokens[denomIdx + 2] || '').replace(/,/g, ''));
+      if (!isNaN(bankNotes)) machineData[houseNo] = bankNotes;
+    }
+
+    const count = Object.keys(machineData).length;
+    if (count === 0) { showMachToast('No machine data found in PDF', 'error'); return; }
+
+    Object.entries(machineData).forEach(([houseNo, value]) => {
+      const el = document.getElementById(`ms-${houseNo}`);
+      if (el) el.value = value;
+    });
+    calcMachines();
+    showMachToast(`Imported ${count} machine${count !== 1 ? 's' : ''} ✓`, 'ok');
+  } catch (err) {
+    console.error(err);
+    showMachToast('Failed to read PDF', 'error');
+  }
 }
 
 // ─── Float Reconciliation ────────────────────────────────────────────────────
