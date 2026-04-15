@@ -1582,7 +1582,7 @@ function buildMachines() {
       </td>
       <td class="mach-input-cell">
         <input type="number" id="mc-${i}" min="0" step="0.01" placeholder="—"
-          oninput="calcMachines()">
+          oninput="calcMachines()" onkeydown="machCountKeydown(event,${i})">
       </td>
       <td class="mach-variance" id="mv-${i}">—</td>`;
     tbody.appendChild(tr);
@@ -1656,6 +1656,19 @@ function resetMachines() {
     if (c) c.value = '';
   }
   calcMachines();
+}
+
+function machCountKeydown(e, i) {
+  if (e.key !== 'Enter') return;
+  e.preventDefault();
+  const countEl = document.getElementById(`mc-${i}`);
+  const valueEl = document.getElementById(`ms-${i}`);
+  if (countEl && countEl.value === '' && valueEl && valueEl.value !== '') {
+    countEl.value = valueEl.value;
+    calcMachines();
+  }
+  const next = document.getElementById(`mc-${i + 1}`);
+  if (next) next.focus();
 }
 
 function unlockRakes(input) {
