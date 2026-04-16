@@ -1033,6 +1033,44 @@
   }
   .atm-lock-cell input.has-value { color: var(--text); }
 
+  .atm-disp {
+    display: none;
+    font-family: var(--mono);
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    padding: 4px 2px;
+  }
+  .atm-disp.muted { color: var(--muted); }
+
+  .atm-table.show-value .atm-input-cell input,
+  .atm-table.show-value .atm-lock-cell input { display: none; }
+  .atm-table.show-value .atm-disp { display: block; }
+
+  .atm-section-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 24px;
+    margin-bottom: 0;
+  }
+
+  .atm-toggle-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 3px 10px;
+    border-radius: 4px;
+    font-family: var(--sans);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .atm-toggle-btn:hover { border-color: var(--accent-mach); color: var(--accent-mach); }
+
   .mach-btn-row {
     display: flex;
     gap: 8px;
@@ -1284,9 +1322,12 @@
         </div>
         <button class="reset-btn" style="margin-top:8px" onclick="resetCashCount()">↺ Reset</button>
 
-        <div class="section-label" style="margin-top:24px">ATM</div>
+        <div class="atm-section-row">
+          <div class="section-label" style="margin-top:0">ATM</div>
+          <button class="atm-toggle-btn" id="atm-toggle-btn" onclick="toggleATMView()">$ Values</button>
+        </div>
         <div class="atm-table-wrap">
-          <table class="atm-table">
+          <table class="atm-table" id="atm-table">
             <thead>
               <tr>
                 <th>Denomination</th>
@@ -1298,15 +1339,33 @@
             <tbody>
               <tr>
                 <td class="atm-denom">$100</td>
-                <td class="atm-input-cell"><input type="number" id="an-100" min="0" step="1" placeholder="—" oninput="calcATM()"></td>
-                <td class="atm-lock-cell"><input type="number" id="af-100" min="0" step="0.01" placeholder="—" readonly tabindex="-1" ondblclick="unlockATM(this)" onblur="lockATM(this)" onkeydown="atmKeydown(event,this)"></td>
-                <td class="atm-lock-cell"><input type="number" id="anf-100" min="0" step="0.01" placeholder="—" readonly tabindex="-1" ondblclick="unlockATM(this)" onblur="lockATM(this)" onkeydown="atmKeydown(event,this)"></td>
+                <td class="atm-input-cell">
+                  <input type="number" id="an-100" min="0" step="1" placeholder="—" oninput="calcATM()">
+                  <span class="atm-disp" id="anv-100">—</span>
+                </td>
+                <td class="atm-lock-cell">
+                  <input type="number" id="af-100" min="0" step="1" placeholder="—" readonly tabindex="-1" ondblclick="unlockATM(this)" onblur="lockATM(this)" onkeydown="atmKeydown(event,this)" oninput="calcATM()">
+                  <span class="atm-disp" id="afv-100">—</span>
+                </td>
+                <td class="atm-lock-cell">
+                  <input type="number" id="anf-100" min="0" step="1" placeholder="—" readonly tabindex="-1" ondblclick="unlockATM(this)" onblur="lockATM(this)" onkeydown="atmKeydown(event,this)" oninput="calcATM()">
+                  <span class="atm-disp" id="anfv-100">—</span>
+                </td>
               </tr>
               <tr>
                 <td class="atm-denom">$50</td>
-                <td class="atm-input-cell"><input type="number" id="an-50" min="0" step="1" placeholder="—" oninput="calcATM()"></td>
-                <td class="atm-lock-cell"><input type="number" id="af-50" min="0" step="0.01" placeholder="—" readonly tabindex="-1" ondblclick="unlockATM(this)" onblur="lockATM(this)" onkeydown="atmKeydown(event,this)"></td>
-                <td class="atm-lock-cell"><input type="number" id="anf-50" min="0" step="0.01" placeholder="—" readonly tabindex="-1" ondblclick="unlockATM(this)" onblur="lockATM(this)" onkeydown="atmKeydown(event,this)"></td>
+                <td class="atm-input-cell">
+                  <input type="number" id="an-50" min="0" step="1" placeholder="—" oninput="calcATM()">
+                  <span class="atm-disp" id="anv-50">—</span>
+                </td>
+                <td class="atm-lock-cell">
+                  <input type="number" id="af-50" min="0" step="1" placeholder="—" readonly tabindex="-1" ondblclick="unlockATM(this)" onblur="lockATM(this)" onkeydown="atmKeydown(event,this)" oninput="calcATM()">
+                  <span class="atm-disp" id="afv-50">—</span>
+                </td>
+                <td class="atm-lock-cell">
+                  <input type="number" id="anf-50" min="0" step="1" placeholder="—" readonly tabindex="-1" ondblclick="unlockATM(this)" onblur="lockATM(this)" onkeydown="atmKeydown(event,this)" oninput="calcATM()">
+                  <span class="atm-disp" id="anfv-50">—</span>
+                </td>
               </tr>
             </tbody>
             <tfoot>
@@ -1972,23 +2031,78 @@ function resetCashCount() {
 // ─── ATM ─────────────────────────────────────────────────────────────────────
 
 const ATM_DENOMS = [100, 50];
+const ATM_FLOAT_DEFAULTS = { 100: 390, 50: 40 };
+let atmShowValue = false;
+
+function initATMDefaults() {
+  ATM_DENOMS.forEach(d => {
+    const el = document.getElementById(`af-${d}`);
+    if (el) { el.value = ATM_FLOAT_DEFAULTS[d]; el.classList.add('has-value'); }
+  });
+  calcATM();
+}
 
 function calcATM() {
-  let totalNotes = 0, totalFloat = 0, totalNewFloat = 0, anyNotes = false, anyFloat = false, anyNew = false;
+  let totNotes = 0, totFloat = 0, totNew = 0;
+  let anyNotes = false, anyFloat = false, anyNew = false;
+
   ATM_DENOMS.forEach(d => {
-    const n = parseFloat(document.getElementById(`an-${d}`)?.value) || 0;
-    const f = parseFloat(document.getElementById(`af-${d}`)?.value) || 0;
-    const nf = parseFloat(document.getElementById(`anf-${d}`)?.value) || 0;
-    if (document.getElementById(`an-${d}`)?.value !== '') { totalNotes += n; anyNotes = true; }
-    if (document.getElementById(`af-${d}`)?.value !== '') { totalFloat += f; anyFloat = true; }
-    if (document.getElementById(`anf-${d}`)?.value !== '') { totalNewFloat += nf; anyNew = true; }
+    const nEl  = document.getElementById(`an-${d}`);
+    const fEl  = document.getElementById(`af-${d}`);
+    const nfEl = document.getElementById(`anf-${d}`);
+    const n  = nEl  && nEl.value  !== '' ? (parseFloat(nEl.value)  || 0) : null;
+    const f  = fEl  && fEl.value  !== '' ? (parseFloat(fEl.value)  || 0) : null;
+    const nf = nfEl && nfEl.value !== '' ? (parseFloat(nfEl.value) || 0) : null;
+
+    // Update value display spans
+    const setSpan = (spanId, count) => {
+      const span = document.getElementById(spanId);
+      if (!span) return;
+      if (count === null) { span.textContent = '—'; span.classList.add('muted'); }
+      else { span.textContent = fmt(count * d); span.classList.remove('muted'); }
+    };
+    setSpan(`anv-${d}`,  n);
+    setSpan(`afv-${d}`,  f);
+    setSpan(`anfv-${d}`, nf);
+
+    if (n  !== null) { totNotes += n;  anyNotes = true; }
+    if (f  !== null) { totFloat += f;  anyFloat = true; }
+    if (nf !== null) { totNew   += nf; anyNew   = true; }
   });
-  document.getElementById('at-notes').textContent    = anyNotes ? totalNotes            : '—';
-  document.getElementById('at-float').textContent    = anyFloat ? fmt(totalFloat)       : '—';
-  document.getElementById('at-newfloat').textContent = anyNew   ? fmt(totalNewFloat)    : '—';
+
+  if (atmShowValue) {
+    document.getElementById('at-notes').textContent    = anyNotes ? fmt(totNotes * 0)  : '—'; // mixed denoms — show note sum only
+    // For totals in value mode, sum each denom separately
+    let tvNotes = 0, tvFloat = 0, tvNew = 0;
+    ATM_DENOMS.forEach(d => {
+      const nv  = parseFloat(document.getElementById(`an-${d}`)?.value)  || 0;
+      const fv  = parseFloat(document.getElementById(`af-${d}`)?.value)  || 0;
+      const nfv = parseFloat(document.getElementById(`anf-${d}`)?.value) || 0;
+      if (document.getElementById(`an-${d}`)?.value  !== '') tvNotes += nv  * d;
+      if (document.getElementById(`af-${d}`)?.value  !== '') tvFloat += fv  * d;
+      if (document.getElementById(`anf-${d}`)?.value !== '') tvNew   += nfv * d;
+    });
+    document.getElementById('at-notes').textContent    = anyNotes ? fmt(tvNotes) : '—';
+    document.getElementById('at-float').textContent    = anyFloat ? fmt(tvFloat) : '—';
+    document.getElementById('at-newfloat').textContent = anyNew   ? fmt(tvNew)   : '—';
+  } else {
+    document.getElementById('at-notes').textContent    = anyNotes ? totNotes        : '—';
+    document.getElementById('at-float').textContent    = anyFloat ? totFloat        : '—';
+    document.getElementById('at-newfloat').textContent = anyNew   ? totNew          : '—';
+  }
+}
+
+function toggleATMView() {
+  // Lock any open ATM inputs before switching
+  document.querySelectorAll('#atm-table .atm-lock-cell input.unlocked').forEach(el => el.blur());
+  atmShowValue = !atmShowValue;
+  document.getElementById('atm-table').classList.toggle('show-value', atmShowValue);
+  document.getElementById('atm-toggle-btn').textContent = atmShowValue ? '# Notes' : '$ Values';
+  calcATM();
 }
 
 function unlockATM(input) {
+  if (atmShowValue) return; // editing only in notes mode
   input.readOnly = false;
   input.tabIndex = 0;
   input.classList.add('unlocked');
@@ -2013,11 +2127,18 @@ function atmKeydown(e, input) {
 }
 
 function resetATM() {
-  ['an-100','an-50','af-100','af-50','anf-100','anf-50'].forEach(id => {
+  ['an-100','an-50','anf-100','anf-50'].forEach(id => {
     const el = document.getElementById(id);
-    if (el) { el.value = ''; el.classList.remove('has-value', 'unlocked'); el.readOnly = true; el.tabIndex = id.startsWith('an-') ? 0 : -1; }
+    if (el) { el.value = ''; el.classList.remove('has-value', 'unlocked'); el.readOnly = !id.startsWith('an-'); el.tabIndex = id.startsWith('an-') ? 0 : -1; }
   });
-  calcATM();
+  // Restore float defaults
+  ATM_DENOMS.forEach(d => {
+    const el = document.getElementById(`af-${d}`);
+    if (el) { el.value = ATM_FLOAT_DEFAULTS[d]; el.classList.add('has-value'); el.classList.remove('unlocked'); el.readOnly = true; el.tabIndex = -1; }
+  });
+  // Reset to notes view
+  if (atmShowValue) toggleATMView();
+  else calcATM();
 }
 
 // ─── Float Reconciliation ────────────────────────────────────────────────────
@@ -2179,6 +2300,7 @@ buildTill();
 buildSafe();
 buildMachines();
 buildFloat();
+initATMDefaults();
 setupNavigation();
 selectTill(document.querySelector('.till-check-label[data-key="bar"]'));
 </script>
