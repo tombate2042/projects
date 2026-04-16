@@ -919,6 +919,120 @@
   }
   .cc-value.has-val { color: var(--text); }
 
+  /* ── ATM TABLE ── */
+  .atm-table-wrap {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: clip;
+    margin-top: 8px;
+  }
+
+  .atm-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--surface);
+  }
+
+  .atm-table thead th {
+    position: sticky;
+    top: 65px;
+    z-index: 10;
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 8px 12px;
+    font-family: var(--sans);
+    font-weight: 600;
+    background: var(--surface2);
+    border-bottom: 2px solid var(--border);
+    text-align: center;
+  }
+
+  .atm-table tbody tr { border-bottom: 1px solid var(--border); }
+  .atm-table tbody tr:last-child { border-bottom: none; }
+  .atm-table tbody tr:hover { background: rgba(58,143,168,0.04); }
+
+  .atm-table tfoot tr td {
+    background: var(--surface2);
+    border-top: 2px solid var(--border);
+    font-weight: 700;
+    text-align: center;
+    padding: 8px 12px;
+    font-family: var(--mono);
+    font-size: 14px;
+    color: var(--text);
+  }
+
+  .atm-denom {
+    padding: 5px 12px;
+    font-family: var(--mono);
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+    text-align: center;
+    background: var(--surface2);
+    border-right: 1px solid var(--border);
+    width: 80px;
+  }
+
+  .atm-input-cell {
+    padding: 3px 8px;
+    text-align: center;
+  }
+
+  .atm-input-cell input {
+    font-family: var(--mono);
+    font-size: 14px;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    padding: 4px 8px;
+    text-align: center;
+    width: 100%;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.12s, background 0.12s;
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
+  .atm-input-cell input::-webkit-outer-spin-button,
+  .atm-input-cell input::-webkit-inner-spin-button { -webkit-appearance: none; }
+  .atm-input-cell input:hover { border-color: var(--border); background: var(--surface2); }
+  .atm-input-cell input:focus { border-color: var(--accent-mach); background: var(--accent-mach-dim); }
+
+  .atm-lock-cell {
+    padding: 3px 8px;
+    text-align: center;
+  }
+
+  .atm-lock-cell input {
+    font-family: var(--mono);
+    font-size: 14px;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    padding: 4px 8px;
+    text-align: center;
+    width: 100%;
+    color: var(--muted);
+    outline: none;
+    cursor: default;
+    transition: border-color 0.12s, background 0.12s, color 0.12s;
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
+  .atm-lock-cell input::-webkit-outer-spin-button,
+  .atm-lock-cell input::-webkit-inner-spin-button { -webkit-appearance: none; }
+  .atm-lock-cell input:hover { border-color: transparent; background: transparent; }
+  .atm-lock-cell input.unlocked {
+    cursor: text;
+    color: var(--text);
+    border-color: var(--accent-mach);
+    background: var(--accent-mach-dim);
+  }
+  .atm-lock-cell input.has-value { color: var(--text); }
+
   .mach-btn-row {
     display: flex;
     gap: 8px;
@@ -1169,6 +1283,43 @@
           </table>
         </div>
         <button class="reset-btn" style="margin-top:8px" onclick="resetCashCount()">↺ Reset</button>
+
+        <div class="section-label" style="margin-top:24px">ATM</div>
+        <div class="atm-table-wrap">
+          <table class="atm-table">
+            <thead>
+              <tr>
+                <th>Denomination</th>
+                <th>Note Count</th>
+                <th>Float</th>
+                <th>New Float</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="atm-denom">$100</td>
+                <td class="atm-input-cell"><input type="number" id="an-100" min="0" step="1" placeholder="—" oninput="calcATM()"></td>
+                <td class="atm-lock-cell"><input type="number" id="af-100" min="0" step="0.01" placeholder="—" readonly tabindex="-1" ondblclick="unlockATM(this)" onblur="lockATM(this)" onkeydown="atmKeydown(event,this)"></td>
+                <td class="atm-lock-cell"><input type="number" id="anf-100" min="0" step="0.01" placeholder="—" readonly tabindex="-1" ondblclick="unlockATM(this)" onblur="lockATM(this)" onkeydown="atmKeydown(event,this)"></td>
+              </tr>
+              <tr>
+                <td class="atm-denom">$50</td>
+                <td class="atm-input-cell"><input type="number" id="an-50" min="0" step="1" placeholder="—" oninput="calcATM()"></td>
+                <td class="atm-lock-cell"><input type="number" id="af-50" min="0" step="0.01" placeholder="—" readonly tabindex="-1" ondblclick="unlockATM(this)" onblur="lockATM(this)" onkeydown="atmKeydown(event,this)"></td>
+                <td class="atm-lock-cell"><input type="number" id="anf-50" min="0" step="0.01" placeholder="—" readonly tabindex="-1" ondblclick="unlockATM(this)" onblur="lockATM(this)" onkeydown="atmKeydown(event,this)"></td>
+              </tr>
+            </tbody>
+            <tfoot>
+              <tr>
+                <td>Total</td>
+                <td id="at-notes">—</td>
+                <td id="at-float">—</td>
+                <td id="at-newfloat">—</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+        <button class="reset-btn" style="margin-top:8px" onclick="resetATM()">↺ Reset</button>
       </div>
 
     </div>
@@ -1816,6 +1967,57 @@ function resetCashCount() {
   });
   document.getElementById('cc-total-notes').textContent = '—';
   document.getElementById('cc-total-value').textContent = '—';
+}
+
+// ─── ATM ─────────────────────────────────────────────────────────────────────
+
+const ATM_DENOMS = [100, 50];
+
+function calcATM() {
+  let totalNotes = 0, totalFloat = 0, totalNewFloat = 0, anyNotes = false, anyFloat = false, anyNew = false;
+  ATM_DENOMS.forEach(d => {
+    const n = parseFloat(document.getElementById(`an-${d}`)?.value) || 0;
+    const f = parseFloat(document.getElementById(`af-${d}`)?.value) || 0;
+    const nf = parseFloat(document.getElementById(`anf-${d}`)?.value) || 0;
+    if (document.getElementById(`an-${d}`)?.value !== '') { totalNotes += n; anyNotes = true; }
+    if (document.getElementById(`af-${d}`)?.value !== '') { totalFloat += f; anyFloat = true; }
+    if (document.getElementById(`anf-${d}`)?.value !== '') { totalNewFloat += nf; anyNew = true; }
+  });
+  document.getElementById('at-notes').textContent    = anyNotes ? totalNotes            : '—';
+  document.getElementById('at-float').textContent    = anyFloat ? fmt(totalFloat)       : '—';
+  document.getElementById('at-newfloat').textContent = anyNew   ? fmt(totalNewFloat)    : '—';
+}
+
+function unlockATM(input) {
+  input.readOnly = false;
+  input.tabIndex = 0;
+  input.classList.add('unlocked');
+  input.focus();
+  input.select();
+}
+
+function lockATM(input) {
+  input.readOnly = true;
+  input.tabIndex = -1;
+  input.classList.remove('unlocked');
+  if (input.value !== '') input.classList.add('has-value');
+  else input.classList.remove('has-value');
+  calcATM();
+}
+
+function atmKeydown(e, input) {
+  if (e.key === 'Enter' || e.key === 'Escape') {
+    if (e.key === 'Escape') { input.value = ''; input.classList.remove('has-value'); }
+    input.blur();
+  }
+}
+
+function resetATM() {
+  ['an-100','an-50','af-100','af-50','anf-100','anf-50'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.value = ''; el.classList.remove('has-value', 'unlocked'); el.readOnly = true; el.tabIndex = id.startsWith('an-') ? 0 : -1; }
+  });
+  calcATM();
 }
 
 // ─── Float Reconciliation ────────────────────────────────────────────────────
