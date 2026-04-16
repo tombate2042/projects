@@ -1033,6 +1033,19 @@
   }
   .atm-lock-cell input.has-value { color: var(--text); }
 
+  .atm-calc-cell {
+    padding: 5px 12px;
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 600;
+    text-align: center;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+  .atm-calc-cell.var-pos  { color: #5a8f5a; }
+  .atm-calc-cell.var-neg  { color: #c0504a; }
+  .atm-calc-cell.var-zero { color: var(--accent-mach); }
+
   .atm-disp {
     display: none;
     font-family: var(--mono);
@@ -1334,6 +1347,8 @@
                 <th>Note Count</th>
                 <th>Float</th>
                 <th>New Float</th>
+                <th>Refill</th>
+                <th>Increase / Decrease</th>
               </tr>
             </thead>
             <tbody>
@@ -1351,6 +1366,8 @@
                   <input type="number" id="anf-100" min="0" step="1" placeholder="—" readonly tabindex="-1" ondblclick="unlockATM(this)" onblur="lockATM(this)" onkeydown="atmKeydown(event,this)" oninput="calcATM()">
                   <span class="atm-disp" id="anfv-100">—</span>
                 </td>
+                <td class="atm-calc-cell" id="ar-100">—</td>
+                <td class="atm-calc-cell" id="aid-100">—</td>
               </tr>
               <tr>
                 <td class="atm-denom">$50</td>
@@ -1366,6 +1383,8 @@
                   <input type="number" id="anf-50" min="0" step="1" placeholder="—" readonly tabindex="-1" ondblclick="unlockATM(this)" onblur="lockATM(this)" onkeydown="atmKeydown(event,this)" oninput="calcATM()">
                   <span class="atm-disp" id="anfv-50">—</span>
                 </td>
+                <td class="atm-calc-cell" id="ar-50">—</td>
+                <td class="atm-calc-cell" id="aid-50">—</td>
               </tr>
             </tbody>
             <tfoot>
@@ -1374,6 +1393,8 @@
                 <td id="at-notes">—</td>
                 <td id="at-float">—</td>
                 <td id="at-newfloat">—</td>
+                <td id="at-refill">—</td>
+                <td id="at-incdec">—</td>
               </tr>
             </tfoot>
           </table>
@@ -2043,8 +2064,8 @@ function initATMDefaults() {
 }
 
 function calcATM() {
-  let totNotes = 0, totFloat = 0, totNew = 0;
-  let anyNotes = false, anyFloat = false, anyNew = false;
+  let totNotes = 0, totFloat = 0, totNew = 0, totRefill = 0, totIncDec = 0;
+  let anyNotes = false, anyFloat = false, anyNew = false, anyRefill = false, anyIncDec = false;
 
   ATM_DENOMS.forEach(d => {
     const nEl  = document.getElementById(`an-${d}`);
@@ -2054,41 +2075,86 @@ function calcATM() {
     const f  = fEl  && fEl.value  !== '' ? (parseFloat(fEl.value)  || 0) : null;
     const nf = nfEl && nfEl.value !== '' ? (parseFloat(nfEl.value) || 0) : null;
 
-    // Update value display spans
+    // Value display spans for togglable columns
     const setSpan = (spanId, count) => {
       const span = document.getElementById(spanId);
       if (!span) return;
       if (count === null) { span.textContent = '—'; span.classList.add('muted'); }
       else { span.textContent = fmt(count * d); span.classList.remove('muted'); }
     };
-    setSpan(`anv-${d}`,  n);
-    setSpan(`afv-${d}`,  f);
+    setSpan(`anv-${d}`, n);
+    setSpan(`afv-${d}`, f);
     setSpan(`anfv-${d}`, nf);
 
     if (n  !== null) { totNotes += n;  anyNotes = true; }
     if (f  !== null) { totFloat += f;  anyFloat = true; }
     if (nf !== null) { totNew   += nf; anyNew   = true; }
+
+    // Refill = Float - Note Count
+    const refillEl = document.getElementById(`ar-${d}`);
+    if (refillEl) {
+      if (f !== null && n !== null) {
+        const rv = atmShowValue ? (f - n) * d : (f - n);
+        const rRound = Math.round(rv * 100) / 100;
+        refillEl.textContent = (rRound === 0 ? '✓' : (rRound > 0 ? '+' : '') + (atmShowValue ? fmt(rRound) : rRound));
+        refillEl.className = 'atm-calc-cell ' + (rRound === 0 ? 'var-zero' : rRound > 0 ? 'var-pos' : 'var-neg');
+        totRefill += (f - n); anyRefill = true;
+      } else {
+        refillEl.textContent = '—'; refillEl.className = 'atm-calc-cell';
+      }
+    }
+
+    // Increase/Decrease = New Float - Float
+    const idEl = document.getElementById(`aid-${d}`);
+    if (idEl) {
+      if (nf !== null && f !== null) {
+        const iv = atmShowValue ? (nf - f) * d : (nf - f);
+        const iRound = Math.round(iv * 100) / 100;
+        idEl.textContent = (iRound === 0 ? '✓' : (iRound > 0 ? '+' : '') + (atmShowValue ? fmt(iRound) : iRound));
+        idEl.className = 'atm-calc-cell ' + (iRound === 0 ? 'var-zero' : iRound > 0 ? 'var-pos' : 'var-neg');
+        totIncDec += (nf - f); anyIncDec = true;
+      } else {
+        idEl.textContent = '—'; idEl.className = 'atm-calc-cell';
+      }
+    }
   });
 
+  // Totals row
   if (atmShowValue) {
-    document.getElementById('at-notes').textContent    = anyNotes ? fmt(totNotes * 0)  : '—'; // mixed denoms — show note sum only
-    // For totals in value mode, sum each denom separately
-    let tvNotes = 0, tvFloat = 0, tvNew = 0;
+    let tvNotes = 0, tvFloat = 0, tvNew = 0, tvRefill = 0, tvIncDec = 0;
     ATM_DENOMS.forEach(d => {
-      const nv  = parseFloat(document.getElementById(`an-${d}`)?.value)  || 0;
-      const fv  = parseFloat(document.getElementById(`af-${d}`)?.value)  || 0;
-      const nfv = parseFloat(document.getElementById(`anf-${d}`)?.value) || 0;
-      if (document.getElementById(`an-${d}`)?.value  !== '') tvNotes += nv  * d;
-      if (document.getElementById(`af-${d}`)?.value  !== '') tvFloat += fv  * d;
-      if (document.getElementById(`anf-${d}`)?.value !== '') tvNew   += nfv * d;
+      const nv  = document.getElementById(`an-${d}`)?.value  !== '' ? (parseFloat(document.getElementById(`an-${d}`)?.value)  || 0) : null;
+      const fv  = document.getElementById(`af-${d}`)?.value  !== '' ? (parseFloat(document.getElementById(`af-${d}`)?.value)  || 0) : null;
+      const nfv = document.getElementById(`anf-${d}`)?.value !== '' ? (parseFloat(document.getElementById(`anf-${d}`)?.value) || 0) : null;
+      if (nv  !== null) tvNotes  += nv  * d;
+      if (fv  !== null) tvFloat  += fv  * d;
+      if (nfv !== null) tvNew    += nfv * d;
+      if (fv !== null && nv  !== null) tvRefill += (fv  - nv)  * d;
+      if (nfv !== null && fv !== null) tvIncDec += (nfv - fv)  * d;
     });
-    document.getElementById('at-notes').textContent    = anyNotes ? fmt(tvNotes) : '—';
-    document.getElementById('at-float').textContent    = anyFloat ? fmt(tvFloat) : '—';
-    document.getElementById('at-newfloat').textContent = anyNew   ? fmt(tvNew)   : '—';
+    document.getElementById('at-notes').textContent    = anyNotes  ? fmt(tvNotes)  : '—';
+    document.getElementById('at-float').textContent    = anyFloat  ? fmt(tvFloat)  : '—';
+    document.getElementById('at-newfloat').textContent = anyNew    ? fmt(tvNew)    : '—';
+    const setTotal = (id, val, any) => {
+      const el = document.getElementById(id); if (!el) return;
+      if (!any) { el.textContent = '—'; return; }
+      const r = Math.round(val * 100) / 100;
+      el.textContent = r === 0 ? '✓' : (r > 0 ? '+' : '') + fmt(r);
+    };
+    setTotal('at-refill', tvRefill, anyRefill);
+    setTotal('at-incdec', tvIncDec, anyIncDec);
   } else {
-    document.getElementById('at-notes').textContent    = anyNotes ? totNotes        : '—';
-    document.getElementById('at-float').textContent    = anyFloat ? totFloat        : '—';
-    document.getElementById('at-newfloat').textContent = anyNew   ? totNew          : '—';
+    document.getElementById('at-notes').textContent    = anyNotes  ? totNotes  : '—';
+    document.getElementById('at-float').textContent    = anyFloat  ? totFloat  : '—';
+    document.getElementById('at-newfloat').textContent = anyNew    ? totNew    : '—';
+    const setTotal = (id, val, any) => {
+      const el = document.getElementById(id); if (!el) return;
+      if (!any) { el.textContent = '—'; return; }
+      const r = Math.round(val * 100) / 100;
+      el.textContent = r === 0 ? '✓' : (r > 0 ? '+' : '') + r;
+    };
+    setTotal('at-refill', totRefill, anyRefill);
+    setTotal('at-incdec', totIncDec, anyIncDec);
   }
 }
 
