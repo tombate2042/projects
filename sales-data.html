@@ -1771,7 +1771,7 @@ async function handleMachPDF(input) {
       if (el) { el.value = value; el.classList.add('has-value'); }
     });
     calcMachines();
-    showMachToast(`Imported ${count} machine${count !== 1 ? 's' : ''} ✓`, 'ok');
+    showMachToast(`Imported ${count} gaming machine${count !== 1 ? 's' : ''} ✓`, 'ok');
   } catch (err) {
     console.error(err);
     showMachToast('Failed to read PDF', 'error');
@@ -1925,7 +1925,7 @@ function switchTab(which) {
   document.getElementById('tab-safe').className  = 'tab-btn' + (which === 'safe'  ? ' active-safe'  : '');
   document.getElementById('tab-mach').className  = 'tab-btn' + (which === 'mach'  ? ' active-mach'  : '');
   document.getElementById('tab-float').className = 'tab-btn' + (which === 'float' ? ' active-float' : '');
-  const titles = { till: 'Till', safe: 'Safe', mach: 'Machines', float: 'Float Rec' };
+  const titles = { till: 'Till', safe: 'Safe', mach: 'Gaming', float: 'Float Rec' };
   document.getElementById('header-title').textContent = titles[which] || which;
 }
 
