@@ -273,7 +273,7 @@
 </head>
 <body>
   <div class="card">
-    <div class="logo">The Republic Bar</div>
+    <div class="logo">The Republic Hotel</div>
     <h1>Gaming cheque payout</h1>
 
     <div class="field">
@@ -308,6 +308,11 @@
       <span class="total-value" id="totalDisplay">$0.00</span>
     </div>
 
+    <label class="check-item" style="margin-bottom: 1.25rem;">
+      <input type="checkbox" id="chk-jackpot" />
+      <span style="font-size:13px; color:#444;">Link Jackpot</span>
+    </label>
+
     <div class="checklist" id="checklist">
       <div class="checklist-header">Pre-send confirmation</div>
       <div class="checklist-body">
@@ -338,6 +343,10 @@
           <input type="checkbox" id="chk-ccu" onchange="checkComplete()" />
           <span>Entered into CCU</span>
         </label>
+        <label class="check-item" id="chk-globaleye-row" style="display:none;">
+          <input type="checkbox" id="chk-globaleye" onchange="checkComplete()" />
+          <span>Entered into Global Eye</span>
+        </label>
         <label class="check-item">
           <input type="checkbox" id="chk-register" onchange="checkComplete()" />
           <span>Gaming Payout Register completed</span>
@@ -361,12 +370,7 @@
 
   <script>
     // ── CONFIG ──────────────────────────────────────────────────────
-    const TO = [
-      'placeholder1@republic.com.au',
-      'placeholder2@republic.com.au',
-      'placeholder3@republic.com.au'
-    ];
-    const CC = 'placeholder-cc@republic.com.au';
+    const TO = 'Cheque';
     // ────────────────────────────────────────────────────────────────
 
     function fmt(val) {
@@ -451,13 +455,15 @@ Thank you & have a great day!`;
       const total = f.chequePayout + f.cashPayout;
       const subject = `Republic Gaming Cheque Payout - ${f.name || '[Name]'} ${today()}`;
       const body = buildBody(f, total);
-      const mailto = `mailto:${TO.join(',')}?cc=${encodeURIComponent(CC)}&subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+      const mailto = `mailto:${encodeURIComponent(TO)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
       window.location.href = mailto;
 
       emailOpened = true;
       document.getElementById('sendBtn').textContent = 'Email opened ✓';
       document.getElementById('sendBtn').disabled = true;
       document.getElementById('post-checklist').style.display = 'block';
+      const isJackpot = document.getElementById('chk-jackpot').checked;
+      document.getElementById('chk-globaleye-row').style.display = isJackpot ? 'flex' : 'none';
     }
 
     function checkComplete() {
@@ -465,7 +471,9 @@ Thank you & have a great day!`;
       const ccu = document.getElementById('chk-ccu').checked;
       const reg = document.getElementById('chk-register').checked;
       const drive = document.getElementById('chk-drive').checked;
-      if (ccu && reg && drive) {
+      const isJackpot = document.getElementById('chk-jackpot').checked;
+      const globalEye = isJackpot ? document.getElementById('chk-globaleye').checked : true;
+      if (ccu && reg && drive && globalEye) {
         setTimeout(showSuccess, 300);
       }
     }
@@ -481,7 +489,7 @@ Thank you & have a great day!`;
         document.getElementById(id).value = '';
       });
       // Reset checkboxes
-      ['chk-id', 'chk-cheque', 'chk-ccu', 'chk-register', 'chk-drive'].forEach(id => {
+      ['chk-id', 'chk-cheque', 'chk-jackpot', 'chk-ccu', 'chk-globaleye', 'chk-register', 'chk-drive'].forEach(id => {
         document.getElementById(id).checked = false;
       });
       // Reset state
@@ -490,6 +498,7 @@ Thank you & have a great day!`;
       document.getElementById('sendBtn').disabled = true;
       document.getElementById('checklist').style.display = 'none';
       document.getElementById('post-checklist').style.display = 'none';
+      document.getElementById('chk-globaleye-row').style.display = 'none';
       document.getElementById('preview').style.display = 'none';
       document.getElementById('totalDisplay').textContent = '$0.00';
       document.getElementById('successOverlay').classList.remove('visible');
