@@ -235,7 +235,7 @@
       <div class="checklist-body">
         <label class="check-item">
           <input type="checkbox" id="chk-id" onchange="updateBtn()" />
-          <span>Valid ID sighted &amp; all information completed</span>
+          <span id="chk-id-label">Valid ID sighted &amp; all information completed</span>
         </label>
         <label class="check-item">
           <input type="checkbox" id="chk-cheque" onchange="updateBtn()" />
@@ -316,6 +316,13 @@ Thank you & have a great day!`;
       const f = getFields();
       const total = f.chequePayout + f.cashPayout;
       document.getElementById('totalDisplay').textContent = fmt(total);
+
+      const idLabel = document.getElementById('chk-id-label');
+      if (total > 10000) {
+        idLabel.textContent = '2 Valid IDs sighted & all information on both forms completed';
+      } else {
+        idLabel.textContent = 'Valid ID sighted & all information completed';
+      }
 
       const hasData = f.name || f.machine || f.chequeNum || f.chequePayout || f.cashPayout;
       if (hasData) {
