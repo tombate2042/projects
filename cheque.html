@@ -136,6 +136,61 @@
     }
 
     .note strong { color: #666; font-weight: 500; }
+
+    .checklist {
+      display: none;
+      border: 0.5px solid #e0e0dc;
+      border-radius: 10px;
+      overflow: hidden;
+      margin: 1.25rem 0;
+    }
+
+    .checklist-header {
+      background: #f5f5f3;
+      padding: 8px 14px;
+      font-size: 11px;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      border-bottom: 0.5px solid #e0e0dc;
+    }
+
+    .checklist-body { padding: 0.75rem 1rem; }
+
+    .check-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 0.5rem 0;
+      cursor: pointer;
+    }
+
+    .check-item:not(:last-child) {
+      border-bottom: 0.5px solid #f0f0ec;
+    }
+
+    .check-item input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      min-width: 16px;
+      margin-top: 2px;
+      accent-color: #1a1a1a;
+      cursor: pointer;
+      padding: 0;
+      border: none;
+      border-radius: 3px;
+    }
+
+    .check-item span {
+      font-size: 13px;
+      color: #444;
+      line-height: 1.45;
+      user-select: none;
+    }
+
+    .check-item input[type="checkbox"]:checked + span {
+      color: #1a1a1a;
+    }
   </style>
 </head>
 <body>
@@ -175,7 +230,21 @@
       <span class="total-value" id="totalDisplay">$0.00</span>
     </div>
 
-    <button class="btn" onclick="openEmail()">Open in Outlook ↗</button>
+    <div class="checklist" id="checklist">
+      <div class="checklist-header">Pre-send confirmation</div>
+      <div class="checklist-body">
+        <label class="check-item">
+          <input type="checkbox" id="chk-id" onchange="updateBtn()" />
+          <span>Valid ID sighted &amp; all information completed</span>
+        </label>
+        <label class="check-item">
+          <input type="checkbox" id="chk-cheque" onchange="updateBtn()" />
+          <span>Cheque details are correct — words &amp; numbers match, cheque is signed &amp; stamped</span>
+        </label>
+      </div>
+    </div>
+
+    <button class="btn" id="sendBtn" onclick="openEmail()" disabled>Open in Outlook ↗</button>
 
     <div class="preview" id="preview">
       <div class="preview-header">Email preview</div>
@@ -237,6 +306,12 @@ Any questions please reach out.
 Thank you & have a great day!`;
     }
 
+    function updateBtn() {
+      const chkId = document.getElementById('chk-id').checked;
+      const chkCheque = document.getElementById('chk-cheque').checked;
+      document.getElementById('sendBtn').disabled = !(chkId && chkCheque);
+    }
+
     function update() {
       const f = getFields();
       const total = f.chequePayout + f.cashPayout;
@@ -246,9 +321,15 @@ Thank you & have a great day!`;
       if (hasData) {
         document.getElementById('previewBody').textContent = buildBody(f, total);
         document.getElementById('preview').style.display = 'block';
+        document.getElementById('checklist').style.display = 'block';
       } else {
         document.getElementById('preview').style.display = 'none';
+        document.getElementById('checklist').style.display = 'none';
+        document.getElementById('chk-id').checked = false;
+        document.getElementById('chk-cheque').checked = false;
+        document.getElementById('sendBtn').disabled = true;
       }
+      updateBtn();
     }
 
     function openEmail() {
