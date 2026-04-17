@@ -191,6 +191,84 @@
     .check-item input[type="checkbox"]:checked + span {
       color: #1a1a1a;
     }
+
+    .post-checklist {
+      display: none;
+      border: 0.5px solid #c8e6c9;
+      border-radius: 10px;
+      overflow: hidden;
+      margin-top: 1.25rem;
+    }
+
+    .post-checklist .checklist-header {
+      background: #f1f8f1;
+      border-bottom-color: #c8e6c9;
+      color: #4a7a4a;
+    }
+
+    /* Success overlay */
+    .success-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(255,255,255,0.85);
+      backdrop-filter: blur(4px);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .success-overlay.visible {
+      display: flex;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .success-tick {
+      width: 96px;
+      height: 96px;
+      border-radius: 50%;
+      background: #2e7d32;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    @keyframes popIn {
+      from { transform: scale(0.4); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    .success-tick svg {
+      width: 52px;
+      height: 52px;
+      stroke: #fff;
+      stroke-width: 3.5;
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-dasharray: 80;
+      stroke-dashoffset: 80;
+      animation: drawTick 0.4s ease 0.25s forwards;
+    }
+
+    @keyframes drawTick {
+      to { stroke-dashoffset: 0; }
+    }
+
+    .success-label {
+      font-size: 17px;
+      font-weight: 500;
+      color: #2e7d32;
+      animation: fadeIn 0.3s ease 0.5s both;
+    }
   </style>
 </head>
 <body>
@@ -252,6 +330,33 @@
     </div>
 
     <p class="note"><strong>Remember:</strong> attach the cheque payout document before sending.</p>
+
+    <div class="post-checklist checklist" id="post-checklist">
+      <div class="checklist-header">After sending</div>
+      <div class="checklist-body">
+        <label class="check-item">
+          <input type="checkbox" id="chk-ccu" onchange="checkComplete()" />
+          <span>Entered into CCU</span>
+        </label>
+        <label class="check-item">
+          <input type="checkbox" id="chk-register" onchange="checkComplete()" />
+          <span>Gaming Payout Register completed</span>
+        </label>
+        <label class="check-item">
+          <input type="checkbox" id="chk-drive" onchange="checkComplete()" />
+          <span>Saved in Venue Drive (V:/Gaming/Payouts) &amp; filed in folder in the office</span>
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <div class="success-overlay" id="successOverlay">
+    <div class="success-tick">
+      <svg viewBox="0 0 52 52">
+        <polyline points="10,27 21,38 42,16" />
+      </svg>
+    </div>
+    <div class="success-label">Payout complete</div>
   </div>
 
   <script>
@@ -318,7 +423,7 @@ Thank you & have a great day!`;
       document.getElementById('totalDisplay').textContent = fmt(total);
 
       const idLabel = document.getElementById('chk-id-label');
-      if (total > 10000) {
+      if (total >= 10000) {
         idLabel.textContent = '2 Valid IDs sighted & all information on both forms completed';
       } else {
         idLabel.textContent = 'Valid ID sighted & all information completed';
@@ -339,6 +444,8 @@ Thank you & have a great day!`;
       updateBtn();
     }
 
+    let emailOpened = false;
+
     function openEmail() {
       const f = getFields();
       const total = f.chequePayout + f.cashPayout;
@@ -346,6 +453,46 @@ Thank you & have a great day!`;
       const body = buildBody(f, total);
       const mailto = `mailto:${TO.join(',')}?cc=${encodeURIComponent(CC)}&subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
       window.location.href = mailto;
+
+      emailOpened = true;
+      document.getElementById('sendBtn').textContent = 'Email opened ✓';
+      document.getElementById('sendBtn').disabled = true;
+      document.getElementById('post-checklist').style.display = 'block';
+    }
+
+    function checkComplete() {
+      if (!emailOpened) return;
+      const ccu = document.getElementById('chk-ccu').checked;
+      const reg = document.getElementById('chk-register').checked;
+      const drive = document.getElementById('chk-drive').checked;
+      if (ccu && reg && drive) {
+        setTimeout(showSuccess, 300);
+      }
+    }
+
+    function showSuccess() {
+      document.getElementById('successOverlay').classList.add('visible');
+      setTimeout(resetAll, 2800);
+    }
+
+    function resetAll() {
+      // Reset fields
+      ['name', 'machine', 'chequeNum', 'chequePayout', 'cashPayout'].forEach(id => {
+        document.getElementById(id).value = '';
+      });
+      // Reset checkboxes
+      ['chk-id', 'chk-cheque', 'chk-ccu', 'chk-register', 'chk-drive'].forEach(id => {
+        document.getElementById(id).checked = false;
+      });
+      // Reset state
+      emailOpened = false;
+      document.getElementById('sendBtn').textContent = 'Open in Outlook ↗';
+      document.getElementById('sendBtn').disabled = true;
+      document.getElementById('checklist').style.display = 'none';
+      document.getElementById('post-checklist').style.display = 'none';
+      document.getElementById('preview').style.display = 'none';
+      document.getElementById('totalDisplay').textContent = '$0.00';
+      document.getElementById('successOverlay').classList.remove('visible');
     }
   </script>
 </body>
