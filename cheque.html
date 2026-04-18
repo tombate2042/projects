@@ -206,6 +206,48 @@
       color: #4a7a4a;
     }
 
+    .info-btn {
+      flex-shrink: 0;
+      width: 15px;
+      height: 15px;
+      border-radius: 50%;
+      border: 1px solid #ccc;
+      background: none;
+      color: #aaa;
+      font-size: 9px;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 3px;
+      margin-left: auto;
+      padding: 0;
+      transition: border-color 0.15s, color 0.15s;
+      line-height: 1;
+    }
+
+    .info-btn:hover { border-color: #888; color: #555; }
+    .info-btn.active { border-color: #1a1a1a; color: #1a1a1a; background: #f0f0ee; }
+
+    .info-pop {
+      display: none;
+      position: fixed;
+      z-index: 50;
+      background: #1a1a1a;
+      color: #e8e8e8;
+      font-size: 12.5px;
+      line-height: 1.55;
+      padding: 10px 13px;
+      border-radius: 8px;
+      max-width: 290px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.18);
+      pointer-events: none;
+    }
+
+    .info-pop.visible { display: block; }
+
     /* Success overlay */
     .success-overlay {
       display: none;
@@ -402,10 +444,12 @@
         <label class="check-item">
           <input type="checkbox" id="chk-id" onchange="updateBtn()" />
           <span id="chk-id-label">Valid ID sighted &amp; all information completed</span>
+          <button class="info-btn" onclick="showInfo(this,'chk-id');event.preventDefault();event.stopPropagation();">i</button>
         </label>
         <label class="check-item">
           <input type="checkbox" id="chk-cheque" onchange="updateBtn()" />
           <span>Cheque details are correct — words &amp; numbers match, cheque is signed &amp; stamped</span>
+          <button class="info-btn" onclick="showInfo(this,'chk-cheque');event.preventDefault();event.stopPropagation();">i</button>
         </label>
       </div>
     </div>
@@ -425,22 +469,28 @@
         <label class="check-item">
           <input type="checkbox" id="chk-ccu" onchange="checkComplete()" />
           <span>Entered into CCU</span>
+          <button class="info-btn" onclick="showInfo(this,'chk-ccu');event.preventDefault();event.stopPropagation();">i</button>
         </label>
         <label class="check-item" id="chk-globaleye-row" style="display:none;">
           <input type="checkbox" id="chk-globaleye" onchange="checkComplete()" />
           <span>Entered into Global Eye</span>
+          <button class="info-btn" onclick="showInfo(this,'chk-globaleye');event.preventDefault();event.stopPropagation();">i</button>
         </label>
         <label class="check-item">
           <input type="checkbox" id="chk-register" onchange="checkComplete()" />
           <span>Gaming Payout Register completed</span>
+          <button class="info-btn" onclick="showInfo(this,'chk-register');event.preventDefault();event.stopPropagation();">i</button>
         </label>
         <label class="check-item">
           <input type="checkbox" id="chk-drive" onchange="checkComplete()" />
           <span>Saved in Venue Drive (V:/Gaming/Payouts) &amp; filed in folder in the office</span>
+          <button class="info-btn" onclick="showInfo(this,'chk-drive');event.preventDefault();event.stopPropagation();">i</button>
         </label>
       </div>
     </div>
   </div>
+
+  <div class="info-pop" id="infoPop"></div>
 
   <div class="toast" id="toast">Formatted email copied — select all &amp; paste in Outlook</div>
 
@@ -457,6 +507,46 @@
     // ── CONFIG ──────────────────────────────────────────────────────
     const TO = 'Cheque';
     // ────────────────────────────────────────────────────────────────
+
+    const INFO = {
+      'chk-id': 'A valid government-issued photo ID must be physically sighted before processing. Accepted forms include an Australian driver\'s licence, passport, or keypass. The name must match the payout form exactly. For payouts of $10,000 or more, two separate forms of ID are required and all fields on both AML forms must be fully completed.',
+      'chk-cheque': 'Verify the written amount (in words) exactly matches the numeric amount on the cheque. Confirm the cheque is signed by an authorised signatory and stamped with the venue stamp. The payee name must match the ID provided.',
+      'chk-ccu': 'Log the payout in the Cashless Gaming System (CCU). Navigate to Payouts → New Payout and enter the machine number, payout amount, and cheque number. Ensure the entry is saved before proceeding.',
+      'chk-globaleye': 'Record the jackpot win in Global Eye. Log in to the Global Eye terminal, navigate to Jackpot Payouts, and enter the machine number, win amount, and winner details. Required for all jackpot-linked payouts.',
+      'chk-register': 'Complete the Gaming Payout Register located in the gaming room. Fill in the date, time, winner name, machine number, cheque number, and payout amount. Obtain all required signatures before filing.',
+      'chk-drive': 'Save a scanned copy of all payout documents to V:/Gaming/Payouts using the format YYYY-MM-DD_[Name]_[Amount]. File the original physical documents in the payout folder in the gaming office.',
+    };
+
+    let activeInfoBtn = null;
+
+    function showInfo(btn, key) {
+      const pop = document.getElementById('infoPop');
+      if (activeInfoBtn === btn) {
+        pop.classList.remove('visible');
+        btn.classList.remove('active');
+        activeInfoBtn = null;
+        return;
+      }
+      if (activeInfoBtn) activeInfoBtn.classList.remove('active');
+      pop.textContent = INFO[key] || '';
+      const rect = btn.getBoundingClientRect();
+      const popWidth = 290;
+      let left = rect.left;
+      if (left + popWidth > window.innerWidth - 12) left = window.innerWidth - popWidth - 12;
+      pop.style.left = left + 'px';
+      pop.style.top = (rect.bottom + 6) + 'px';
+      pop.classList.add('visible');
+      btn.classList.add('active');
+      activeInfoBtn = btn;
+    }
+
+    document.addEventListener('click', (e) => {
+      if (activeInfoBtn && !e.target.closest('.info-btn')) {
+        document.getElementById('infoPop').classList.remove('visible');
+        activeInfoBtn.classList.remove('active');
+        activeInfoBtn = null;
+      }
+    });
 
     function fmt(val) {
       const n = parseFloat(val) || 0;
@@ -487,7 +577,7 @@
       const aest = new Date(utc + 10 * 3600000);
       const h = aest.getHours();
       if (h >= 17 && h < 22) return 'Good evening';
-      if (h >= 12) return 'Good afternoon';
+      if (h >= 12 && h < 17) return 'Good afternoon';
       return 'Good morning';
     }
 
