@@ -511,10 +511,10 @@
     const INFO = {
       'chk-id': '- Driver Licence, Photo Card or Passport is acceptable.<br>- If anything seems off, ask for a second form of ID & record details.',
       'chk-id-high': '- Accepted forms: Driver Licence, Photo Card or Passport. Additional: Medicare Card, Bank Card<br>- The extra CIP form must be completed.',
-      'chk-cheque': '- "Prize Winning Cheque Cashing Rules Apply" on cheque.<br>- Write "Only" at the end of words to mark the end.<br>Strikethrough unused line space.<br>- Only used cheques signed by an authorised signatory (Chris, Michael, John)<img src="https://raw.githubusercontent.com/tombate2042/projects/main/images/Cheque.png">',
+      'chk-cheque': '- "Prize Winning Cheque Cashing Rules Apply" on cheque.<br>- Write "Only" at the end of words to mark the end.<br>- Strikethrough unused line space.<br>- Only used cheques signed by an authorised signatory (Chris, Michael, John)<img src="https://raw.githubusercontent.com/tombate2042/projects/main/images/Cheque.png">',
       'chk-ccu': 'Scan ticket, change cash value to match payout details & enter cheque number.',
       'chk-globaleye': 'In Global Eye:<br> - Go to Data Entry -> Hand Pays & Hopper Refills<br>- Ensure the correct date is selected<br>- Enter machine House Number<br>- Select Manual Hand Pay in the Entry Type dropdown<br>- Enter the Jackpot total<br>- Press Add then Save',
-      'chk-register': '- Record payout details in V:/Gaming/Payouts/Gaming Payout Register.xlsx.<br> - Include full name & PEP Check from:<br>   - https://www.dfat.gov.au/<br>   -https://www.aph.gov.au/Senators_and_Members/',
+      'chk-register': '- Record payout details in V:/Gaming/Payouts/Gaming Payout Register.xlsx.<br>&nbsp;- Include full name & PEP Check from:<br>&nbsp;&nbsp;- https://www.dfat.gov.au/<br>&nbsp;&nbsp;- https://www.aph.gov.au/Senators_and_Members/',
       'chk-drive': '- Scan & save as a single PDF called: Customer Name dd.mm.yy<br>in the gaming office.<br> - Copy & print to store in the Gaming Cheques folder.',
     };
 
@@ -542,7 +542,7 @@
     }
 
     document.addEventListener('click', (e) => {
-      if (activeInfoBtn && !e.target.closest('.info-btn')) {
+      if (activeInfoBtn && !e.target.closest('.info-btn') && !e.target.closest('.info-pop')) {
         document.getElementById('infoPop').classList.remove('visible');
         activeInfoBtn.classList.remove('active');
         activeInfoBtn = null;
