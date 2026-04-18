@@ -1330,6 +1330,12 @@ function printCountSheet() {
   const cats = [...new Set(allItems.map(m => m.category))];
   const venues = state.venues;
 
+  const colgroup = `
+    <colgroup>
+      <col style="width:220px">
+      ${venues.map(() => `<col style="width:110px">`).join('')}
+      <col style="width:90px">
+    </colgroup>`;
   const venueHeaders = venues.map(v => `<th>${v}</th>`).join('');
 
   const sections = cats.map(cat => {
@@ -1342,6 +1348,7 @@ function printCountSheet() {
       <div class="cat-section">
         <div class="cat-header">${cat}</div>
         <table>
+          ${colgroup}
           <thead><tr>
             <th class="item-th">Item</th>
             ${venueHeaders}
@@ -1368,11 +1375,11 @@ function printCountSheet() {
   .print-date { font-size: 11px; color: #555; }
   .cat-section { margin-bottom: 14px; page-break-inside: avoid; }
   .cat-header { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; background: #111; color: #fff; padding: 4px 10px; }
-  table { width: 100%; border-collapse: collapse; }
-  th { font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: #555; background: #f4f4f4; border: 0.5px solid #ccc; padding: 4px 8px; text-align: center; }
+  table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+  th { font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: #555; background: #f4f4f4; border: 0.5px solid #ccc; padding: 4px 8px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   th.item-th { text-align: left; }
-  td { border: 0.5px solid #ccc; padding: 0; height: 22px; }
-  td.item-cell { padding: 3px 8px; font-size: 11px; text-align: left; vertical-align: middle; }
+  td { border: 0.5px solid #ccc; padding: 0; height: 22px; overflow: hidden; }
+  td.item-cell { padding: 3px 8px; font-size: 11px; text-align: left; vertical-align: middle; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   td.blank-cell { text-align: center; vertical-align: middle; }
   tbody tr:nth-child(even) td { background: #fafafa; }
   @media print {
