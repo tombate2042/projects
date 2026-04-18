@@ -237,11 +237,11 @@
       z-index: 50;
       background: #1a1a1a;
       color: #e8e8e8;
-      font-size: 12.5px;
-      line-height: 1.55;
-      padding: 10px 13px;
-      border-radius: 8px;
-      max-width: 290px;
+      font-size: 13.5px;
+      line-height: 1.6;
+      padding: 14px 16px;
+      border-radius: 10px;
+      max-width: 420px;
       box-shadow: 0 4px 20px rgba(0,0,0,0.18);
     }
 
@@ -444,7 +444,7 @@
         <label class="check-item">
           <input type="checkbox" id="chk-id" onchange="updateBtn()" />
           <span id="chk-id-label">Valid ID sighted &amp; all information completed</span>
-          <button class="info-btn" onclick="showInfo(this,'chk-id');event.preventDefault();event.stopPropagation();">i</button>
+          <button class="info-btn" id="info-btn-chk-id" onclick="showInfo(this,'chk-id');event.preventDefault();event.stopPropagation();">i</button>
         </label>
         <label class="check-item">
           <input type="checkbox" id="chk-cheque" onchange="updateBtn()" />
@@ -509,12 +509,13 @@
     // ────────────────────────────────────────────────────────────────
 
     const INFO = {
-      'chk-id': 'Driver Licence, Photo Card or Passport is acceptable.<br>If anything seems of ask for a second form of ID & record details.',
-      'chk-cheque': '"Prize Winning Cheque Cashing Rules Apply" on cheque.<br>Write "Only" at the end of words to mark the end.<br>Strikethrough unused line space.<br>Only used cheques signed by an authorised signatory (Chris, Michael, John)<img src="https://raw.githubusercontent.com/tombate2042/projects/main/images/Cheque.png">',
-      'chk-ccu': 'Log the payout in the Cashless Gaming System (CCU). Navigate to Payouts → New Payout and enter the machine number, payout amount, and cheque number. Ensure the entry is saved before proceeding.',
-      'chk-globaleye': 'Record the jackpot win in Global Eye. Log in to the Global Eye terminal, navigate to Jackpot Payouts, and enter the machine number, win amount, and winner details. Required for all jackpot-linked payouts.',
-      'chk-register': 'Complete the Gaming Payout Register located in the gaming room. Fill in the date, time, winner name, machine number, cheque number, and payout amount. Obtain all required signatures before filing.',
-      'chk-drive': 'Save a scanned copy of all payout documents to V:/Gaming/Payouts using the format YYYY-MM-DD_[Name]_[Amount]. File the original physical documents in the payout folder in the gaming office.',
+      'chk-id': '- Driver Licence, Photo Card or Passport is acceptable.<br>- If anything seems off, ask for a second form of ID & record details.',
+      'chk-id-high': '- Accepted forms: Driver Licence, Photo Card or Passport. Additional: Medicare Card, Bank Card<br>- The extra CIP form must be completed.',
+      'chk-cheque': '- "Prize Winning Cheque Cashing Rules Apply" on cheque.<br>- Write "Only" at the end of words to mark the end.<br>Strikethrough unused line space.<br>- Only used cheques signed by an authorised signatory (Chris, Michael, John)<img src="https://raw.githubusercontent.com/tombate2042/projects/main/images/Cheque.png">',
+      'chk-ccu': 'Scan ticket, change cash value to match payout details & enter cheque number.',
+      'chk-globaleye': 'In Global Eye:<br> - Go to Data Entry -> Hand Pays & Hopper Refills<br>- Ensure the correct date is selected<br>- Enter machine House Number<br>- Select Manual Hand Pay in the Entry Type dropdown<br>- Enter the Jackpot total<br>- Press Add then Save',
+      'chk-register': '- Record payout details in V:/Gaming/Payouts/Gaming Payout Register.xlsx.<br> - Include full name & PEP Check from:<br>   - https://www.dfat.gov.au/<br>   -https://www.aph.gov.au/Senators_and_Members/',
+      'chk-drive': '- Scan & save as a single PDF called: Customer Name dd.mm.yy<br>in the gaming office.<br> - Copy & print to store in the Gaming Cheques folder.',
     };
 
     let activeInfoBtn = null;
@@ -649,10 +650,13 @@
       document.getElementById('totalDisplay').textContent = fmt(total);
 
       const idLabel = document.getElementById('chk-id-label');
+      const idInfoBtn = document.getElementById('info-btn-chk-id');
       if (total >= 10000) {
         idLabel.textContent = '2 Valid IDs sighted & all information on both forms completed';
+        idInfoBtn.setAttribute('onclick', "showInfo(this,'chk-id-high');event.preventDefault();event.stopPropagation();");
       } else {
         idLabel.textContent = 'Valid ID sighted & all information completed';
+        idInfoBtn.setAttribute('onclick', "showInfo(this,'chk-id');event.preventDefault();event.stopPropagation();");
       }
 
       const hasData = f.name || f.machine || f.chequeNum || f.chequePayout || f.cashPayout;
