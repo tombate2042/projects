@@ -456,19 +456,28 @@
       };
     }
 
+    function greeting() {
+      const h = new Date().getHours();
+      if (h >= 17 && h < 22) return 'Good evening';
+      if (h >= 12) return 'Good afternoon';
+      return 'Good morning';
+    }
+
     function buildBody(f, total) {
-      return `Good evening team,
+      const pad = (label) => label.padEnd(16);
+      return `${greeting()} team,
 
 Please find attached a gaming cheque payout from today.
 
-Details below:
-
-Name: ${f.name || '[Name]'}
-Machine: #${f.machine || '[Machine]'}
-Cheque Payout: ${fmt(f.chequePayout)}
-Cash Payout: ${fmt(f.cashPayout)}
-Total Payout: ${fmt(total)}
-Cheque Number: ${f.chequeNum || '[Cheque Number]'}
+\u2015\u2015\u2015\u2015\u2015\u2015\u2015\u2015\u2015\u2015\u2015\u2015\u2015\u2015\u2015\u2015\u2015\u2015\u2015\u2015\u2015\u2015\u2015\u2015\u2015\u2015\u2015\u2015\u2015\u2015\u2015\u2015\u2015\u2015\u2015
+${pad('Name')}${f.name || '[Name]'}
+${pad('Machine')}#${f.machine || '[Machine]'}
+${pad('Cheque Payout')}${fmt(f.chequePayout)}
+${pad('Cash Payout')}${fmt(f.cashPayout)}
+${pad('Cheque Number')}${f.chequeNum || '[Cheque Number]'}
+\u2015\u2015\u2015\u2015\u2015\u2015\u2015\u2015\u2015\u2015\u2015\u2015\u2015\u2015\u2015\u2015\u2015\u2015\u2015\u2015\u2015\u2015\u2015\u2015\u2015\u2015\u2015\u2015\u2015\u2015\u2015\u2015\u2015\u2015\u2015
+${pad('TOTAL PAYOUT')}${fmt(total)}
+\u2015\u2015\u2015\u2015\u2015\u2015\u2015\u2015\u2015\u2015\u2015\u2015\u2015\u2015\u2015\u2015\u2015\u2015\u2015\u2015\u2015\u2015\u2015\u2015\u2015\u2015\u2015\u2015\u2015\u2015\u2015\u2015\u2015\u2015\u2015
 
 Any questions please reach out.
 
