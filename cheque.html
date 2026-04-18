@@ -243,10 +243,10 @@
       border-radius: 8px;
       max-width: 290px;
       box-shadow: 0 4px 20px rgba(0,0,0,0.18);
-      pointer-events: none;
     }
 
     .info-pop.visible { display: block; }
+    .info-pop img { width: 100%; border-radius: 5px; margin-top: 8px; display: block; }
 
     /* Success overlay */
     .success-overlay {
@@ -528,7 +528,7 @@
         return;
       }
       if (activeInfoBtn) activeInfoBtn.classList.remove('active');
-      pop.textContent = INFO[key] || '';
+      pop.innerHTML = INFO[key] || '';
       const rect = btn.getBoundingClientRect();
       const popWidth = 290;
       let left = rect.left;
