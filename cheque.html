@@ -312,6 +312,66 @@
       animation: fadeIn 0.3s ease 0.5s both;
     }
 
+    .copy-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(255,255,255,0.85);
+      backdrop-filter: blur(4px);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 1rem;
+      cursor: pointer;
+    }
+
+    .copy-overlay.visible {
+      display: flex;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .copy-icon {
+      width: 96px;
+      height: 96px;
+      border-radius: 50%;
+      background: #1a1a1a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .copy-label {
+      font-size: 17px;
+      font-weight: 500;
+      color: #1a1a1a;
+      animation: fadeIn 0.3s ease 0.2s both;
+    }
+
+    .copy-sub {
+      font-size: 14px;
+      color: #666;
+      animation: fadeIn 0.3s ease 0.3s both;
+    }
+
+    .copy-attach {
+      font-size: 15px;
+      font-weight: 600;
+      color: #b85c00;
+      background: #fff4e6;
+      border: 1px solid #f0c080;
+      border-radius: 8px;
+      padding: 10px 18px;
+      animation: fadeIn 0.3s ease 0.4s both;
+    }
+
+    .copy-dismiss {
+      font-size: 12px;
+      color: #bbb;
+      animation: fadeIn 0.3s ease 0.6s both;
+    }
+
     .toast {
       position: fixed;
       bottom: 28px;
@@ -490,6 +550,18 @@
     </div>
   </div>
 
+  <div class="copy-overlay" id="copyOverlay" onclick="dismissCopyOverlay()">
+    <div class="copy-icon">
+      <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
+      </svg>
+    </div>
+    <div class="copy-label">Copied to clipboard</div>
+    <div class="copy-sub">Select all &amp; paste in Outlook to apply formatting</div>
+    <div class="copy-attach">⚠ Remember to attach the payout forms before sending</div>
+    <div class="copy-dismiss">Tap anywhere to continue</div>
+  </div>
+
   <div class="info-pop" id="infoPop"></div>
 
   <div class="toast" id="toast">Formatted email copied — select all &amp; paste in Outlook</div>
@@ -514,7 +586,7 @@
       'chk-cheque': '- "Prize Winning Cheque Cashing Rules Apply" on cheque.<br>- Write "Only" at the end of words to mark the end.<br>- Strikethrough unused line space.<br>- Only used cheques signed by an authorised signatory (Chris, Michael, John)<img src="https://raw.githubusercontent.com/tombate2042/projects/main/images/Cheque.png">',
       'chk-ccu': 'Scan ticket, change cash value to match payout details & enter cheque number.',
       'chk-globaleye': 'In Global Eye:<br> - Go to Data Entry -> Hand Pays & Hopper Refills<br>- Ensure the correct date is selected<br>- Enter machine House Number<br>- Select Manual Hand Pay in the Entry Type dropdown<br>- Enter the Jackpot total<br>- Press Add then Save',
-      'chk-register': '- Record payout details in V:/Gaming/Payouts/Gaming Payout Register.xlsx.<br>&nbsp;- Include full name & PEP Check from:<br>&nbsp;&nbsp;- https://www.dfat.gov.au/<br>&nbsp;&nbsp;- https://www.aph.gov.au/Senators_and_Members/',
+      'chk-register': '- Record payout details in V:/Gaming/Payouts/Gaming Payout Register.xlsx.<br>&nbsp;- Include full name & PEP Check from:<br>&nbsp;&nbsp;- <a href="https://www.dfat.gov.au/" target="_blank" style="color:#7eb8f7;">Department of Foreign Affairs & Trade Search</a><br>&nbsp;&nbsp;- <a href="https://www.aph.gov.au/Senators_and_Members/" target="_blank" style="color:#7eb8f7;">Senators & Members Search</a>',
       'chk-drive': '- Scan & save as a single PDF called: Customer Name dd.mm.yy<br>in the gaming office.<br> - Copy & print to store in the Gaming Cheques folder.',
     };
 
@@ -609,11 +681,16 @@
       </div>`;
     }
 
-    function showToast(msg) {
-      const t = document.getElementById('toast');
-      t.textContent = msg;
-      t.classList.add('show');
-      setTimeout(() => t.classList.remove('show'), 4000);
+    let copyOverlayTimer = null;
+
+    function showCopyOverlay() {
+      document.getElementById('copyOverlay').classList.add('visible');
+      copyOverlayTimer = setTimeout(dismissCopyOverlay, 6000);
+    }
+
+    function dismissCopyOverlay() {
+      clearTimeout(copyOverlayTimer);
+      document.getElementById('copyOverlay').classList.remove('visible');
     }
 
     function updateGlow(id, checked, total) {
@@ -689,10 +766,10 @@
       try {
         const htmlBlob = new Blob([html], { type: 'text/html' });
         navigator.clipboard.write([new ClipboardItem({ 'text/html': htmlBlob })])
-          .then(() => showToast('Formatted email copied — select all & paste in Outlook'))
-          .catch(() => showToast('Email opened — paste from clipboard into Outlook'));
+          .then(() => showCopyOverlay())
+          .catch(() => showCopyOverlay());
       } catch {
-        showToast('Email opened ✓');
+        showCopyOverlay();
       }
 
       emailOpened = true;
