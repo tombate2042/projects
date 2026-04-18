@@ -464,21 +464,18 @@
     }
 
     function buildBody(f, total) {
-      const sep = '\u2015'.repeat(35);
-      const row = (label, value) => `${label}:\t${value}`;
       return `${greeting()} team,
 
 Please find attached a gaming cheque payout from today.
 
-${sep}
-${row('Name',           f.name || '[Name]')}
-${row('Machine',        '#' + (f.machine || '[Machine]'))}
-${row('Cheque Payout',  fmt(f.chequePayout))}
-${row('Cash Payout',    fmt(f.cashPayout))}
-${row('Cheque Number',  f.chequeNum || '[Cheque Number]')}
-${sep}
-${row('TOTAL PAYOUT',   fmt(total))}
-${sep}
+Name: ${f.name || '[Name]'}
+Machine: #${f.machine || '[Machine]'}
+Cheque Number: ${f.chequeNum || '[Cheque Number]'}
+
+Cheque Payout: ${fmt(f.chequePayout)}
+Cash Payout: ${fmt(f.cashPayout)}
+
+Total Payout: ${fmt(total)}
 
 Any questions please reach out.
 
