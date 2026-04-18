@@ -142,6 +142,7 @@
       border-radius: 10px;
       overflow: hidden;
       margin: 1.25rem 0;
+      transition: border-color 0.3s ease, box-shadow 0.3s ease;
     }
 
     .checklist-header {
@@ -524,6 +525,22 @@
       setTimeout(() => t.classList.remove('show'), 4000);
     }
 
+    function updateGlow(id, checked, total) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      if (checked === 0) {
+        el.style.borderColor = '';
+        el.style.boxShadow = '';
+      } else if (checked < total) {
+        const r = checked / total;
+        el.style.borderColor = `rgba(23,143,214,${0.3 + r * 0.4})`;
+        el.style.boxShadow = `0 0 0 ${(r * 3).toFixed(1)}px rgba(23,143,214,${0.08 + r * 0.08}), 0 0 ${(r * 14).toFixed(0)}px rgba(23,143,214,${0.08 + r * 0.07})`;
+      } else {
+        el.style.borderColor = 'rgba(76,175,80,0.7)';
+        el.style.boxShadow = '0 0 0 3px rgba(76,175,80,0.12), 0 0 16px rgba(76,175,80,0.14)';
+      }
+    }
+
     function toggleJackpot() {
       const checked = document.getElementById('chk-jackpot').checked;
       document.querySelector('.card').classList.toggle('jackpot-active', checked);
@@ -533,6 +550,7 @@
       const chkId = document.getElementById('chk-id').checked;
       const chkCheque = document.getElementById('chk-cheque').checked;
       document.getElementById('sendBtn').disabled = !(chkId && chkCheque);
+      updateGlow('checklist', (chkId ? 1 : 0) + (chkCheque ? 1 : 0), 2);
     }
 
     function update() {
@@ -598,6 +616,9 @@
       const drive = document.getElementById('chk-drive').checked;
       const isJackpot = document.getElementById('chk-jackpot').checked;
       const globalEye = isJackpot ? document.getElementById('chk-globaleye').checked : true;
+      const total = 3 + (isJackpot ? 1 : 0);
+      const checked = [ccu, reg, drive, ...(isJackpot ? [document.getElementById('chk-globaleye').checked] : [])].filter(Boolean).length;
+      updateGlow('post-checklist', checked, total);
       if (ccu && reg && drive && globalEye) {
         setTimeout(showSuccess, 300);
       }
@@ -628,6 +649,8 @@
       document.getElementById('totalDisplay').textContent = '$0.00';
       document.getElementById('successOverlay').classList.remove('visible');
       document.querySelector('.card').classList.remove('jackpot-active');
+      updateGlow('checklist', 0, 2);
+      updateGlow('post-checklist', 0, 3);
     }
   </script>
 </body>
