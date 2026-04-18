@@ -27,6 +27,35 @@
     --mono: 'Roboto Mono', monospace;
     --sans: 'DM Sans', sans-serif;
   }
+  [data-theme="lo"] {
+    --bg: #fffcf6;
+    --surface: #edece8;
+    --surface2: #e2e0da;
+    --border: #ccdde8;
+    --border2: #b5cfe0;
+    --text: #034488;
+    --text2: #178fd6;
+    --text3: #6b96b8;
+    --accent: #178fd6;
+    --accent-dim: rgba(23,143,214,0.08);
+    --accent-dim2: rgba(23,143,214,0.15);
+    --red: #d63031;
+    --red-dim: rgba(214,48,49,0.1);
+    --amber: #e07b00;
+    --amber-dim: rgba(224,123,0,0.1);
+    --blue: #178fd6;
+    --blue-dim: rgba(23,143,214,0.1);
+  }
+  [data-theme="lo"] .btn:hover { background: #d8dce2; }
+  [data-theme="lo"] .btn-primary { color: #fff; }
+  [data-theme="lo"] .btn-primary:hover { background: #0d7bbf; border-color: #0d7bbf; color: #fff; }
+  [data-theme="lo"] .category-header { background: rgba(237,236,232,0.98); }
+  [data-theme="lo"] .category-header:hover { background: rgba(226,224,218,0.98); }
+  [data-theme="lo"] tbody tr { border-bottom: 1px solid rgba(204,221,232,0.7); }
+  [data-theme="lo"] tbody tr:hover { background: rgba(23,143,214,0.04); }
+  [data-theme="lo"] .filter-chip.active { border-color: rgba(23,143,214,0.4); }
+  [data-theme="lo"] .header-week { border-color: rgba(23,143,214,0.3); }
+
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 14px; min-height: 100vh; }
 
@@ -984,6 +1013,10 @@ function openSettings() {
   document.getElementById('settingsModal').classList.add('open');
 }
 
+function applyTheme(activeGist) {
+  document.documentElement.setAttribute('data-theme', activeGist === 'lo' ? 'lo' : '');
+}
+
 function saveGistSettings() {
   const cfg = loadGistConfig();
   const activeRadio = document.querySelector('input[name="activeGist"]:checked');
@@ -997,6 +1030,7 @@ function saveGistSettings() {
   saveGistConfig(cfg);
   saveVenuesFromEditor();
   saveState();
+  applyTheme(cfg.activeGist);
   closeModal('settingsModal');
   if (document.getElementById('view-count') && document.getElementById('view-count').classList.contains('active')) renderCount();
 }
@@ -1669,6 +1703,7 @@ function confirmDelete() {
   updateStats();
 }
 
+applyTheme(loadGistConfig().activeGist);
 render();
 
 // ─── ARROW KEY CELL NAVIGATION ────────────────────────────────────────────────
