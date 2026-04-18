@@ -124,7 +124,6 @@
       font-size: 13px;
       line-height: 1.75;
       color: #1a1a1a;
-      white-space: pre-wrap;
       font-family: inherit;
     }
 
@@ -335,7 +334,7 @@
   <div class="card">
     <div class="logo">The Republic Hotel</div>
     <div class="title-row">
-      <h1>Gaming cheque payout</h1>
+      <h1>Gaming Cheque Payout</h1>
       <label class="jackpot-toggle">
         <input type="checkbox" id="chk-jackpot" onchange="toggleJackpot()" />
         <span>&#9889; Link Jackpot</span>
@@ -344,7 +343,7 @@
 
     <div class="field">
       <label>Full name</label>
-      <input type="text" id="name" placeholder="e.g. William James Redfern" oninput="update()" />
+      <input type="text" id="name" placeholder="e.g. Steven Peter Agosta" oninput="update()" />
     </div>
 
     <div class="row">
@@ -476,6 +475,29 @@ Any questions please reach out.
 Thank you & have a great day!`;
     }
 
+    function buildPreviewHTML(f, total) {
+      const row = (label, value) =>
+        `<div style="display:flex;gap:0;line-height:1.75;"><span style="font-weight:600;min-width:140px;">${label}:</span><span>${value}</span></div>`;
+      return [
+        'Good evening team,',
+        '',
+        'Please find attached a gaming cheque payout from today.',
+        '',
+        'Details below:',
+        '',
+        row('Name', f.name || '[Name]'),
+        row('Machine', '#' + (f.machine || '[Machine]')),
+        row('Cheque Payout', fmt(f.chequePayout)),
+        row('Cash Payout', fmt(f.cashPayout)),
+        row('Total Payout', fmt(total)),
+        row('Cheque Number', f.chequeNum || '[Cheque Number]'),
+        '',
+        'Any questions please reach out.',
+        '',
+        'Thank you &amp; have a great day!',
+      ].join('<br>');
+    }
+
     function toggleJackpot() {
       const checked = document.getElementById('chk-jackpot').checked;
       document.querySelector('.card').classList.toggle('jackpot-active', checked);
@@ -501,7 +523,7 @@ Thank you & have a great day!`;
 
       const hasData = f.name || f.machine || f.chequeNum || f.chequePayout || f.cashPayout;
       if (hasData) {
-        document.getElementById('previewBody').textContent = buildBody(f, total);
+        document.getElementById('previewBody').innerHTML = buildPreviewHTML(f, total);
         document.getElementById('preview').style.display = 'block';
         document.getElementById('checklist').style.display = 'block';
       } else {
