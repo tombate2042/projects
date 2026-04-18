@@ -269,12 +269,78 @@
       color: #2e7d32;
       animation: fadeIn 0.3s ease 0.5s both;
     }
+
+    .title-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.75rem;
+      gap: 12px;
+    }
+
+    .title-row h1 {
+      margin-bottom: 0;
+    }
+
+    .jackpot-toggle {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      padding: 5px 11px 5px 9px;
+      border-radius: 20px;
+      border: 1px solid #e0e0dc;
+      background: #f5f5f3;
+      transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
+      user-select: none;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .jackpot-toggle input[type="checkbox"] {
+      width: 14px;
+      height: 14px;
+      accent-color: #c8a000;
+      cursor: pointer;
+      margin: 0;
+    }
+
+    .jackpot-toggle span {
+      font-size: 12px;
+      font-weight: 500;
+      color: #777;
+      transition: color 0.2s;
+    }
+
+    .jackpot-toggle:has(input:checked) {
+      background: #fffbe6;
+      border-color: #e8c000;
+    }
+
+    .jackpot-toggle:has(input:checked) span {
+      color: #7a5f00;
+    }
+
+    .card {
+      transition: box-shadow 0.3s ease, border-color 0.3s ease;
+    }
+
+    .card.jackpot-active {
+      border-color: #e8c000;
+      box-shadow: 0 0 0 3px rgba(232,192,0,0.18), 0 0 28px 6px rgba(232,192,0,0.13);
+    }
   </style>
 </head>
 <body>
   <div class="card">
     <div class="logo">The Republic Hotel</div>
-    <h1>Gaming cheque payout</h1>
+    <div class="title-row">
+      <h1>Gaming cheque payout</h1>
+      <label class="jackpot-toggle">
+        <input type="checkbox" id="chk-jackpot" onchange="toggleJackpot()" />
+        <span>&#9889; Link Jackpot</span>
+      </label>
+    </div>
 
     <div class="field">
       <label>Full name</label>
@@ -307,11 +373,6 @@
       <span class="total-label">Total payout</span>
       <span class="total-value" id="totalDisplay">$0.00</span>
     </div>
-
-    <label class="check-item" style="margin-bottom: 1.25rem;">
-      <input type="checkbox" id="chk-jackpot" />
-      <span style="font-size:13px; color:#444;">Link Jackpot</span>
-    </label>
 
     <div class="checklist" id="checklist">
       <div class="checklist-header">Pre-send confirmation</div>
@@ -415,6 +476,11 @@ Any questions please reach out.
 Thank you & have a great day!`;
     }
 
+    function toggleJackpot() {
+      const checked = document.getElementById('chk-jackpot').checked;
+      document.querySelector('.card').classList.toggle('jackpot-active', checked);
+    }
+
     function updateBtn() {
       const chkId = document.getElementById('chk-id').checked;
       const chkCheque = document.getElementById('chk-cheque').checked;
@@ -502,6 +568,7 @@ Thank you & have a great day!`;
       document.getElementById('preview').style.display = 'none';
       document.getElementById('totalDisplay').textContent = '$0.00';
       document.getElementById('successOverlay').classList.remove('visible');
+      document.querySelector('.card').classList.remove('jackpot-active');
     }
   </script>
 </body>
