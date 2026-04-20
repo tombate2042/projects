@@ -589,7 +589,7 @@
       'chk-ccu': 'Scan ticket, change cash value to match payout details & enter cheque number.',
       'chk-ccu-jackpot': '- Press <strong>EGM Hand Pay</strong> Button<br>- Select <strong>JP Hand Pay</strong> - Scroll to the relevant machine<br>- The Jackpot should be there (if not enter in Jackpot total)<br>- Change cash value to match payout details & enter cheque number.',
       'chk-globaleye': 'In <strong>Global Eye:</strong><br> - Go to <strong>Data Entry -> Hand Pays & Hopper Refills</strong><br>- Ensure the correct <strong>date</strong> is selected<br>- Enter machine <strong>House Number</strong><br>- Select <strong>Manual Hand Pay</strong> in the Entry Type dropdown<br>- Enter the <strong>Jackpot</strong> total<br>- Press <strong>Add</strong> then <strong>Save</strong>',
-      'chk-register': '- Record payout details in <strong>V:/Gaming/Payouts/Gaming Payout Register.xlsx</strong>.<br>&nbsp;- Include full name & PEP Check from:<br>&nbsp;&nbsp;- <a href="https://www.dfat.gov.au/" target="_blank" style="color:#7eb8f7;">Department of Foreign Affairs & Trade Search</a><br>&nbsp;&nbsp;- <a href="https://www.aph.gov.au/Senators_and_Members/" target="_blank" style="color:#7eb8f7;">Senators & Members Search</a>',
+      'chk-register': '- Record payout details in <strong>V:/Gaming/Payouts/Gaming Payout Register.xlsx</strong>.<br>&nbsp;- Include full name & PEP Check from:<br>&nbsp;&nbsp;- <a href="https://www.dfat.gov.au/search?keys={name}" target="_blank" style="color:#7eb8f7;">Department of Foreign Affairs & Trade Search</a><br>&nbsp;&nbsp;- <a href="https://www.aph.gov.au/Senators_and_Members/Parliamentarian_Search_Results?q={name_pct}" target="_blank" style="color:#7eb8f7;">Senators & Members Search</a>',
       'chk-drive': '- Scan & save as a single PDF called:<br><strong>Customer Name dd.mm.yy</strong><br>- Copy & print to store in the Gaming Cheques folder in the office',
     };
 
@@ -604,7 +604,10 @@
         return;
       }
       if (activeInfoBtn) activeInfoBtn.classList.remove('active');
-      pop.innerHTML = INFO[key] || '';
+      const nameVal = (document.getElementById('name').value || '').trim();
+      const encodedName = encodeURIComponent(nameVal).replace(/%20/g, '+');
+      const encodedNamePct = encodeURIComponent(nameVal);
+      pop.innerHTML = (INFO[key] || '').replace(/\{name\}/g, encodedName).replace(/\{name_pct\}/g, encodedNamePct);
       const rect = btn.getBoundingClientRect();
       const popWidth = 290;
       let left = rect.left;
