@@ -2040,22 +2040,21 @@ function calcMachines() {
   document.getElementById('mt-count').textContent  = anyInput ? fmt0(totalCount)  : '—';
 
   const tvEl = document.getElementById('mt-variance');
-  const headerEl = document.getElementById('mach-total');
   if (!anyInput) {
     tvEl.textContent = '—'; tvEl.className = 'mach-variance';
-    headerEl.textContent = '—';
+    _machCashCount = null;
   } else {
     const totalV = Math.round((totalCount + totalRakes - totalSystem) * 100) / 100;
     if (totalV === 0) {
       tvEl.textContent = '✓'; tvEl.className = 'mach-variance var-zero';
-      headerEl.textContent = '✓ Balanced';
     } else {
       const sign = totalV > 0 ? '+' : '';
       tvEl.textContent = sign + fmt0(totalV);
       tvEl.className = 'mach-variance ' + (totalV > 0 ? 'var-pos' : 'var-neg');
-      headerEl.textContent = sign + fmt0(totalV);
     }
+    _machCashCount = totalCount > 0 ? totalCount : null;
   }
+  updateGamingHeader();
 }
 
 function resetMachines() {
@@ -2248,10 +2247,11 @@ const ATM_FLOAT_DEFAULTS = { 100: 390, 50: 40 };
 let atmShowValue = false;
 
 // Gaming header totals
-let _ccTotal = null, _atmTotal = null, _crtTotal = null, _ccuTotal = null;
+let _ccTotal = null, _machCashCount = null, _atmTotal = null, _crtTotal = null, _ccuTotal = null;
 
 function updateGamingHeader() {
-  const vals = [_ccTotal, _atmTotal, _crtTotal, _ccuTotal].filter(v => v !== null);
+  const cashCount = _ccTotal !== null ? _ccTotal : _machCashCount;
+  const vals = [cashCount, _atmTotal, _crtTotal, _ccuTotal].filter(v => v !== null);
   const headerEl = document.getElementById('mach-total');
   if (!headerEl) return;
   if (vals.length === 0) { headerEl.textContent = '—'; headerEl.className = 'total-amount'; return; }
