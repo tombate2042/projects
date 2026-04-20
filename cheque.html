@@ -581,13 +581,13 @@
     // ────────────────────────────────────────────────────────────────
 
     const INFO = {
-      'chk-id': '- Driver Licence, Photo Card or Passport is acceptable.<br>- If anything seems off, ask for a second form of ID & record details.',
-      'chk-id-high': '- Accepted forms: Driver Licence, Photo Card or Passport. Additional: Medicare Card, Bank Card<br>- The extra CIP form must be completed.',
-      'chk-cheque': '- "Prize Winning Cheque Cashing Rules Apply" on cheque.<br>- Write "Only" at the end of words to mark the end.<br>- Strikethrough unused line space.<br>- Only used cheques signed by an authorised signatory (Chris, Michael, John)<img src="https://raw.githubusercontent.com/tombate2042/projects/main/images/Cheque.png">',
+      'chk-id': '- <strong>Driver Licence, Photo Card or Passport</strong> is acceptable.<br>- If anything seems off, ask for a second form of ID & record details.',
+      'chk-id-high': '- Accepted forms: <strong>Driver Licence, Photo Card or Passport</strong>. Additional: <strong>Medicare Card, Bank Card</strong><br>- The extra <strong>CIP form</strong> must be completed.',
+      'chk-cheque': '- <strong>Prize Winning Cheque Cashing Rules Apply</strong> on cheque.<br>- Write <strong>Only</strong> at the end of words to mark the end.<br>- Strikethrough unused line space.<br>- Only used cheques signed by an authorised signatory (Chris, Michael, John)<img src="https://raw.githubusercontent.com/tombate2042/projects/main/images/Cheque.png">',
       'chk-ccu': 'Scan ticket, change cash value to match payout details & enter cheque number.',
-      'chk-globaleye': 'In Global Eye:<br> - Go to Data Entry -> Hand Pays & Hopper Refills<br>- Ensure the correct date is selected<br>- Enter machine House Number<br>- Select Manual Hand Pay in the Entry Type dropdown<br>- Enter the Jackpot total<br>- Press Add then Save',
-      'chk-register': '- Record payout details in V:/Gaming/Payouts/Gaming Payout Register.xlsx.<br>&nbsp;- Include full name & PEP Check from:<br>&nbsp;&nbsp;- <a href="https://www.dfat.gov.au/" target="_blank" style="color:#7eb8f7;">Department of Foreign Affairs & Trade Search</a><br>&nbsp;&nbsp;- <a href="https://www.aph.gov.au/Senators_and_Members/" target="_blank" style="color:#7eb8f7;">Senators & Members Search</a>',
-      'chk-drive': '- Scan & save as a single PDF called: Customer Name dd.mm.yy<br>in the gaming office.<br> - Copy & print to store in the Gaming Cheques folder.',
+      'chk-globaleye': 'In <strong>Global Eye:</strong><br> - Go to <strong>Data Entry -> Hand Pays & Hopper Refills</strong><br>- Ensure the correct <strong>date</strong> is selected<br>- Enter machine <strong>House Number</strong><br>- Select <strong>Manual Hand Pay</strong> in the Entry Type dropdown<br>- Enter the <strong>Jackpot</strong> total<br>- Press <strong>Add</strong> then <strong>Save</strong>',
+      'chk-register': '- Record payout details in <strong>V:/Gaming/Payouts/Gaming Payout Register.xlsx</strong>.<br>&nbsp;- Include full name & PEP Check from:<br>&nbsp;&nbsp;- <a href="https://www.dfat.gov.au/" target="_blank" style="color:#7eb8f7;">Department of Foreign Affairs & Trade Search</a><br>&nbsp;&nbsp;- <a href="https://www.aph.gov.au/Senators_and_Members/" target="_blank" style="color:#7eb8f7;">Senators & Members Search</a>',
+      'chk-drive': '- Scan & save as a single PDF called:<br><strong>Customer Name dd.mm.yy</strong><br>- Copy & print to store in the Gaming Cheques folder in the office',
     };
 
     let activeInfoBtn = null;
@@ -681,15 +681,11 @@
       </div>`;
     }
 
-    let copyOverlayTimer = null;
-
     function showCopyOverlay() {
       document.getElementById('copyOverlay').classList.add('visible');
-      copyOverlayTimer = setTimeout(dismissCopyOverlay, 6000);
     }
 
     function dismissCopyOverlay() {
-      clearTimeout(copyOverlayTimer);
       document.getElementById('copyOverlay').classList.remove('visible');
     }
 
