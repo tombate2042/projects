@@ -2313,7 +2313,16 @@ function resetATM() {
 // ─── CRT ─────────────────────────────────────────────────────────────────────
 
 const CRT_DENOMS = [100, 50, 20, 5];
+const CRT_FLOAT_DEFAULTS = { 100: 700, 50: 500, 20: 100, 5: 100 };
 let crtShowValue = false;
+
+function initCRTDefaults() {
+  CRT_DENOMS.forEach(d => {
+    const el = document.getElementById(`rf-${d}`);
+    if (el) { el.value = CRT_FLOAT_DEFAULTS[d]; el.classList.add('has-value'); }
+  });
+  calcCRT();
+}
 
 function calcCRT() {
   let totNotes = 0, totFloat = 0, totNew = 0, totRefill = 0, totIncDec = 0;
@@ -2441,10 +2450,12 @@ function crtKeydown(e, input) {
 
 function resetCRT() {
   CRT_DENOMS.forEach(d => {
-    ['rn', 'rf', 'rnf'].forEach(prefix => {
+    ['rn', 'rnf'].forEach(prefix => {
       const el = document.getElementById(`${prefix}-${d}`);
-      if (el) { el.value = ''; el.classList.remove('has-value', 'unlocked'); el.readOnly = prefix !== 'rn'; el.tabIndex = prefix === 'rn' ? 0 : -1; }
+      if (el) { el.value = ''; el.classList.remove('has-value', 'unlocked'); el.readOnly = false; el.tabIndex = 0; }
     });
+    const fEl = document.getElementById(`rf-${d}`);
+    if (fEl) { fEl.value = CRT_FLOAT_DEFAULTS[d]; fEl.classList.add('has-value'); fEl.classList.remove('unlocked'); fEl.readOnly = true; fEl.tabIndex = -1; }
   });
   if (crtShowValue) toggleCRTView();
   else calcCRT();
@@ -2610,7 +2621,7 @@ buildSafe();
 buildMachines();
 buildFloat();
 initATMDefaults();
-calcCRT();
+initCRTDefaults();
 setupNavigation();
 selectTill(document.querySelector('.till-check-label[data-key="bar"]'));
 </script>
