@@ -1282,7 +1282,7 @@
         <input type="file" id="mach-pdf-input" accept=".pdf" style="display:none" onchange="handleMachPDF(this)">
       </div>
       <div class="panel-total">
-        <div class="total-label">Net Variance</div>
+        <div class="total-label">Total</div>
         <div class="total-amount" id="mach-total">—</div>
       </div>
     </div>
@@ -1828,11 +1828,14 @@ function calcTill() {
     if (ccuActive && total > 0) {
       ccuEl.textContent = (net >= 0 ? '+' : '- ') + fmt0(Math.abs(net));
       ccuEl.className = 'atm-section-total ' + (net === 0 ? 'var-zero' : net > 0 ? 'var-pos' : 'var-neg');
+      _ccuTotal = net;
     } else {
       ccuEl.textContent = '';
       ccuEl.className = 'atm-section-total';
+      _ccuTotal = null;
     }
   }
+  updateGamingHeader();
 }
 
 function calcSafe() {
@@ -2221,6 +2224,8 @@ function calcCashCount() {
   if (valueEl) valueEl.textContent = anyInput ? fmt0(totalValue) : '—';
   const secTotalEl = document.getElementById('cc-section-total');
   if (secTotalEl) { secTotalEl.textContent = anyInput ? fmt0(totalValue) : '—'; secTotalEl.className = 'atm-section-total' + (anyInput ? ' var-pos' : ''); }
+  _ccTotal = anyInput ? totalValue : null;
+  updateGamingHeader();
 }
 
 function resetCashCount() {
@@ -2241,6 +2246,19 @@ function resetCashCount() {
 const ATM_DENOMS = [100, 50];
 const ATM_FLOAT_DEFAULTS = { 100: 390, 50: 40 };
 let atmShowValue = false;
+
+// Gaming header totals
+let _ccTotal = null, _atmTotal = null, _crtTotal = null, _ccuTotal = null;
+
+function updateGamingHeader() {
+  const vals = [_ccTotal, _atmTotal, _crtTotal, _ccuTotal].filter(v => v !== null);
+  const headerEl = document.getElementById('mach-total');
+  if (!headerEl) return;
+  if (vals.length === 0) { headerEl.textContent = '—'; headerEl.className = 'total-amount'; return; }
+  const sum = Math.round(vals.reduce((a, b) => a + b, 0) * 100) / 100;
+  headerEl.textContent = (sum >= 0 ? '' : '- ') + fmt0(Math.abs(sum));
+  headerEl.className = 'total-amount';
+}
 
 function initATMDefaults() {
   ATM_DENOMS.forEach(d => {
@@ -2355,13 +2373,15 @@ function calcATM() {
   });
   const atmStEl = document.getElementById('atm-section-total');
   if (atmStEl) {
-    if (atmSecVal === null) { atmStEl.textContent = '—'; atmStEl.className = 'atm-section-total'; }
+    if (atmSecVal === null) { atmStEl.textContent = '—'; atmStEl.className = 'atm-section-total'; _atmTotal = null; }
     else {
       const v = Math.round(-atmSecVal * 100) / 100;
       atmStEl.textContent = v === 0 ? '✓' : (v > 0 ? '+' : '- ') + fmt0(Math.abs(v));
       atmStEl.className = 'atm-section-total ' + (v === 0 ? 'var-zero' : v > 0 ? 'var-pos' : 'var-neg');
+      _atmTotal = v;
     }
   }
+  updateGamingHeader();
 }
 
 function toggleATMView() {
@@ -2528,13 +2548,15 @@ function calcCRT() {
   });
   const crtStEl = document.getElementById('crt-section-total');
   if (crtStEl) {
-    if (crtSecVal === null) { crtStEl.textContent = '—'; crtStEl.className = 'atm-section-total'; }
+    if (crtSecVal === null) { crtStEl.textContent = '—'; crtStEl.className = 'atm-section-total'; _crtTotal = null; }
     else {
       const v = Math.round(-crtSecVal * 100) / 100;
       crtStEl.textContent = v === 0 ? '✓' : (v > 0 ? '+' : '- ') + fmt0(Math.abs(v));
       crtStEl.className = 'atm-section-total ' + (v === 0 ? 'var-zero' : v > 0 ? 'var-pos' : 'var-neg');
+      _crtTotal = v;
     }
   }
+  updateGamingHeader();
 }
 
 function toggleCRTView() {
