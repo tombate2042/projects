@@ -198,15 +198,35 @@
 
   /* Section headers */
   .section-label {
-    font-size: 10px;
-    letter-spacing: 0.25em;
+    font-size: 13px;
+    letter-spacing: 0.18em;
     text-transform: uppercase;
     color: var(--muted);
     margin: 10px 0 6px;
     padding-left: 2px;
+    cursor: pointer;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    gap: 6px;
   }
+  .section-label:hover { color: var(--text); }
 
   .section-label:first-of-type { margin-top: 0; }
+
+  .collapse-chevron {
+    font-size: 9px;
+    display: inline-block;
+    transition: transform 0.18s;
+    color: var(--muted);
+  }
+  .section-label.collapsed .collapse-chevron { transform: rotate(-90deg); }
+
+  .collapse-body {
+    overflow: hidden;
+    transition: opacity 0.15s;
+  }
+  .collapse-body.collapsed { display: none; }
 
   /* Denomination rows */
   .denom-group {
@@ -1299,7 +1319,8 @@
 
       <!-- Right: Total Cash Count table -->
       <div class="mach-col-right">
-        <div class="section-label">Total Cash Count</div>
+        <div class="section-label" onclick="toggleSection('cc-body', this)"><span class="collapse-chevron">▼</span>Total Cash Count</div>
+        <div class="collapse-body" id="cc-body">
         <div class="cc-table-wrap">
           <table class="cc-table">
             <thead>
@@ -1346,12 +1367,14 @@
           </table>
         </div>
         <button class="reset-btn" style="margin-top:8px" onclick="resetCashCount()">↺ Reset</button>
+        </div>
 
         <div class="atm-section-row">
-          <div class="section-label" style="margin-top:0">ATM</div>
+          <div class="section-label" style="margin-top:0" onclick="toggleSection('atm-body', this)"><span class="collapse-chevron">▼</span>ATM</div>
           <button class="atm-toggle-btn" id="atm-toggle-btn" onclick="toggleATMView()">$ Values</button>
           <span class="atm-section-total" id="atm-section-total">—</span>
         </div>
+        <div class="collapse-body" id="atm-body">
         <div class="atm-table-wrap">
           <table class="atm-table" id="atm-table">
             <thead>
@@ -1413,12 +1436,14 @@
           </table>
         </div>
         <button class="reset-btn" style="margin-top:8px" onclick="resetATM()">↺ Reset</button>
+        </div>
 
         <div class="atm-section-row" style="margin-top:16px">
-          <div class="section-label" style="margin-top:0">CRT</div>
+          <div class="section-label" style="margin-top:0" onclick="toggleSection('crt-body', this)"><span class="collapse-chevron">▼</span>CRT</div>
           <button class="atm-toggle-btn" id="crt-toggle-btn" onclick="toggleCRTView()">$ Values</button>
           <span class="atm-section-total" id="crt-section-total">—</span>
         </div>
+        <div class="collapse-body" id="crt-body">
         <div class="atm-table-wrap">
           <table class="atm-table" id="crt-table">
             <thead>
@@ -1514,6 +1539,7 @@
           </table>
         </div>
         <button class="reset-btn" style="margin-top:8px" onclick="resetCRT()">↺ Reset</button>
+        </div>
       </div>
 
     </div>
@@ -2128,6 +2154,11 @@ async function handleMachPDF(input) {
 }
 
 // ─── Total Cash Count ────────────────────────────────────────────────────────
+
+function toggleSection(bodyId, labelEl) {
+  document.getElementById(bodyId).classList.toggle('collapsed');
+  labelEl.classList.toggle('collapsed');
+}
 
 const CC_DENOMS = [100, 50, 20, 10, 5];
 
