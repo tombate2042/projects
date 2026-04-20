@@ -835,6 +835,7 @@
 
   .cc-table {
     width: 100%;
+    table-layout: fixed;
     border-collapse: collapse;
     background: var(--surface);
   }
@@ -885,6 +886,7 @@
   .cc-input-cell {
     padding: 3px 8px;
     text-align: center;
+    width: 80px;
   }
 
   .cc-input-cell input {
@@ -908,13 +910,13 @@
   .cc-input-cell input:focus { border-color: var(--accent-mach); background: var(--accent-mach-dim); }
 
   .cc-value {
-    padding: 5px 14px;
+    padding: 5px 8px;
     font-family: var(--sans);
     font-size: 13px;
     font-weight: 600;
     text-align: center;
     color: var(--muted);
-    width: 120px;
+    width: 80px;
   }
   .cc-value.has-val { color: var(--text); }
 
@@ -928,6 +930,7 @@
 
   .atm-table {
     width: 100%;
+    table-layout: fixed;
     border-collapse: collapse;
     background: var(--surface);
   }
