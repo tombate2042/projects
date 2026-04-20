@@ -1090,6 +1090,15 @@
     margin-bottom: 0;
   }
 
+  .atm-section-row .section-label { margin: 0; }
+
+  .table-actions-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 8px;
+  }
+
   .atm-section-total {
     margin-left: auto;
     font-size: 13px;
@@ -1319,7 +1328,10 @@
 
       <!-- Right: Total Cash Count table -->
       <div class="mach-col-right">
-        <div class="section-label" onclick="toggleSection('cc-body', this)"><span class="collapse-chevron">▼</span>Total Cash Count</div>
+        <div class="atm-section-row" style="margin-top:0">
+          <div class="section-label" onclick="toggleSection('cc-body', this)"><span class="collapse-chevron">▼</span>Total Cash Count</div>
+          <span class="atm-section-total" id="cc-section-total">—</span>
+        </div>
         <div class="collapse-body" id="cc-body">
         <div class="cc-table-wrap">
           <table class="cc-table">
@@ -1366,12 +1378,13 @@
             </tfoot>
           </table>
         </div>
-        <button class="reset-btn" style="margin-top:8px" onclick="resetCashCount()">↺ Reset</button>
+        <div class="table-actions-row">
+          <button class="reset-btn" onclick="resetCashCount()">↺ Reset</button>
+        </div>
         </div>
 
         <div class="atm-section-row">
           <div class="section-label" style="margin-top:0" onclick="toggleSection('atm-body', this)"><span class="collapse-chevron">▼</span>ATM</div>
-          <button class="atm-toggle-btn" id="atm-toggle-btn" onclick="toggleATMView()">$ Values</button>
           <span class="atm-section-total" id="atm-section-total">—</span>
         </div>
         <div class="collapse-body" id="atm-body">
@@ -1435,12 +1448,14 @@
             </tfoot>
           </table>
         </div>
-        <button class="reset-btn" style="margin-top:8px" onclick="resetATM()">↺ Reset</button>
+        <div class="table-actions-row">
+          <button class="reset-btn" onclick="resetATM()">↺ Reset</button>
+          <button class="atm-toggle-btn" id="atm-toggle-btn" onclick="toggleATMView()">$ Values</button>
+        </div>
         </div>
 
         <div class="atm-section-row" style="margin-top:16px">
           <div class="section-label" style="margin-top:0" onclick="toggleSection('crt-body', this)"><span class="collapse-chevron">▼</span>CRT</div>
-          <button class="atm-toggle-btn" id="crt-toggle-btn" onclick="toggleCRTView()">$ Values</button>
           <span class="atm-section-total" id="crt-section-total">—</span>
         </div>
         <div class="collapse-body" id="crt-body">
@@ -1538,7 +1553,10 @@
             </tfoot>
           </table>
         </div>
-        <button class="reset-btn" style="margin-top:8px" onclick="resetCRT()">↺ Reset</button>
+        <div class="table-actions-row">
+          <button class="reset-btn" onclick="resetCRT()">↺ Reset</button>
+          <button class="atm-toggle-btn" id="crt-toggle-btn" onclick="toggleCRTView()">$ Values</button>
+        </div>
         </div>
       </div>
 
@@ -2185,6 +2203,8 @@ function calcCashCount() {
   const valueEl = document.getElementById('cc-total-value');
   if (notesEl) notesEl.textContent = anyInput ? totalNotes : '—';
   if (valueEl) valueEl.textContent = anyInput ? fmt0(totalValue) : '—';
+  const secTotalEl = document.getElementById('cc-section-total');
+  if (secTotalEl) { secTotalEl.textContent = anyInput ? fmt0(totalValue) : '—'; secTotalEl.className = 'atm-section-total' + (anyInput ? ' var-pos' : ''); }
 }
 
 function resetCashCount() {
@@ -2196,6 +2216,8 @@ function resetCashCount() {
   });
   document.getElementById('cc-total-notes').textContent = '—';
   document.getElementById('cc-total-value').textContent = '—';
+  const secTotalEl = document.getElementById('cc-section-total');
+  if (secTotalEl) { secTotalEl.textContent = '—'; secTotalEl.className = 'atm-section-total'; }
 }
 
 // ─── ATM ─────────────────────────────────────────────────────────────────────
