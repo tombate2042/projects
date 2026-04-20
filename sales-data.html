@@ -1826,7 +1826,7 @@ function calcTill() {
   if (ccuEl) {
     const ccuActive = document.querySelector('.till-check-label.checked-ccu');
     if (ccuActive && total > 0) {
-      ccuEl.textContent = (net >= 0 ? '+' : '- ') + fmt0(Math.abs(net));
+      ccuEl.textContent = (net >= 0 ? '+' : '- ') + fmt(Math.abs(net));
       ccuEl.className = 'atm-section-total ' + (net === 0 ? 'var-zero' : net > 0 ? 'var-pos' : 'var-neg');
       _ccuTotal = net;
     } else {
@@ -2256,7 +2256,7 @@ function updateGamingHeader() {
   if (!headerEl) return;
   if (vals.length === 0) { headerEl.textContent = '—'; headerEl.className = 'total-amount'; return; }
   const sum = Math.round(vals.reduce((a, b) => a + b, 0) * 100) / 100;
-  headerEl.textContent = (sum >= 0 ? '' : '- ') + fmt0(Math.abs(sum));
+  headerEl.textContent = (sum >= 0 ? '' : '- ') + fmt(Math.abs(sum));
   headerEl.className = 'total-amount';
 }
 
