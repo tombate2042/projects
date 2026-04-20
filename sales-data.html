@@ -1551,6 +1551,14 @@
         </div>
       </div>
 
+      <div class="atm-section-row" style="margin-top:10px">
+        <div class="section-label" style="margin-top:0;cursor:default;pointer-events:none"><span class="collapse-chevron" style="visibility:hidden">▼</span>CCU</div>
+        <span class="atm-section-total" id="ccu-section-total"></span>
+      </div>
+      <div>
+        <button class="reset-btn" onclick="switchTab('till');selectTill(document.querySelector('.till-check-label[data-key=\'ccu\']'))">CCU Count</button>
+      </div>
+
     </div>
   </div>
   </div>
@@ -1808,6 +1816,18 @@ function calcTill() {
   document.getElementById('till-total').textContent = fmt(net);
   document.getElementById('till-grand').textContent = fmt(total);
   updateBreakdown('till', breakdown, total);
+
+  const ccuEl = document.getElementById('ccu-section-total');
+  if (ccuEl) {
+    const ccuActive = document.querySelector('.till-check-label.checked-ccu');
+    if (ccuActive && total > 0) {
+      ccuEl.textContent = (net >= 0 ? '+' : '- ') + fmt0(Math.abs(net));
+      ccuEl.className = 'atm-section-total ' + (net === 0 ? 'var-zero' : net > 0 ? 'var-pos' : 'var-neg');
+    } else {
+      ccuEl.textContent = '';
+      ccuEl.className = 'atm-section-total';
+    }
+  }
 }
 
 function calcSafe() {
@@ -2333,7 +2353,7 @@ function calcATM() {
     if (atmSecVal === null) { atmStEl.textContent = '—'; atmStEl.className = 'atm-section-total'; }
     else {
       const v = Math.round(-atmSecVal * 100) / 100;
-      atmStEl.textContent = v === 0 ? '✓' : (v > 0 ? '+' : '') + fmt0(v);
+      atmStEl.textContent = v === 0 ? '✓' : (v > 0 ? '+' : '- ') + fmt0(Math.abs(v));
       atmStEl.className = 'atm-section-total ' + (v === 0 ? 'var-zero' : v > 0 ? 'var-pos' : 'var-neg');
     }
   }
@@ -2506,7 +2526,7 @@ function calcCRT() {
     if (crtSecVal === null) { crtStEl.textContent = '—'; crtStEl.className = 'atm-section-total'; }
     else {
       const v = Math.round(-crtSecVal * 100) / 100;
-      crtStEl.textContent = v === 0 ? '✓' : (v > 0 ? '+' : '') + fmt0(v);
+      crtStEl.textContent = v === 0 ? '✓' : (v > 0 ? '+' : '- ') + fmt0(Math.abs(v));
       crtStEl.className = 'atm-section-total ' + (v === 0 ? 'var-zero' : v > 0 ? 'var-pos' : 'var-neg');
     }
   }
