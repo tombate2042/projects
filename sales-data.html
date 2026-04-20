@@ -1067,6 +1067,16 @@
     margin-bottom: 0;
   }
 
+  .atm-section-total {
+    margin-left: auto;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted);
+  }
+  .atm-section-total.var-pos { color: var(--pos); }
+  .atm-section-total.var-neg { color: var(--neg); }
+  .atm-section-total.var-zero { color: var(--pos); }
+
   .atm-toggle-btn {
     background: var(--surface2);
     border: 1px solid var(--border);
@@ -1337,6 +1347,7 @@
         <div class="atm-section-row">
           <div class="section-label" style="margin-top:0">ATM</div>
           <button class="atm-toggle-btn" id="atm-toggle-btn" onclick="toggleATMView()">$ Values</button>
+          <span class="atm-section-total" id="atm-section-total">—</span>
         </div>
         <div class="atm-table-wrap">
           <table class="atm-table" id="atm-table">
@@ -1403,6 +1414,7 @@
         <div class="atm-section-row" style="margin-top:16px">
           <div class="section-label" style="margin-top:0">CRT</div>
           <button class="atm-toggle-btn" id="crt-toggle-btn" onclick="toggleCRTView()">$ Values</button>
+          <span class="atm-section-total" id="crt-section-total">—</span>
         </div>
         <div class="atm-table-wrap">
           <table class="atm-table" id="crt-table">
@@ -2259,6 +2271,25 @@ function calcATM() {
     setTotal('at-refill', totRefill, anyRefill);
     setTotal('at-incdec', totIncDec, anyIncDec);
   }
+
+  // Section total: negative of (refill + inc/dec) in dollar terms
+  let atmSecVal = null;
+  ATM_DENOMS.forEach(d => {
+    const n  = document.getElementById(`an-${d}`)?.value  !== '' ? (parseFloat(document.getElementById(`an-${d}`)?.value)  || 0) : null;
+    const f  = document.getElementById(`af-${d}`)?.value  !== '' ? (parseFloat(document.getElementById(`af-${d}`)?.value)  || 0) : null;
+    const nf = document.getElementById(`anf-${d}`)?.value !== '' ? (parseFloat(document.getElementById(`anf-${d}`)?.value) || 0) : null;
+    if (f !== null && n  !== null) { if (atmSecVal === null) atmSecVal = 0; atmSecVal += (f - n)  * d; }
+    if (nf !== null && f !== null) { if (atmSecVal === null) atmSecVal = 0; atmSecVal += (nf - f) * d; }
+  });
+  const atmStEl = document.getElementById('atm-section-total');
+  if (atmStEl) {
+    if (atmSecVal === null) { atmStEl.textContent = '—'; atmStEl.className = 'atm-section-total'; }
+    else {
+      const v = Math.round(-atmSecVal * 100) / 100;
+      atmStEl.textContent = v === 0 ? '✓' : (v > 0 ? '+' : '') + fmt0(v);
+      atmStEl.className = 'atm-section-total ' + (v === 0 ? 'var-zero' : v > 0 ? 'var-pos' : 'var-neg');
+    }
+  }
 }
 
 function toggleATMView() {
@@ -2412,6 +2443,25 @@ function calcCRT() {
     };
     setTotal('ct-refill', totRefill, anyRefill);
     setTotal('ct-incdec', totIncDec, anyIncDec);
+  }
+
+  // Section total: negative of (refill + inc/dec) in dollar terms
+  let crtSecVal = null;
+  CRT_DENOMS.forEach(d => {
+    const n  = document.getElementById(`rn-${d}`)?.value  !== '' ? (parseFloat(document.getElementById(`rn-${d}`)?.value)  || 0) : null;
+    const f  = document.getElementById(`rf-${d}`)?.value  !== '' ? (parseFloat(document.getElementById(`rf-${d}`)?.value)  || 0) : null;
+    const nf = document.getElementById(`rnf-${d}`)?.value !== '' ? (parseFloat(document.getElementById(`rnf-${d}`)?.value) || 0) : null;
+    if (f !== null && n  !== null) { if (crtSecVal === null) crtSecVal = 0; crtSecVal += (f - n)  * d; }
+    if (nf !== null && f !== null) { if (crtSecVal === null) crtSecVal = 0; crtSecVal += (nf - f) * d; }
+  });
+  const crtStEl = document.getElementById('crt-section-total');
+  if (crtStEl) {
+    if (crtSecVal === null) { crtStEl.textContent = '—'; crtStEl.className = 'atm-section-total'; }
+    else {
+      const v = Math.round(-crtSecVal * 100) / 100;
+      crtStEl.textContent = v === 0 ? '✓' : (v > 0 ? '+' : '') + fmt0(v);
+      crtStEl.className = 'atm-section-total ' + (v === 0 ? 'var-zero' : v > 0 ? 'var-pos' : 'var-neg');
+    }
   }
 }
 
