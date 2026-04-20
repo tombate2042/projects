@@ -376,28 +376,6 @@
       animation: fadeIn 0.3s ease 0.6s both;
     }
 
-    .toast {
-      position: fixed;
-      bottom: 28px;
-      left: 50%;
-      transform: translateX(-50%) translateY(12px);
-      background: #1a1a1a;
-      color: #fff;
-      font-size: 13px;
-      padding: 10px 16px;
-      border-radius: 8px;
-      white-space: nowrap;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.2s ease, transform 0.2s ease;
-      z-index: 200;
-    }
-
-    .toast.show {
-      opacity: 1;
-      transform: translateX(-50%) translateY(0);
-    }
-
     .title-row {
       display: flex;
       align-items: center;
@@ -478,7 +456,7 @@
     <div class="row">
       <div class="field">
         <label>Machine #</label>
-        <input type="number" id="machine" placeholder="e.g. 4" oninput="update()" />
+        <input type="number" id="machine" placeholder="e.g. 4" min="0" oninput="update()" />
       </div>
       <div class="field">
         <label>Cheque number</label>
@@ -489,11 +467,11 @@
     <div class="row">
       <div class="field">
         <label>Cheque payout ($)</label>
-        <input type="number" id="chequePayout" placeholder="0.00" step="0.01" oninput="update()" />
+        <input type="number" id="chequePayout" placeholder="0.00" step="0.01" min="0" oninput="update()" />
       </div>
       <div class="field">
         <label>Cash payout ($)</label>
-        <input type="number" id="cashPayout" placeholder="0.00" step="0.01" oninput="update()" />
+        <input type="number" id="cashPayout" placeholder="0.00" step="0.01" min="0" oninput="update()" />
       </div>
     </div>
 
@@ -633,10 +611,11 @@
     }
 
     function today() {
-      const d = new Date();
-      const dd = String(d.getDate()).padStart(2, '0');
-      const mm = String(d.getMonth() + 1).padStart(2, '0');
-      const yy = String(d.getFullYear()).slice(-2);
+      const now = new Date();
+      const aest = new Date(now.getTime() + now.getTimezoneOffset() * 60000 + 10 * 3600000);
+      const dd = String(aest.getDate()).padStart(2, '0');
+      const mm = String(aest.getMonth() + 1).padStart(2, '0');
+      const yy = String(aest.getFullYear()).slice(-2);
       return `${dd}.${mm}.${yy}`;
     }
 
@@ -829,7 +808,7 @@
       document.getElementById('successOverlay').classList.remove('visible');
       document.querySelector('.card').classList.remove('jackpot-active');
       updateGlow('checklist', 0, 2);
-      updateGlow('post-checklist', 0, 3);
+      updateGlow('post-checklist', 0, 4);
     }
   </script>
 </body>
