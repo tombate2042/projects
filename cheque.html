@@ -529,7 +529,7 @@
         <label class="check-item">
           <input type="checkbox" id="chk-ccu" onchange="checkComplete()" />
           <span>Entered into CCU</span>
-          <button class="info-btn" onclick="showInfo(this,'chk-ccu');event.preventDefault();event.stopPropagation();">i</button>
+          <button class="info-btn" id="info-btn-chk-ccu" onclick="showInfo(this,'chk-ccu');event.preventDefault();event.stopPropagation();">i</button>
         </label>
         <label class="check-item" id="chk-globaleye-row" style="display:none;">
           <input type="checkbox" id="chk-globaleye" onchange="checkComplete()" />
@@ -557,14 +557,12 @@
       </svg>
     </div>
     <div class="copy-label">Copied to clipboard</div>
-    <div class="copy-sub">Select all &amp; paste in Outlook to apply formatting</div>
+    <div class="copy-sub">Paste in email</div>
     <div class="copy-attach">⚠ Remember to attach the payout forms before sending</div>
     <div class="copy-dismiss">Tap anywhere to continue</div>
   </div>
 
   <div class="info-pop" id="infoPop"></div>
-
-  <div class="toast" id="toast">Formatted email copied — select all &amp; paste in Outlook</div>
 
   <div class="success-overlay" id="successOverlay">
     <div class="success-tick">
@@ -709,6 +707,12 @@
     function toggleJackpot() {
       const checked = document.getElementById('chk-jackpot').checked;
       document.querySelector('.card').classList.toggle('jackpot-active', checked);
+      const ccuInfoBtn = document.getElementById('info-btn-chk-ccu');
+      if (checked) {
+        ccuInfoBtn.setAttribute('onclick', "showInfo(this,'chk-ccu-jackpot');event.preventDefault();event.stopPropagation();");
+      } else {
+        ccuInfoBtn.setAttribute('onclick', "showInfo(this,'chk-ccu');event.preventDefault();event.stopPropagation();");
+      }
     }
 
     function updateBtn() {
