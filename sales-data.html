@@ -1590,6 +1590,10 @@ function fmt(n) {
   return '$' + n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 }
 
+function fmt0(n) {
+  return '$' + Math.round(n).toLocaleString('en-AU');
+}
+
 function getVal(id) {
   const el = document.getElementById(id);
   return el ? Math.max(0, parseInt(el.value) || 0) : 0;
@@ -1847,15 +1851,15 @@ function calcMachines() {
       if (v === 0) {
         vEl.textContent = '✓'; vEl.className = 'mach-variance var-zero';
       } else {
-        vEl.textContent = (v > 0 ? '+' : '') + fmt(v);
+        vEl.textContent = (v > 0 ? '+' : '') + fmt0(v);
         vEl.className = 'mach-variance ' + (v > 0 ? 'var-pos' : 'var-neg');
       }
     }
   }
 
-  document.getElementById('mt-system').textContent = anyInput ? fmt(totalSystem) : '—';
-  document.getElementById('mt-rakes').textContent  = anyInput ? fmt(totalRakes)  : '—';
-  document.getElementById('mt-count').textContent  = anyInput ? fmt(totalCount)  : '—';
+  document.getElementById('mt-system').textContent = anyInput ? fmt0(totalSystem) : '—';
+  document.getElementById('mt-rakes').textContent  = anyInput ? fmt0(totalRakes)  : '—';
+  document.getElementById('mt-count').textContent  = anyInput ? fmt0(totalCount)  : '—';
 
   const tvEl = document.getElementById('mt-variance');
   const headerEl = document.getElementById('mach-total');
@@ -1869,9 +1873,9 @@ function calcMachines() {
       headerEl.textContent = '✓ Balanced';
     } else {
       const sign = totalV > 0 ? '+' : '';
-      tvEl.textContent = sign + fmt(totalV);
+      tvEl.textContent = sign + fmt0(totalV);
       tvEl.className = 'mach-variance ' + (totalV > 0 ? 'var-pos' : 'var-neg');
-      headerEl.textContent = sign + fmt(totalV);
+      headerEl.textContent = sign + fmt0(totalV);
     }
   }
 }
@@ -2024,7 +2028,7 @@ function calcCashCount() {
       const v = n * d;
       totalNotes += n;
       totalValue += v;
-      valueEl.textContent = fmt(v);
+      valueEl.textContent = fmt0(v);
       valueEl.classList.add('has-val');
     } else {
       valueEl.textContent = '—';
@@ -2034,7 +2038,7 @@ function calcCashCount() {
   const notesEl = document.getElementById('cc-total-notes');
   const valueEl = document.getElementById('cc-total-value');
   if (notesEl) notesEl.textContent = anyInput ? totalNotes : '—';
-  if (valueEl) valueEl.textContent = anyInput ? fmt(totalValue) : '—';
+  if (valueEl) valueEl.textContent = anyInput ? fmt0(totalValue) : '—';
 }
 
 function resetCashCount() {
@@ -2079,7 +2083,7 @@ function calcATM() {
       const span = document.getElementById(spanId);
       if (!span) return;
       if (count === null) { span.textContent = '—'; span.classList.add('muted'); }
-      else { span.textContent = fmt(count * d); span.classList.remove('muted'); }
+      else { span.textContent = fmt0(count * d); span.classList.remove('muted'); }
     };
     setSpan(`anv-${d}`, n);
     setSpan(`afv-${d}`, f);
@@ -2095,7 +2099,7 @@ function calcATM() {
       if (f !== null && n !== null) {
         const rv = atmShowValue ? (f - n) * d : (f - n);
         const rRound = Math.round(rv * 100) / 100;
-        refillEl.textContent = (rRound === 0 ? '✓' : (rRound > 0 ? '+' : '') + (atmShowValue ? fmt(rRound) : rRound));
+        refillEl.textContent = (rRound === 0 ? '✓' : (rRound > 0 ? '+' : '') + (atmShowValue ? fmt0(rRound) : rRound));
         refillEl.className = 'atm-calc-cell ' + (rRound === 0 ? 'var-zero' : rRound > 0 ? 'var-pos' : 'var-neg');
         totRefill += (f - n); anyRefill = true;
       } else {
@@ -2109,7 +2113,7 @@ function calcATM() {
       if (nf !== null && f !== null) {
         const iv = atmShowValue ? (nf - f) * d : (nf - f);
         const iRound = Math.round(iv * 100) / 100;
-        idEl.textContent = (iRound === 0 ? '✓' : (iRound > 0 ? '+' : '') + (atmShowValue ? fmt(iRound) : iRound));
+        idEl.textContent = (iRound === 0 ? '✓' : (iRound > 0 ? '+' : '') + (atmShowValue ? fmt0(iRound) : iRound));
         idEl.className = 'atm-calc-cell ' + (iRound === 0 ? 'var-zero' : iRound > 0 ? 'var-pos' : 'var-neg');
         totIncDec += (nf - f); anyIncDec = true;
       } else {
@@ -2131,14 +2135,14 @@ function calcATM() {
       if (fv !== null && nv  !== null) tvRefill += (fv  - nv)  * d;
       if (nfv !== null && fv !== null) tvIncDec += (nfv - fv)  * d;
     });
-    document.getElementById('at-notes').textContent    = anyNotes  ? fmt(tvNotes)  : '—';
-    document.getElementById('at-float').textContent    = anyFloat  ? fmt(tvFloat)  : '—';
-    document.getElementById('at-newfloat').textContent = anyNew    ? fmt(tvNew)    : '—';
+    document.getElementById('at-notes').textContent    = anyNotes  ? fmt0(tvNotes)  : '—';
+    document.getElementById('at-float').textContent    = anyFloat  ? fmt0(tvFloat)  : '—';
+    document.getElementById('at-newfloat').textContent = anyNew    ? fmt0(tvNew)    : '—';
     const setTotal = (id, val, any) => {
       const el = document.getElementById(id); if (!el) return;
       if (!any) { el.textContent = '—'; return; }
       const r = Math.round(val * 100) / 100;
-      el.textContent = r === 0 ? '✓' : (r > 0 ? '+' : '') + fmt(r);
+      el.textContent = r === 0 ? '✓' : (r > 0 ? '+' : '') + fmt0(r);
     };
     setTotal('at-refill', tvRefill, anyRefill);
     setTotal('at-incdec', tvIncDec, anyIncDec);
