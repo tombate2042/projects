@@ -19,6 +19,7 @@
     --accent: #1a3a2a;
     --accent-light: #e8f0eb;
     --accent-mid: #2d6b48;
+    --accent2: #2d6b48;
     --danger: #8b2e2e;
     --danger-light: #fdf0f0;
     --amber: #7a4f10;
@@ -117,7 +118,7 @@
   .section-header .dot {
     width: 8px; height: 8px;
     border-radius: 50%;
-    background: var(--accent-mid);
+    background: var(--accent2);
     flex-shrink: 0;
   }
   .section-body { padding: 16px; }
@@ -551,7 +552,8 @@
   .rs-section-title {
     background: var(--surface2);
     border-bottom: 1px solid var(--border);
-    padding: 8px 24px;
+    border-left: 3px solid var(--accent2);
+    padding: 8px 24px 8px 21px;
     font-family: var(--sans);
     font-size: 10px;
     font-weight: 700;
@@ -1694,6 +1696,7 @@ const LOCATION_PALETTES = {
     '--accent':        '#1a3a2a',
     '--accent-mid':    '#2d6b48',
     '--accent-light':  '#e8f0eb',
+    '--accent2':       '#2d6b48',
     '--bg':            '#f5f4f0',
     '--surface2':      '#f0efe9',
     '--border':        '#d8d5cc',
@@ -1705,6 +1708,7 @@ const LOCATION_PALETTES = {
     '--accent':        '#013128',
     '--accent-mid':    '#1a5c38',
     '--accent-light':  '#e4ede7',
+    '--accent2':       '#8f704a',
     '--bg':            '#f2efe8',
     '--surface2':      '#e9e6de',
     '--border':        '#cec9c0',
@@ -1716,6 +1720,7 @@ const LOCATION_PALETTES = {
     '--accent':        '#113128',
     '--accent-mid':    '#8f704a',
     '--accent-light':  '#f0e8dc',
+    '--accent2':       '#a47968',
     '--bg':            '#f5f0e6',
     '--surface2':      '#ede5d8',
     '--border':        '#d0c5b0',
@@ -1727,6 +1732,7 @@ const LOCATION_PALETTES = {
     '--accent':        '#440e13',
     '--accent-mid':    '#327362',
     '--accent-light':  '#e6f0ed',
+    '--accent2':       '#8e745f',
     '--bg':            '#faf4ed',
     '--surface2':      '#f2e8da',
     '--border':        '#d8c8b5',
@@ -1735,15 +1741,16 @@ const LOCATION_PALETTES = {
     '--text3':         '#968a7c',
   },
   "Taylor's Rooftop": {
-    '--accent':        '#585b64',
+    '--accent':        '#a55e38',
     '--accent-mid':    '#6f8c84',
-    '--accent-light':  '#e6eeec',
-    '--bg':            '#f4f2f0',
-    '--surface2':      '#eae7e3',
-    '--border':        '#cdc8c2',
-    '--border-strong': '#aeaaa4',
-    '--text2':         '#504e4a',
-    '--text3':         '#908c88',
+    '--accent-light':  '#f5e8d8',
+    '--accent2':       '#b16a5f',
+    '--bg':            '#f5f1ec',
+    '--surface2':      '#ece5dc',
+    '--border':        '#d0c4b8',
+    '--border-strong': '#b0a498',
+    '--text2':         '#504038',
+    '--text3':         '#908070',
   },
 };
 
