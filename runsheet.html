@@ -220,55 +220,41 @@
     font-weight: 600;
   }
 
-  /* bistro sit-down */
-  .bistro-table { width: 100%; border-collapse: collapse; }
-  .bistro-table th {
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-    color: var(--text2);
-    padding: 6px 8px;
-    text-align: left;
-    border-bottom: 1px solid var(--border);
+  /* bistro tally */
+  .bistro-tally { display: flex; flex-direction: column; gap: 18px; }
+  .bistro-tally-cat-title {
+    font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.05em; color: var(--text2);
+    padding-bottom: 5px; border-bottom: 1px solid var(--border); margin-bottom: 4px;
   }
-  .bistro-table td { padding: 5px 4px; }
-  .bistro-table td input, .bistro-table td select {
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 6px 8px;
-    font-family: var(--sans);
-    font-size: 13px;
-    width: 100%;
-    background: var(--surface);
-    color: var(--text);
+  .bistro-tally-header {
+    display: grid; grid-template-columns: 1fr 56px 72px 72px;
+    gap: 8px; padding: 0 0 3px;
+    font-size: 10px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.05em; color: var(--text3);
   }
-  .bistro-table td input:focus, .bistro-table td select:focus {
-    outline: none; border-color: var(--accent-mid);
+  .bistro-tally-header span:nth-child(2),
+  .bistro-tally-header span:nth-child(3),
+  .bistro-tally-header span:nth-child(4) { text-align: right; }
+  .bistro-tally-row {
+    display: grid; grid-template-columns: 1fr 56px 72px 72px;
+    align-items: center; gap: 8px; padding: 3px 0;
   }
-
-  /* ── BISTRO DISH AUTOCOMPLETE ── */
-  .dish-ac-wrap { position: relative; }
-  .dish-ac-dropdown {
-    position: absolute; top: calc(100% + 2px); left: 0; right: 0;
-    background: var(--surface); border: 1px solid var(--border-strong);
-    border-radius: var(--radius); box-shadow: 0 4px 16px rgba(0,0,0,0.12);
-    max-height: 200px; overflow-y: auto; z-index: 50; display: none;
+  .bistro-tally-name { font-size: 13px; color: var(--text); }
+  .bistro-tally-qty {
+    border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 5px 6px; text-align: center; font-size: 13px;
+    font-family: var(--sans); width: 100%; background: var(--surface); color: var(--text);
   }
-  .dish-ac-dropdown.open { display: block; }
-  .dish-ac-option {
-    padding: 7px 10px; font-size: 13px; cursor: pointer;
-    color: var(--text); transition: background 0.08s;
+  .bistro-tally-qty:focus { outline: none; border-color: var(--accent-mid); }
+  .bistro-tally-price { font-size: 12px; color: var(--text3); text-align: right; }
+  .bistro-tally-line { font-size: 13px; font-weight: 500; color: var(--text); text-align: right; }
+  .bistro-tally-total {
+    display: flex; justify-content: flex-end; align-items: center; gap: 12px;
+    padding: 12px 0 0; border-top: 2px solid var(--border); margin-top: 4px;
+    font-size: 15px; font-weight: 700; color: var(--text);
   }
-  .dish-ac-option:hover, .dish-ac-option.highlighted {
-    background: var(--accent-light); color: var(--accent);
-  }
-  .dish-ac-optgroup {
-    padding: 5px 10px 3px; font-size: 10px; font-weight: 700;
-    text-transform: uppercase; letter-spacing: 0.05em; color: var(--text3);
-    background: var(--surface2); border-top: 1px solid var(--border);
-  }
-  .dish-ac-optgroup:first-child { border-top: none; }
+  .bistro-tally-total-label { font-size: 12px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 0.05em; }
   .btn-icon {
     background: none;
     border: 1px solid var(--border);
@@ -899,19 +885,7 @@
 
       <!-- Bistro Sit-Down -->
       <div class="menu-panel" id="mp-bistro">
-        <p style="font-size:12px;color:var(--text2);margin-bottom:10px;">Enter each guest's name and their dish selection.</p>
-        <table class="bistro-table">
-          <thead>
-            <tr>
-              <th style="width:36px;">#</th>
-              <th>Guest Name</th>
-              <th>Dish</th>
-              <th style="width:40px;"></th>
-            </tr>
-          </thead>
-          <tbody id="bistro-rows"></tbody>
-        </table>
-        <button class="btn btn-add" onclick="addBistroRow()">+ Add guest</button>
+        <div id="bistro-order-tally"></div>
       </div>
 
       <!-- Misc -->
@@ -1191,9 +1165,8 @@ let menuData = {
 let selectedCanapeA = [];
 let selectedCanapeB = [];
 let selectedBanquet = [];
-let bistroRows = [];
+let bistroOrder = {};
 let currentMenuType = null;
-let bistroDishHighlight = {};
 
 /* ════════════════════════════════════════════
    GIST SYNC
@@ -1700,7 +1673,7 @@ function loadFormData() {
         }
         renderBanquetItems();
       }
-      if (d.menuType === 'bistro') { bistroRows = d.bistroRows || []; renderBistroRows(); }
+      if (d.menuType === 'bistro') { bistroOrder = d.bistroOrder || {}; renderBistroOrder(); }
     }
   } catch(e) {}
 }
@@ -1728,7 +1701,7 @@ function getFormData() {
     canapeA: selectedCanapeA,
     canapeB: selectedCanapeB,
     banquet: selectedBanquet,
-    bistroRows: bistroRows
+    bistroOrder: bistroOrder
   };
 }
 
@@ -1750,7 +1723,7 @@ function selectMenuType(type, silent) {
   if (type === 'canape-a') renderCanapeItems('a');
   if (type === 'canape-b') renderCanapeItems('b');
   if (type === 'banquet') renderBanquetItems();
-  if (type === 'bistro' && bistroRows.length === 0) addBistroRow();
+  if (type === 'bistro') renderBistroOrder();
   if (!silent) autoSave();
 }
 
@@ -1966,20 +1939,8 @@ function updateBanquetCount() {
 }
 
 /* ════════════════════════════════════════════
-   BISTRO ROWS
+   BISTRO ORDER TALLY
 ════════════════════════════════════════════ */
-function addBistroRow() {
-  bistroRows.push({ name: '', dish: '' });
-  renderBistroRows();
-  autoSave();
-}
-
-function removeBistroRow(idx) {
-  bistroRows.splice(idx, 1);
-  renderBistroRows();
-  autoSave();
-}
-
 const BISTRO_DISH_CATS = [
   { label: 'Snacks & Sharing', key: 'bistroSnacks' },
   { label: 'Burgers',          key: 'bistroBurgers' },
@@ -1989,153 +1950,94 @@ const BISTRO_DISH_CATS = [
   { label: 'Sides',            key: 'bistroSides' }
 ];
 
-const BISTRO_ADDONS = [
-  { id: 'mainSide',   label: 'Main Side',    key: 'bistroMainSides',    appliesTo: ['bistroMains', 'bistroPubClassics'] },
-  { id: 'sauce',      label: 'Sauce',        key: 'bistroSauces',       appliesTo: ['bistroMains', 'bistroPubClassics'] },
-  { id: 'steakTemp',  label: 'Steak Temp',   key: 'bistroSteakTemp',    appliesTo: ['bistroMains'] },
-  { id: 'bowlAddOn',  label: 'Bowl Add On',  key: 'bistroBowlAddOns',   appliesTo: ['bistroBowls'] },
-  { id: 'burgerAddOn',      label: 'Burger Add On',      key: 'bistroBurgerAddOns',      appliesTo: ['bistroBurgers'] },
-  { id: 'schnitzelUpgrade', label: 'Schnitzel Upgrade',  key: 'bistroSchnitzelUpgrade',  appliesTo: ['bistroMains', 'bistroPubClassics'] },
-  { id: 'extraSauce',       label: 'Extra Sauce',        key: 'bistroExtraSauce',         appliesTo: ['bistroSnacks', 'bistroBurgers', 'bistroPubClassics', 'bistroBowls', 'bistroMains', 'bistroSides'] }
+const BISTRO_ADDON_CATS = [
+  { label: 'Main Sides',        key: 'bistroMainSides' },
+  { label: 'Sauces',            key: 'bistroSauces' },
+  { label: 'Steak Temp',        key: 'bistroSteakTemp' },
+  { label: 'Bowl Add-Ons',      key: 'bistroBowlAddOns' },
+  { label: 'Burger Add-Ons',    key: 'bistroBurgerAddOns' },
+  { label: 'Schnitzel Upgrade', key: 'bistroSchnitzelUpgrade' },
+  { label: 'Extra Sauce',       key: 'bistroExtraSauce' }
 ];
 
-function getBistroDisCat(dishName) {
-  for (const c of BISTRO_DISH_CATS) {
-    if ((menuData[c.key] || []).some(i => (typeof i === 'object' ? i.name : i) === dishName)) return c.key;
+const BISTRO_ADDONS = BISTRO_ADDON_CATS.map((c, i) => ({
+  id: ['mainSide','sauce','steakTemp','bowlAddOn','burgerAddOn','schnitzelUpgrade','extraSauce'][i],
+  label: c.label, key: c.key, appliesTo: []
+}));
+
+function parsePrice(str) {
+  const n = parseFloat(String(str || '').replace(/[^0-9.]/g, ''));
+  return isNaN(n) ? 0 : n;
+}
+
+function bistroCategoryHtml(label, items, showAddons) {
+  if (!items.length) return '';
+  const header = `<div class="bistro-tally-header"><span>${showAddons ? 'Add-on' : 'Item'}</span><span>Qty</span><span>Price</span><span>Total</span></div>`;
+  const rows = items.map(item => {
+    const name  = typeof item === 'object' ? (item.name  || '') : item;
+    const price = typeof item === 'object' ? (item.price || '') : '';
+    if (!name) return '';
+    const qty      = bistroOrder[name] || 0;
+    const priceFmt = parsePrice(price) ? `$${parsePrice(price).toFixed(2)}` : '—';
+    const lineFmt  = (qty && parsePrice(price)) ? `$${(qty * parsePrice(price)).toFixed(2)}` : (qty ? `×${qty}` : '');
+    return `<div class="bistro-tally-row">
+      <span class="bistro-tally-name">${escHtml(name)}</span>
+      <input type="number" class="bistro-tally-qty" min="0" value="${qty || ''}" placeholder="0"
+        oninput="bistroOrder[${JSON.stringify(name)}]=parseInt(this.value)||0;autoSave();updateBistroTotal()">
+      <span class="bistro-tally-price">${priceFmt}</span>
+      <span class="bistro-tally-line" id="btline-${escHtml(name).replace(/\s/g,'_')}">${lineFmt}</span>
+    </div>`;
+  }).join('');
+  return `<div><div class="bistro-tally-cat-title">${escHtml(label)}</div>${header}${rows}</div>`;
+}
+
+function renderBistroOrder() {
+  const el = document.getElementById('bistro-order-tally');
+  if (!el) return;
+
+  const foodSections = BISTRO_DISH_CATS
+    .map(c => bistroCategoryHtml(c.label, menuData[c.key] || [], false))
+    .filter(Boolean).join('');
+
+  const addonSections = BISTRO_ADDON_CATS
+    .map(c => bistroCategoryHtml(c.label, menuData[c.key] || [], true))
+    .filter(Boolean).join('');
+
+  const addonBlock = addonSections
+    ? `<div style="margin-top:4px;padding-top:14px;border-top:1px dashed var(--border);">${addonSections}</div>`
+    : '';
+
+  const total = calcBistroTotal();
+  const totalHtml = `<div class="bistro-tally-total" id="bistro-grand-total">
+    <span class="bistro-tally-total-label">Order Total</span>
+    <span>${total ? '$' + total.toFixed(2) : '—'}</span>
+  </div>`;
+
+  if (!foodSections && !addonSections) {
+    el.innerHTML = '<p style="font-size:13px;color:var(--text3);">Add bistro items in Menu Manager to get started.</p>';
+    return;
   }
-  return null;
+
+  el.innerHTML = `<div class="bistro-tally">${foodSections}${addonBlock}</div>${totalHtml}`;
 }
 
-function getBistroAllDishes() {
-  const out = [];
-  BISTRO_DISH_CATS.forEach(({ label, key }) => {
-    const items = (menuData[key] || []).map(i => typeof i === 'object' ? (i.name || '') : i).filter(Boolean);
-    if (items.length) out.push({ label, items });
-  });
-  return out;
-}
-
-function bistroDishInput(i, input) {
-  const q = input.value.toLowerCase();
-  const dd = document.getElementById('dish-dd-' + i);
-  if (!dd) return;
-  const allCats = getBistroAllDishes();
-  let html = '';
-  allCats.forEach(({ label, items }) => {
-    const matching = items.filter(n => n.toLowerCase().includes(q));
-    if (!matching.length) return;
-    html += `<div class="dish-ac-optgroup">${escHtml(label)}</div>`;
-    matching.forEach(name => {
-      html += `<div class="dish-ac-option" data-dish="${escHtml(name)}"
-        onmousedown="event.preventDefault()"
-        onclick="bistroDishSelect(${i},'${escJs(name)}')">${escHtml(name)}</div>`;
+function calcBistroTotal() {
+  let total = 0;
+  [...BISTRO_DISH_CATS, ...BISTRO_ADDON_CATS].forEach(({ key }) => {
+    (menuData[key] || []).forEach(item => {
+      const name  = typeof item === 'object' ? item.name  : item;
+      const price = typeof item === 'object' ? item.price : '';
+      total += (bistroOrder[name] || 0) * parsePrice(price);
     });
   });
-  dd.innerHTML = html;
-  bistroDishHighlight[i] = -1;
-  dd.classList.toggle('open', !!html);
+  return total;
 }
 
-function bistroDishKeydown(i, e, input) {
-  const dd = document.getElementById('dish-dd-' + i);
-  if (!dd) return;
-  const opts = [...dd.querySelectorAll('.dish-ac-option')];
-  let hi = bistroDishHighlight[i] ?? -1;
-  if (e.key === 'ArrowDown') {
-    e.preventDefault();
-    hi = Math.min(hi + 1, opts.length - 1);
-  } else if (e.key === 'ArrowUp') {
-    e.preventDefault();
-    hi = Math.max(hi - 1, 0);
-  } else if (e.key === 'Enter') {
-    e.preventDefault();
-    if (hi >= 0 && opts[hi]) {
-      bistroDishSelect(i, opts[hi].dataset.dish);
-    } else {
-      const q = input.value.trim().toLowerCase();
-      const all = getBistroAllDishes().flatMap(c => c.items);
-      const exact = all.find(n => n.toLowerCase() === q);
-      if (exact) bistroDishSelect(i, exact);
-      else dd.classList.remove('open');
-    }
-    return;
-  } else if (e.key === 'Escape') {
-    dd.classList.remove('open');
-    return;
-  } else {
-    return;
-  }
-  bistroDishHighlight[i] = hi;
-  opts.forEach((o, j) => o.classList.toggle('highlighted', j === hi));
-  if (hi >= 0 && opts[hi]) opts[hi].scrollIntoView({ block: 'nearest' });
-}
-
-function bistroDishBlur(i, input) {
-  setTimeout(() => {
-    const dd = document.getElementById('dish-dd-' + i);
-    if (dd) dd.classList.remove('open');
-    const q = input.value.trim();
-    if (!q) {
-      if (bistroRows[i] && bistroRows[i].dish) {
-        bistroRows[i].dish = '';
-        bistroRows[i].addOns = {};
-        renderBistroRows();
-        autoSave();
-      }
-      return;
-    }
-    const all = getBistroAllDishes().flatMap(c => c.items);
-    const exact = all.find(n => n.toLowerCase() === q.toLowerCase());
-    if (exact) {
-      if (bistroRows[i] && exact !== bistroRows[i].dish) bistroDishSelect(i, exact);
-    } else {
-      // not a valid dish — revert to last saved value
-      if (bistroRows[i]) input.value = bistroRows[i].dish || '';
-    }
-  }, 150);
-}
-
-function bistroDishSelect(i, dishName) {
-  if (!bistroRows[i]) return;
-  bistroRows[i].dish = dishName;
-  bistroRows[i].addOns = {};
-  renderBistroRows();
-  autoSave();
-}
-
-function renderBistroRows() {
-  const tbody = document.getElementById('bistro-rows');
-
-  tbody.innerHTML = bistroRows.map((row, i) => {
-    const addOns = row.addOns || {};
-    const enabledAddons = (menuData.bistroItemAddons || {})[row.dish] || [];
-    const addonCells = BISTRO_ADDONS
-      .filter(a => enabledAddons.includes(a.id))
-      .map(a => {
-        const opts = (menuData[a.key] || []).map(d => { const n = typeof d === 'object' ? (d.name||'') : d; return n ? `<option value="${escHtml(n)}" ${addOns[a.id]===n?'selected':''}>${escHtml(n)}</option>` : ''; }).join('');
-        return opts ? `<select style="width:100%;" onchange="bistroRows[${i}].addOns=bistroRows[${i}].addOns||{};bistroRows[${i}].addOns['${a.id}']=this.value;autoSave()">
-          <option value="">— ${escHtml(a.label)} —</option>${opts}</select>` : '';
-      }).filter(Boolean);
-    const addonGrid = addonCells.length
-      ? `<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:4px;">${addonCells.join('')}</div>`
-      : '';
-    return `
-    <tr>
-      <td class="rs-bistro-num" style="color:var(--text3);font-size:12px;text-align:center;">${i + 1}</td>
-      <td><input type="text" value="${escHtml(row.name)}" placeholder="Guest name" oninput="bistroRows[${i}].name=this.value;autoSave()"></td>
-      <td>
-        <div class="dish-ac-wrap">
-          <input type="text" id="dish-input-${i}" value="${escHtml(row.dish)}" placeholder="Type to search dishes…"
-            oninput="bistroDishInput(${i},this)"
-            onkeydown="bistroDishKeydown(${i},event,this)"
-            onblur="bistroDishBlur(${i},this)">
-          <div class="dish-ac-dropdown" id="dish-dd-${i}"></div>
-        </div>
-        ${addonGrid}
-      </td>
-      <td><button class="btn-icon" onclick="removeBistroRow(${i})">✕</button></td>
-    </tr>`;
-  }).join('');
+function updateBistroTotal() {
+  const el = document.getElementById('bistro-grand-total');
+  if (!el) return;
+  const total = calcBistroTotal();
+  el.innerHTML = `<span class="bistro-tally-total-label">Order Total</span><span>${total ? '$' + total.toFixed(2) : '—'}</span>`;
 }
 
 /* ════════════════════════════════════════════
@@ -2146,7 +2048,7 @@ function refreshFoodSelectors() {
   if (currentMenuType === 'canape-a') renderCanapeItems('a');
   if (currentMenuType === 'canape-b') renderCanapeItems('b');
   if (currentMenuType === 'banquet') renderBanquetItems();
-  if (currentMenuType === 'bistro') renderBistroRows();
+  if (currentMenuType === 'bistro') renderBistroOrder();
 }
 
 
@@ -2204,23 +2106,39 @@ function buildRunsheet() {
         </div>
       </div>`;
   } else if (d.menuType === 'bistro') {
-    const rows = d.bistroRows || [];
+    const order = d.bistroOrder || {};
+    const allCats = [...BISTRO_DISH_CATS, ...BISTRO_ADDON_CATS];
+    const lines = [];
+    allCats.forEach(({ label, key }) => {
+      (menuData[key] || []).forEach(item => {
+        const name  = typeof item === 'object' ? item.name  : item;
+        const price = typeof item === 'object' ? item.price : '';
+        const qty   = order[name] || 0;
+        if (qty > 0) lines.push({ name, qty, price, label });
+      });
+    });
+    const total = lines.reduce((s, l) => s + l.qty * parsePrice(l.price), 0);
+    const tableRows = lines.length
+      ? lines.map(l => `<tr>
+          <td style="padding:5px 8px;">${escHtml(l.name)}</td>
+          <td style="padding:5px 8px;text-align:center;">${l.qty}</td>
+          <td style="padding:5px 8px;text-align:right;">${parsePrice(l.price) ? '$' + parsePrice(l.price).toFixed(2) : '—'}</td>
+          <td style="padding:5px 8px;text-align:right;font-weight:500;">${(l.qty && parsePrice(l.price)) ? '$' + (l.qty * parsePrice(l.price)).toFixed(2) : '—'}</td>
+        </tr>`).join('')
+      : '<tr><td colspan="4" style="text-align:center;color:#aaa;padding:16px;font-family:var(--sans);font-size:13px;">No items selected</td></tr>';
     foodHtml = `
-      <div class="rs-section-title">Food Selection — Bistro Sit-Down</div>
+      <div class="rs-section-title">Food Selection — Bistro</div>
       <div class="rs-row full" style="padding:0;">
-        <div style="padding:12px 24px 6px;">
-          <div class="rs-food-type">Bistro Sit-Down</div>
-        </div>
-        <table class="rs-bistro-table">
-          <thead><tr><th class="rs-bistro-num">#</th><th>Guest Name</th><th>Dish</th></tr></thead>
-          <tbody>
-            ${rows.filter(r => r.name || r.dish).map((r, i) => `
-              <tr>
-                <td class="rs-bistro-num">${i + 1}</td>
-                <td>${escHtml(r.name) || '—'}</td>
-                <td>${escHtml(r.dish) || '—'}${Object.values(r.addOns||{}).filter(Boolean).map(v=>`<span style="color:#888;font-size:12px;margin-left:6px;">· ${escHtml(v)}</span>`).join('')}</td>
-              </tr>`).join('') || '<tr><td colspan="3" style="text-align:center;color:#aaa;padding:16px;font-family:var(--sans);font-size:13px;">No guests added</td></tr>'}
-          </tbody>
+        <div style="padding:12px 24px 6px;"><div class="rs-food-type">Bistro Order</div></div>
+        <table class="rs-bistro-table" style="font-family:var(--sans);">
+          <thead><tr>
+            <th style="padding:6px 8px;text-align:left;">Item</th>
+            <th style="padding:6px 8px;text-align:center;">Qty</th>
+            <th style="padding:6px 8px;text-align:right;">Unit Price</th>
+            <th style="padding:6px 8px;text-align:right;">Total</th>
+          </tr></thead>
+          <tbody>${tableRows}</tbody>
+          ${total ? `<tfoot><tr><td colspan="3" style="padding:8px;text-align:right;font-weight:700;border-top:2px solid #ddd;">Order Total</td><td style="padding:8px;text-align:right;font-weight:700;border-top:2px solid #ddd;">$${total.toFixed(2)}</td></tr></tfoot>` : ''}
         </table>
       </div>`;
   } else if (d.menuType === 'misc') {
@@ -2320,7 +2238,7 @@ function clearForm() {
     const el = document.getElementById(id);
     if (el) el.value = '';
   });
-  selectedCanapeA = []; selectedCanapeB = []; bistroRows = []; currentMenuType = null;
+  selectedCanapeA = []; selectedCanapeB = []; bistroOrder = {}; currentMenuType = null;
   document.querySelectorAll('.menu-type-btn').forEach(b => b.classList.remove('active'));
   document.querySelectorAll('.menu-panel').forEach(p => p.classList.remove('active'));
   localStorage.removeItem('rr_form');
