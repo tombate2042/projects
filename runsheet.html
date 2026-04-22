@@ -807,40 +807,36 @@
   <div class="section-card">
     <div class="section-header"><span class="dot"></span>Event Information</div>
     <div class="section-body">
-      <div class="form-grid form-grid-2" style="margin-bottom:12px;">
-        <div class="field" style="grid-column:1/-1;">
-          <label>Event Name</label>
-          <input type="text" id="f-event-name" placeholder="e.g. Smith Birthday Party" oninput="autoSave()">
-        </div>
+      <div class="field" style="margin-bottom:10px;">
+        <label>Event Name</label>
+        <input type="text" id="f-event-name" placeholder="e.g. Smith Birthday Party" oninput="autoSave()">
       </div>
-      <div class="form-grid form-grid-4" style="margin-bottom:12px;">
+      <div class="form-grid form-grid-4" style="margin-bottom:10px;">
         <div class="field">
           <label>Date</label>
           <input type="text" id="f-date" placeholder="dd.mm.yyyy" oninput="autoSave()" onblur="formatDateInput(this)">
         </div>
         <div class="field">
-          <label>Start Time</label>
+          <label>Start</label>
           <input type="text" id="f-start" placeholder="e.g. 7" oninput="autoSave()" onblur="formatTimeInput(this)">
         </div>
         <div class="field">
-          <label>End Time</label>
+          <label>End</label>
           <input type="text" id="f-end" placeholder="e.g. 11" oninput="autoSave()" onblur="formatTimeInput(this)">
         </div>
         <div class="field">
-          <label>Number of People</label>
+          <label>Guests</label>
           <input type="number" id="f-pax" placeholder="e.g. 40" min="1" oninput="autoSave()">
         </div>
       </div>
-      <div class="form-grid form-grid-2">
-        <div class="field">
-          <label>Location / Area</label>
-          <select id="f-location" onchange="autoSave()">
-            <option value="">— Select Area —</option>
-            <option>Republic Bar</option>
-            <option>Bistro</option>
-            <option>Sports Bar</option>
-            <option>Taylor's Rooftop</option>
-          </select>
+      <div class="field">
+        <label>Location / Area</label>
+        <input type="hidden" id="f-location">
+        <div class="meal-item-grid" style="margin-top:2px;">
+          <button type="button" class="meal-item-btn location-btn" data-loc="Republic Bar" onclick="selectLocation(this.dataset.loc)">Republic Bar</button>
+          <button type="button" class="meal-item-btn location-btn" data-loc="Bistro" onclick="selectLocation(this.dataset.loc)">Bistro</button>
+          <button type="button" class="meal-item-btn location-btn" data-loc="Sports Bar" onclick="selectLocation(this.dataset.loc)">Sports Bar</button>
+          <button type="button" class="meal-item-btn location-btn" data-loc="Taylor's Rooftop" onclick="selectLocation(this.dataset.loc)">Taylor's Rooftop</button>
         </div>
       </div>
     </div>
@@ -850,7 +846,7 @@
   <div class="section-card">
     <div class="section-header"><span class="dot"></span>Client Information</div>
     <div class="section-body">
-      <div class="form-grid form-grid-3">
+      <div class="form-grid form-grid-2">
         <div class="field">
           <label>Client Name</label>
           <input type="text" id="f-client" placeholder="Full name" oninput="autoSave()">
@@ -859,22 +855,22 @@
           <label>Contact Number</label>
           <input type="tel" id="f-contact" placeholder="04xx xxx xxx" oninput="autoSave()">
         </div>
-        <div class="field">
-          <label>Prepaid Amount</label>
-          <input type="text" id="f-prepaid" placeholder="e.g. $500" oninput="autoSave()">
-        </div>
       </div>
     </div>
   </div>
 
-  <!-- Food Cost -->
+  <!-- Financials -->
   <div class="section-card">
     <div class="section-header"><span class="dot"></span>Financials</div>
     <div class="section-body">
-      <div class="form-grid form-grid-3">
+      <div class="form-grid form-grid-2">
         <div class="field">
           <label>Food Cost</label>
           <input type="text" id="f-food-cost" placeholder="e.g. $1,200" oninput="autoSave()">
+        </div>
+        <div class="field">
+          <label>Prepaid Amount</label>
+          <input type="text" id="f-prepaid" placeholder="e.g. $500" oninput="autoSave()">
         </div>
       </div>
     </div>
@@ -1693,6 +1689,13 @@ function loadMenus() {
   } catch(e) {}
 }
 
+function selectLocation(loc, skipSave) {
+  const hidden = document.getElementById('f-location');
+  if (hidden) hidden.value = loc;
+  document.querySelectorAll('.location-btn').forEach(b => b.classList.toggle('selected', b.dataset.loc === loc));
+  if (!skipSave) autoSave();
+}
+
 function autoSave() {
   const data = getFormData();
   localStorage.setItem('rr_form', JSON.stringify(data));
@@ -1714,7 +1717,7 @@ function loadFormData() {
     setVal('f-start', d.start);
     setVal('f-end', d.end);
     setVal('f-pax', d.pax);
-    setVal('f-location', d.location);
+    if (d.location) selectLocation(d.location, true);
     setVal('f-client', d.client);
     setVal('f-contact', d.contact);
     setVal('f-prepaid', d.prepaid);
