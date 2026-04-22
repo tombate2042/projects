@@ -1219,7 +1219,7 @@ let selectedCanapeA = [];
 let selectedCanapeB = [];
 let selectedBanquet = [];
 let bistroRows = [];
-let mealModalState = { guestIdx: -1, dish: '', addOns: {} };
+let mealModalState = { guestIdx: -1, dish: '', addOns: {}, notes: '' };
 let currentMenuType = null;
 
 /* ════════════════════════════════════════════
@@ -2035,7 +2035,7 @@ function renderBistroRows() {
       .map(([, v]) => Array.isArray(v) ? v.map(escHtml).join(' & ') : escHtml(v))
       .join(' · ');
     const mealHtml = row.dish
-      ? `<div class="bistro-meal-dish">${escHtml(row.dish)}</div>${addOnText ? `<div class="bistro-meal-addons">${addOnText}</div>` : ''}`
+      ? `<div class="bistro-meal-dish">${escHtml(row.dish)}</div>${addOnText ? `<div class="bistro-meal-addons">${addOnText}</div>` : ''}${row.notes ? `<div class="bistro-meal-addons" style="font-style:italic;">${escHtml(row.notes)}</div>` : ''}`
       : `<span class="bistro-no-meal">No meal selected</span>`;
     const btnLabel = row.dish ? 'Edit' : 'Select Meal';
     return `<tr>
@@ -2052,6 +2052,7 @@ function openMealModal(guestIdx) {
   mealModalState.guestIdx = guestIdx;
   mealModalState.dish    = bistroRows[guestIdx]?.dish  || '';
   mealModalState.addOns  = { ...(bistroRows[guestIdx]?.addOns || {}) };
+  mealModalState.notes   = bistroRows[guestIdx]?.notes || '';
   document.getElementById('meal-modal').style.display = 'flex';
   showMealStep1();
 }
@@ -2122,6 +2123,13 @@ function showMealStep2() {
     html += `</div>`;
   });
 
+  html += `<div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border);">
+    <div class="meal-cat-title" style="margin-top:0;">Notes <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text3);">optional</span></div>
+    <textarea id="meal-notes-input" rows="2"
+      style="width:100%;border:1px solid var(--border);border-radius:var(--radius);padding:8px 10px;font-family:var(--sans);font-size:13px;color:var(--text);background:var(--surface);resize:vertical;"
+      placeholder="Dietary requirements, allergies, preferences…"
+      oninput="mealModalState.notes=this.value">${escHtml(mealModalState.notes)}</textarea>
+  </div>`;
   document.getElementById('meal-modal-body').innerHTML = html || '<p class="meal-no-addons">No add-ons for this item.</p>';
   document.getElementById('meal-modal-footer').innerHTML =
     `<button class="btn" onclick="showMealStep1()">← Back</button>
@@ -2150,6 +2158,7 @@ function saveMeal() {
   if (idx < 0 || !bistroRows[idx]) return;
   bistroRows[idx].dish   = mealModalState.dish;
   bistroRows[idx].addOns = { ...mealModalState.addOns };
+  bistroRows[idx].notes  = mealModalState.notes;
   closeMealModal();
   renderBistroRows();
   autoSave();
@@ -2230,7 +2239,7 @@ function buildRunsheet() {
       return `<tr>
         <td class="rs-bistro-num">${i + 1}</td>
         <td>${escHtml(r.name) || '—'}</td>
-        <td>${escHtml(r.dish) || '—'}${addOnText}</td>
+        <td>${escHtml(r.dish) || '—'}${addOnText}${r.notes ? `<div style="font-size:12px;color:#888;font-style:italic;margin-top:2px;">${escHtml(r.notes)}</div>` : ''}</td>
       </tr>`;
     }).join('') || '<tr><td colspan="3" style="text-align:center;color:#aaa;padding:16px;font-family:var(--sans);font-size:13px;">No guests added</td></tr>';
     foodHtml = `
