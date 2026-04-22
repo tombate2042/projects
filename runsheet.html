@@ -385,6 +385,17 @@
     text-transform: uppercase;
     letter-spacing: 0.04em;
   }
+  .ds-grid { display: flex; flex-direction: column; gap: 8px; }
+  .ds-row { display: grid; grid-template-columns: 72px 1fr 80px 1fr 80px 1fr 80px; gap: 6px; align-items: center; }
+  .ds-day-label { font-size: 12px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 0.04em; }
+  .ds-row select, .ds-row input {
+    width: 100%; border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 7px 10px; font-family: var(--sans); font-size: 13px;
+    color: var(--text); background: var(--surface); box-sizing: border-box;
+  }
+  .ds-row select:focus, .ds-row input:focus { outline: none; border-color: var(--accent-mid); }
+  .ds-header { display: grid; grid-template-columns: 72px 1fr 80px 1fr 80px 1fr 80px; gap: 6px; padding-bottom: 4px;
+    font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.04em; }
   .mm-limit-row {
     display: flex;
     align-items: center;
@@ -1084,6 +1095,10 @@
               <div class="mm-items" id="mm-bistro-extra-sauce"></div>
               <button class="btn btn-add" onclick="addMMItem('bistro-extra-sauce','')">+ Add option</button>
             </div>
+            <div class="mm-section">
+              <div class="mm-section-title">Daily Specials</div>
+              <div id="mm-daily-specials"></div>
+            </div>
           </div>
         </div>
       </div>
@@ -1163,7 +1178,14 @@ let menuData = {
   bistroExtraSauce: [],
   bistroItemAddons: {},
   grazingStations: [],
-  grazingPlatters: []
+  grazingPlatters: [],
+  dailySpecials: {
+    monday:    [{item:'',price:''},{item:'',price:''},{item:'',price:''}],
+    tuesday:   [{item:'',price:''},{item:'',price:''},{item:'',price:''}],
+    wednesday: [{item:'',price:''},{item:'',price:''},{item:'',price:''}],
+    thursday:  [{item:'',price:''},{item:'',price:''},{item:'',price:''}],
+    friday:    [{item:'',price:''},{item:'',price:''},{item:'',price:''}]
+  }
 };
 
 let selectedCanapeA = [];
@@ -1486,6 +1508,7 @@ function renderMMItems() {
   renderMMList('mm-bistro-extra-sauce',        'bistro-extra-sauce',        menuData.bistroExtraSauce        || [], noDesc);
   renderMMList('mm-grazing-stations-items', 'grazing-stations', menuData.grazingStations || [], all);
   renderMMList('mm-grazing-platters-items', 'grazing-platters', menuData.grazingPlatters || [], all);
+  renderDailySpecials();
   updateLimitInputs();
 }
 
@@ -1545,6 +1568,46 @@ function renderBistroMMList(containerId, type, items) {
       <div style="display:flex;flex-wrap:wrap;gap:6px 16px;padding:8px 0 4px 10px;border-left:2px solid var(--border);margin-top:4px;">${checkboxes}</div>
     </details>`;
   }).join('');
+}
+
+function getAllBistroItems() {
+  const cats = ['bistroSnacks','bistroBurgers','bistroPubClassics','bistroBowls','bistroMains','bistroSides'];
+  const items = [];
+  cats.forEach(cat => (menuData[cat] || []).forEach(i => { if (i.name) items.push(i.name); }));
+  return [...new Set(items)].sort();
+}
+
+function renderDailySpecials() {
+  const el = document.getElementById('mm-daily-specials');
+  if (!el) return;
+  const items = getAllBistroItems();
+  const days =['monday','tuesday','wednesday','thursday','friday'];
+  const labels = { monday:'Mon', tuesday:'Tue', wednesday:'Wed', thursday:'Thu', friday:'Fri' };
+  const specials = menuData.dailySpecials || {};
+
+  const header = `<div class="ds-header"><span></span><span>Special 1</span><span>Price</span><span>Special 2</span><span>Price</span><span>Special 3</span><span>Price</span></div>`;
+  const rows = days.map(day => {
+    const s = specials[day] || [{item:'',price:''},{item:'',price:''},{item:'',price:''}];
+    const cols = [0,1,2].map(i => {
+      const selOpts = ['<option value="">— select item —</option>', ...items.map(n => {
+        const selected = n === (s[i]?.item || '') ? ' selected' : '';
+        return `<option value="${escHtml(n)}"${selected}>${escHtml(n)}</option>`;
+      })].join('');
+      const sel = `<select onchange="updateDailySpecial('${day}',${i},'item',this.value)">${selOpts}</select>`;
+      const price = `<input type="text" value="${escHtml(s[i]?.price||'')}" placeholder="$0.00" oninput="updateDailySpecial('${day}',${i},'price',this.value)">`;
+      return sel + price;
+    }).join('');
+    return `<div class="ds-row"><span class="ds-day-label">${labels[day]}</span>${cols}</div>`;
+  }).join('');
+
+  el.innerHTML = header + `<div class="ds-grid">${rows}</div>`;
+}
+
+function updateDailySpecial(day, idx, field, value) {
+  if (!menuData.dailySpecials) menuData.dailySpecials = {};
+  if (!menuData.dailySpecials[day]) menuData.dailySpecials[day] = [{item:'',price:''},{item:'',price:''},{item:'',price:''}];
+  menuData.dailySpecials[day][idx][field] = value;
+  saveMenus();
 }
 
 function toggleBistroItemAddon(itemName, addonId, checked) {
