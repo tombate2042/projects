@@ -2096,24 +2096,27 @@ function showMealStep2() {
 
   let html = '';
   relevant.forEach(a => {
-    const opts = (menuData[a.key] || [])
+    const options = (menuData[a.key] || [])
       .map(d => typeof d === 'object' ? d.name : d)
-      .filter(Boolean)
-      .map(n => `<option value="${escHtml(n)}"${mealModalState.addOns[a.id]===n?' selected':''}>${escHtml(n)}</option>`)
-      .join('');
-    if (!opts) return;
-    html += `<div class="meal-addon-row">
-      <span class="meal-addon-label">${escHtml(a.label)}</span>
-      <select class="meal-addon-select" onchange="mealModalState.addOns['${a.id}']=this.value">
-        <option value="">— Select —</option>${opts}
-      </select>
-    </div>`;
+      .filter(Boolean);
+    if (!options.length) return;
+    html += `<div class="meal-cat-title">${escHtml(a.label)}</div><div class="meal-item-grid">`;
+    options.forEach(n => {
+      const sel = mealModalState.addOns[a.id] === n ? ' selected' : '';
+      html += `<button class="meal-item-btn${sel}" onclick="selectAddon('${escJs(a.id)}','${escJs(n)}')">${escHtml(n)}</button>`;
+    });
+    html += `</div>`;
   });
 
   document.getElementById('meal-modal-body').innerHTML = html || '<p class="meal-no-addons">No add-ons for this item.</p>';
   document.getElementById('meal-modal-footer').innerHTML =
     `<button class="btn" onclick="showMealStep1()">← Back</button>
      <button class="btn btn-primary" onclick="saveMeal()">Save</button>`;
+}
+
+function selectAddon(addonId, value) {
+  mealModalState.addOns[addonId] = mealModalState.addOns[addonId] === value ? '' : value;
+  showMealStep2();
 }
 
 function saveMeal() {
