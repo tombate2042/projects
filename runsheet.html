@@ -816,15 +816,15 @@
       <div class="form-grid form-grid-4" style="margin-bottom:12px;">
         <div class="field">
           <label>Date</label>
-          <input type="date" id="f-date" oninput="autoSave()">
+          <input type="text" id="f-date" placeholder="dd.mm.yyyy" oninput="autoSave()" onblur="formatDateInput(this)">
         </div>
         <div class="field">
           <label>Start Time</label>
-          <input type="time" id="f-start" oninput="autoSave()">
+          <input type="text" id="f-start" placeholder="e.g. 7" oninput="autoSave()" onblur="formatTimeInput(this)">
         </div>
         <div class="field">
           <label>End Time</label>
-          <input type="time" id="f-end" oninput="autoSave()">
+          <input type="text" id="f-end" placeholder="e.g. 11" oninput="autoSave()" onblur="formatTimeInput(this)">
         </div>
         <div class="field">
           <label>Number of People</label>
@@ -835,13 +835,11 @@
         <div class="field">
           <label>Location / Area</label>
           <select id="f-location" onchange="autoSave()">
-            <option value="">— Select floor/area —</option>
-            <option>Republic Bar — Ground Floor</option>
-            <option>Bistro — Level 2</option>
-            <option>Sports Bar — Level 3</option>
-            <option>Rooftop Bar — Level 4</option>
-            <option>Full Venue Hire</option>
-            <option>Other</option>
+            <option value="">— Select Area —</option>
+            <option>Republic Bar</option>
+            <option>Bistro</option>
+            <option>Sports Bar</option>
+            <option>Taylor's Rooftop</option>
           </select>
         </div>
       </div>
@@ -1707,6 +1705,12 @@ function loadFormData() {
     const d = JSON.parse(saved);
     setVal('f-event-name', d.eventName);
     setVal('f-date', d.date);
+    // Normalise legacy ISO date format to dd.mm.yyyy
+    const dateEl = document.getElementById('f-date');
+    if (dateEl && /^\d{4}-\d{2}-\d{2}$/.test(dateEl.value)) {
+      const [yr, mon, day] = dateEl.value.split('-');
+      dateEl.value = `${day}.${mon}.${yr}`;
+    }
     setVal('f-start', d.start);
     setVal('f-end', d.end);
     setVal('f-pax', d.pax);
@@ -2335,9 +2339,58 @@ function buildRunsheet() {
 /* ════════════════════════════════════════════
    UTILITIES
 ════════════════════════════════════════════ */
+function formatDateInput(el) {
+  const raw = el.value.trim();
+  if (!raw) return;
+  let day, mon, yr, m;
+  if ((m = raw.match(/^(\d{1,2})[.\/-](\d{1,2})[.\/-](\d{2,4})$/))) {
+    day = +m[1]; mon = +m[2]; yr = +m[3];
+    if (yr < 100) yr += 2000;
+  } else if ((m = raw.match(/^(\d{4})[.\/-](\d{1,2})[.\/-](\d{1,2})$/))) {
+    yr = +m[1]; mon = +m[2]; day = +m[3];
+  } else if ((m = raw.match(/^(\d{2})(\d{2})(\d{4})$/))) {
+    day = +m[1]; mon = +m[2]; yr = +m[3];
+  } else { return; }
+  const d = new Date(yr, mon - 1, day);
+  if (isNaN(d.getTime())) return;
+  el.value = `${String(d.getDate()).padStart(2,'0')}.${String(d.getMonth()+1).padStart(2,'0')}.${d.getFullYear()}`;
+  autoSave();
+}
+
+function formatTimeInput(el) {
+  const raw = el.value.trim().toLowerCase();
+  if (!raw) return;
+  let s = raw, forceAm = false, forcePm = false;
+  if (s.endsWith('am') || s.endsWith('a')) { forceAm = true; s = s.replace(/a(m)?$/, '').trim(); }
+  else if (s.endsWith('pm') || s.endsWith('p')) { forcePm = true; s = s.replace(/p(m)?$/, '').trim(); }
+  let h, m = 0;
+  let cm, hm;
+  if ((cm = s.match(/^(\d{1,2}):(\d{2})$/))) {
+    h = +cm[1]; m = +cm[2];
+  } else if (s.match(/^\d{3,4}$/)) {
+    h = s.length === 3 ? +s[0] : +s.slice(0,2);
+    m = +s.slice(s.length === 3 ? 1 : 2);
+  } else if ((hm = s.match(/^(\d{1,2})$/))) {
+    h = +hm[1];
+  } else { return; }
+  if (isNaN(h) || isNaN(m) || h > 23 || m > 59) return;
+  if (forceAm) { if (h === 12) h = 0; }
+  else if (forcePm) { if (h < 12) h += 12; }
+  else if (!s.startsWith('0') && h >= 1 && h <= 11) { h += 12; }
+  el.value = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+  autoSave();
+}
+
 function formatDate(str) {
   if (!str) return '—';
-  const d = new Date(str + 'T12:00:00');
+  let d;
+  if (/^\d{2}\.\d{2}\.\d{4}$/.test(str)) {
+    const [day, mon, yr] = str.split('.').map(Number);
+    d = new Date(yr, mon - 1, day);
+  } else {
+    d = new Date(str + 'T12:00:00');
+  }
+  if (isNaN(d?.getTime())) return str;
   return d.toLocaleDateString('en-AU', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 }
 
