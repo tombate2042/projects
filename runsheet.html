@@ -604,6 +604,10 @@
     font-size: 12px;
     color: #3a3730;
   }
+  .rs-menu-item-list { display: flex; flex-direction: column; gap: 5px; margin-top: 4px; }
+  .rs-menu-item-row { display: flex; align-items: baseline; gap: 8px; font-family: var(--sans); }
+  .rs-menu-item-name { font-size: 13px; font-weight: 600; color: #1a1916; }
+  .rs-menu-item-desc { font-size: 12px; color: #888; }
 
   .rs-bistro-table { width: 100%; border-collapse: collapse; font-family: var(--sans); }
   .rs-bistro-table th {
@@ -2196,29 +2200,43 @@ function buildRunsheet() {
   if (d.menuType === 'canape-a' || d.menuType === 'canape-b') {
     const sel = d.menuType === 'canape-a' ? d.canapeA : d.canapeB;
     const label = d.menuType === 'canape-a' ? '2hr Canapé' : '3hr Canapé';
-    const limit = d.menuType === 'canape-a' ? menuData.caLimitA : menuData.caLimitB;
+    const descMap = {};
+    CANAPE_SUBCATS.forEach(({ key }) => {
+      (menuData[key] || []).forEach(i => { if (typeof i === 'object' && i.name) descMap[i.name] = i.description || ''; });
+    });
+    const itemsHtml = sel.length
+      ? sel.map(n => {
+          const desc = descMap[n] || '';
+          return `<div class="rs-menu-item-row"><span class="rs-menu-item-name">${escHtml(n)}</span>${desc ? `<span class="rs-menu-item-desc">${escHtml(desc)}</span>` : ''}</div>`;
+        }).join('')
+      : '<em style="color:#aaa;font-size:13px;font-family:var(--sans);">No items selected</em>';
     foodHtml = `
       <div class="rs-section-title">Food Selection</div>
       <div class="rs-row full">
         <div class="rs-cell">
           <div class="rs-food-type">${label}</div>
-          <div style="margin-bottom:6px;font-family:var(--sans);font-size:12px;color:#888;">${sel.length} of ${limit} items selected</div>
-          <div class="rs-canape-list">
-            ${sel.length ? sel.map(i => `<span class="rs-canape-tag">${escHtml(i)}</span>`).join('') : '<em style="color:#aaa;font-size:13px;font-family:var(--sans);">No items selected</em>'}
-          </div>
+          <div class="rs-menu-item-list">${itemsHtml}</div>
         </div>
       </div>`;
   } else if (d.menuType === 'banquet') {
     const bq = d.banquet || [];
-    const coursesHtml = BANQUET_SUBCATS.map(({ label, key, limit }) => {
-      const items = (menuData[key] || []).map(i => typeof i === 'object' ? (i.name || '') : i).filter(Boolean);
-      const chosen = bq.filter(n => items.includes(n));
-      const tagsHtml = chosen.length
-        ? chosen.map(n => `<span class="rs-canape-tag">${escHtml(n)}</span>`).join('')
+    const bqDescMap = {};
+    BANQUET_SUBCATS.forEach(({ key }) => {
+      (menuData[key] || []).forEach(i => { if (typeof i === 'object' && i.name) bqDescMap[i.name] = i.description || ''; });
+    });
+    const coursesHtml = BANQUET_SUBCATS.map(({ label, key }) => {
+      const allItems = (menuData[key] || []);
+      const itemNames = allItems.map(i => typeof i === 'object' ? (i.name || '') : i).filter(Boolean);
+      const chosen = bq.filter(n => itemNames.includes(n));
+      const itemsHtml = chosen.length
+        ? chosen.map(n => {
+            const desc = bqDescMap[n] || '';
+            return `<div class="rs-menu-item-row"><span class="rs-menu-item-name">${escHtml(n)}</span>${desc ? `<span class="rs-menu-item-desc">${escHtml(desc)}</span>` : ''}</div>`;
+          }).join('')
         : `<em style="color:#aaa;font-size:13px;font-family:var(--sans);">Not selected</em>`;
       return `<div class="rs-course-row" style="align-items:flex-start;gap:12px;">
-        <span class="rs-course-label" style="padding-top:3px;">${label} <span style="font-weight:400;color:#bbb;">(${chosen.length}/${limit})</span></span>
-        <div class="rs-canape-list" style="margin:0;flex:1;">${tagsHtml}</div>
+        <span class="rs-course-label" style="padding-top:3px;">${label}</span>
+        <div class="rs-menu-item-list" style="flex:1;margin-top:0;">${itemsHtml}</div>
       </div>`;
     }).join('');
     foodHtml = `
