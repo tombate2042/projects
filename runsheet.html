@@ -2005,7 +2005,7 @@ const BISTRO_DISH_CATS = [
 ];
 
 const BISTRO_ADDONS = [
-  { id: 'mainSide',          label: 'Main Side',         key: 'bistroMainSides' },
+  { id: 'mainSide',          label: 'Main Side',         key: 'bistroMainSides',        multi: true,  min: 1, max: 2 },
   { id: 'sauce',             label: 'Sauce',             key: 'bistroSauces' },
   { id: 'steakTemp',         label: 'Steak Temp',        key: 'bistroSteakTemp' },
   { id: 'bowlAddOn',         label: 'Bowl Add-On',       key: 'bistroBowlAddOns' },
@@ -2031,8 +2031,8 @@ function renderBistroRows() {
   if (!tbody) return;
   tbody.innerHTML = bistroRows.map((row, i) => {
     const addOnText = Object.entries(row.addOns || {})
-      .filter(([, v]) => v)
-      .map(([, v]) => escHtml(v))
+      .filter(([, v]) => Array.isArray(v) ? v.length > 0 : v)
+      .map(([, v]) => Array.isArray(v) ? v.map(escHtml).join(' & ') : escHtml(v))
       .join(' · ');
     const mealHtml = row.dish
       ? `<div class="bistro-meal-dish">${escHtml(row.dish)}</div>${addOnText ? `<div class="bistro-meal-addons">${addOnText}</div>` : ''}`
@@ -2100,11 +2100,25 @@ function showMealStep2() {
       .map(d => typeof d === 'object' ? d.name : d)
       .filter(Boolean);
     if (!options.length) return;
-    html += `<div class="meal-cat-title">${escHtml(a.label)}</div><div class="meal-item-grid">`;
-    options.forEach(n => {
-      const sel = mealModalState.addOns[a.id] === n ? ' selected' : '';
-      html += `<button class="meal-item-btn${sel}" onclick="selectAddon('${escJs(a.id)}','${escJs(n)}')">${escHtml(n)}</button>`;
-    });
+    if (a.multi) {
+      const current = Array.isArray(mealModalState.addOns[a.id]) ? mealModalState.addOns[a.id] : [];
+      const atMax   = current.length >= a.max;
+      const counter = `<span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text3);margin-left:6px;">${current.length}/${a.max}</span>`;
+      html += `<div class="meal-cat-title">${escHtml(a.label)}${counter}</div><div class="meal-item-grid">`;
+      options.forEach(n => {
+        const sel      = current.includes(n);
+        const disabled = !sel && atMax;
+        html += `<button class="meal-item-btn${sel ? ' selected' : ''}"
+          style="${disabled ? 'opacity:0.38;cursor:default;' : ''}"
+          onclick="selectAddon('${escJs(a.id)}','${escJs(n)}')">${escHtml(n)}</button>`;
+      });
+    } else {
+      html += `<div class="meal-cat-title">${escHtml(a.label)}</div><div class="meal-item-grid">`;
+      options.forEach(n => {
+        const sel = mealModalState.addOns[a.id] === n ? ' selected' : '';
+        html += `<button class="meal-item-btn${sel}" onclick="selectAddon('${escJs(a.id)}','${escJs(n)}')">${escHtml(n)}</button>`;
+      });
+    }
     html += `</div>`;
   });
 
@@ -2115,7 +2129,19 @@ function showMealStep2() {
 }
 
 function selectAddon(addonId, value) {
-  mealModalState.addOns[addonId] = mealModalState.addOns[addonId] === value ? '' : value;
+  const addon = BISTRO_ADDONS.find(a => a.id === addonId);
+  if (addon?.multi) {
+    const current = Array.isArray(mealModalState.addOns[addonId]) ? [...mealModalState.addOns[addonId]] : [];
+    const idx = current.indexOf(value);
+    if (idx > -1) {
+      current.splice(idx, 1);
+    } else if (current.length < addon.max) {
+      current.push(value);
+    }
+    mealModalState.addOns[addonId] = current;
+  } else {
+    mealModalState.addOns[addonId] = mealModalState.addOns[addonId] === value ? '' : value;
+  }
   showMealStep2();
 }
 
@@ -2197,7 +2223,10 @@ function buildRunsheet() {
   } else if (d.menuType === 'bistro') {
     const rows = d.bistroRows || [];
     const tableRows = rows.filter(r => r.name || r.dish).map((r, i) => {
-      const addOnText = Object.values(r.addOns || {}).filter(Boolean).map(v => `<span style="color:#888;font-size:12px;margin-left:6px;">· ${escHtml(v)}</span>`).join('');
+      const addOnText = Object.values(r.addOns || {})
+        .filter(v => Array.isArray(v) ? v.length > 0 : v)
+        .map(v => `<span style="color:#888;font-size:12px;margin-left:6px;">· ${Array.isArray(v) ? v.map(escHtml).join(' & ') : escHtml(v)}</span>`)
+        .join('');
       return `<tr>
         <td class="rs-bistro-num">${i + 1}</td>
         <td>${escHtml(r.name) || '—'}</td>
