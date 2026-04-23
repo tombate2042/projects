@@ -358,9 +358,12 @@
       <div class="chart-card">
         <div class="chart-title">
           <span>Weekly sales — year on year</span>
+          <div style="display:flex;align-items:center;gap:16px;">
+          <button class="btn" id="btn-hide-future" onclick="toggleFutureWeeks()" style="padding:0.25rem 0.7rem;font-size:10px;">Hide future weeks</button>
           <div class="legend">
             <div class="legend-item"><div class="legend-swatch" style="background:#c8a96e; height:3px;"></div><span id="leg-a">Current</span></div>
             <div class="legend-item"><div class="legend-swatch dashed"></div><span id="leg-b">Prior</span></div>
+          </div>
           </div>
         </div>
         <div class="chart-wrap" style="height:320px;"><canvas id="mainChart"></canvas></div>
@@ -441,6 +444,7 @@ let labelA = '2026';
 let labelB = '2025';
 let mainChartInst = null;
 let varChartInst = null;
+let hideFutureWeeks = false;
 
 // ── PERSIST ────────────────────────────────────────────────────────────────
 function save() {
@@ -578,12 +582,20 @@ function importData() {
 }
 
 // ── DASHBOARD ──────────────────────────────────────────────────────────────
+function toggleFutureWeeks() {
+  hideFutureWeeks = !hideFutureWeeks;
+  const btn = document.getElementById('btn-hide-future');
+  if (btn) btn.textContent = hideFutureWeeks ? 'Show future weeks' : 'Hide future weeks';
+  renderDashboard();
+}
+
 function fmt(v) { return '$' + Math.round(v).toLocaleString('en-AU'); }
 function fmtK(v) { return '$' + (Math.round(v/100)*100/1000).toFixed(0) + 'k'; }
 
 function renderDashboard() {
   const valid = rows.filter(r => r.date && (r.valA || r.valB))
-    .sort((a,b) => a.date.localeCompare(b.date));
+    .sort((a,b) => a.date.localeCompare(b.date))
+    .filter(r => !hideFutureWeeks || parseFloat(r.valA) > 0);
 
   const empty = document.getElementById('dashboard-empty');
   const content = document.getElementById('dashboard-content');
@@ -606,9 +618,9 @@ function renderDashboard() {
     return d.toLocaleDateString('en-AU', { day: '2-digit', month: 'short' });
   });
 
-  const dataA = valid.map(r => parseFloat(r.valA) || 0);
-  const dataB = valid.map(r => parseFloat(r.valB) || 0);
-  const variance = dataA.map((a,i) => Math.round(a - dataB[i]));
+  const dataA = valid.map(r => { const v = parseFloat(r.valA); return v > 0 ? v : null; });
+  const dataB = valid.map(r => { const v = parseFloat(r.valB); return v > 0 ? v : null; });
+  const variance = dataA.map((a,i) => (a == null && dataB[i] == null) ? null : Math.round((a || 0) - (dataB[i] || 0)));
 
   // metrics
   const activeA = dataA.filter(v => v > 0);
@@ -672,6 +684,7 @@ function renderDashboard() {
           pointBackgroundColor: '#c8a96e',
           fill: true,
           tension: 0.3,
+          spanGaps: false,
         },
         {
           label: labelB,
@@ -684,6 +697,7 @@ function renderDashboard() {
           pointBackgroundColor: '#555',
           fill: false,
           tension: 0.3,
+          spanGaps: false,
         }
       ]
     },
