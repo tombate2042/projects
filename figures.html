@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Weekly Sales Comparison — The Republic Bar</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap');
 
@@ -317,6 +318,41 @@
 
   .import-hint { font-size: 12px; color: var(--muted); margin-top: 8px; }
 
+  .dts-file-input {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 0.6rem 0.75rem;
+    cursor: pointer;
+  }
+  .dts-file-input:focus { outline: none; border-color: var(--accent); }
+  .dts-file-input::file-selector-button {
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 3px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 0.25rem 0.65rem;
+    cursor: pointer;
+    margin-right: 0.75rem;
+  }
+  .dts-file-input::file-selector-button:hover { border-color: var(--accent); color: var(--accent); }
+
+  .radio-group { display: flex; gap: 16px; }
+  .radio-label {
+    display: flex; align-items: center; gap: 7px;
+    font-size: 13px; color: var(--text);
+    font-family: var(--sans); cursor: pointer;
+  }
+  .radio-label input[type="radio"] { accent-color: var(--accent); cursor: pointer; }
+
   .notice {
     background: rgba(200,169,110,0.08);
     border: 1px solid rgba(200,169,110,0.2);
@@ -371,6 +407,13 @@
       <div class="chart-card">
         <div class="chart-title">Week-by-week variance</div>
         <div class="chart-wrap" id="variance-wrap" style="height:160px;"><canvas id="varianceChart"></canvas></div>
+      </div>
+      <div class="chart-card" id="breakdown-card" style="display:none;">
+        <div class="chart-title">
+          <span>Venue breakdown — <span id="breakdown-year">current year</span></span>
+          <div class="legend" id="breakdown-legend"></div>
+        </div>
+        <div class="chart-wrap" style="height:280px;"><canvas id="breakdownChart"></canvas></div>
       </div>
     </div>
   </div>
@@ -433,6 +476,31 @@
       <button class="btn" onclick="document.getElementById('import-text').value=''">Clear</button>
     </div>
     <div id="import-notice" style="display:none;margin-top:1rem;"></div>
+
+    <div class="divider"></div>
+
+    <div style="margin-bottom:1.25rem;">
+      <h2 style="font-size:18px;font-weight:500;margin-bottom:4px;">Import from DTS files</h2>
+      <p style="font-size:13px;color:var(--muted);">Select one or more weekly DTS <code style="font-family:var(--mono);font-size:11px;">.xlsx</code> files. Reads the week-ending date and total sales from each Takings sheet automatically.</p>
+    </div>
+    <div class="import-area">
+      <label style="margin-bottom:10px;display:block;">Import into column</label>
+      <div class="radio-group" style="margin-bottom:1.25rem;">
+        <label class="radio-label">
+          <input type="radio" name="dts-col" value="valA" checked>
+          <span id="dts-label-a">Current year (2026)</span>
+        </label>
+        <label class="radio-label">
+          <input type="radio" name="dts-col" value="valB">
+          <span id="dts-label-b">Prior year (2025)</span>
+        </label>
+      </div>
+      <label>Select DTS files</label>
+      <input type="file" id="dts-files" class="dts-file-input" multiple accept=".xlsx">
+      <div class="import-hint">Reads Takings sheet — week-ending date (P2) and weekly total (M12). Merges with existing rows by date.</div>
+    </div>
+    <button class="btn primary" onclick="importFromDTS()">Import DTS files</button>
+    <div id="dts-notice" style="display:none;margin-top:1rem;"></div>
   </div>
 
 </main>
@@ -444,6 +512,7 @@ let labelA = '2026';
 let labelB = '2025';
 let mainChartInst = null;
 let varChartInst = null;
+let breakdownChartInst = null;
 let hideFutureWeeks = false;
 
 // ── PERSIST ────────────────────────────────────────────────────────────────
@@ -456,6 +525,8 @@ function saveConfig() {
   labelB = document.getElementById('label-b').value || '2025';
   document.getElementById('col-label-a').textContent = labelA;
   document.getElementById('col-label-b').textContent = labelB;
+  document.getElementById('dts-label-a').textContent = `Current year (${labelA})`;
+  document.getElementById('dts-label-b').textContent = `Prior year (${labelB})`;
   localStorage.setItem('rbar_sales_config', JSON.stringify({ labelA, labelB }));
 }
 
@@ -472,6 +543,8 @@ function load() {
       document.getElementById('label-b').value = labelB;
       document.getElementById('col-label-a').textContent = labelA;
       document.getElementById('col-label-b').textContent = labelB;
+      document.getElementById('dts-label-a').textContent = `Current year (${labelA})`;
+      document.getElementById('dts-label-b').textContent = `Prior year (${labelB})`;
     }
   } catch(e) {}
 }
@@ -531,6 +604,108 @@ function renderRows() {
     `;
     container.appendChild(div);
   });
+}
+
+// ── DTS IMPORT ─────────────────────────────────────────────────────────────
+function excelSerialToISO(serial) {
+  const d = new Date(Math.round((serial - 25569) * 864e5));
+  return d.toISOString().slice(0, 10);
+}
+
+function readRange(ws, range) {
+  const { s, e } = XLSX.utils.decode_range(range);
+  const result = [];
+  for (let r = s.r; r <= e.r; r++) {
+    const row = [];
+    for (let c = s.c; c <= e.c; c++) {
+      const cell = ws[XLSX.utils.encode_cell({ r, c })];
+      row.push(cell ? (parseFloat(cell.v) || 0) : 0);
+    }
+    result.push(row);
+  }
+  return result;
+}
+
+function sumCol(grid, col) { return grid.reduce((s, r) => s + (r[col] || 0), 0); }
+
+async function importFromDTS() {
+  const fileInput = document.getElementById('dts-files');
+  const col = document.querySelector('input[name="dts-col"]:checked').value;
+  const bdKey = col === 'valA' ? 'bdA' : 'bdB';
+  const files = Array.from(fileInput.files);
+
+  if (!files.length) return;
+
+  let imported = 0, skipped = 0, errors = [];
+
+  for (const file of files) {
+    try {
+      const buffer = await file.arrayBuffer();
+      const wb = XLSX.read(buffer, { type: 'array' });
+
+      const wsName = wb.SheetNames.find(n => n.trim().toLowerCase() === 'takings');
+      if (!wsName) { skipped++; errors.push(`${file.name}: no Takings sheet`); continue; }
+
+      const ws = wb.Sheets[wsName];
+      const dateCell = ws['P2'];
+      if (!dateCell || dateCell.v == null) { skipped++; errors.push(`${file.name}: missing date (P2)`); continue; }
+
+      // C5:G11 — venue sales: Bistro, Sports Bar, Public, Taylor's, Food
+      const venues = readRange(ws, 'C5:G11');
+      const bistro      = sumCol(venues, 0);
+      const sportsBar   = sumCol(venues, 1);
+      const publicBar   = sumCol(venues, 2);
+      const taylors     = sumCol(venues, 3);
+      const food        = sumCol(venues, 4);
+
+      // B24:B30 — gaming turnover per day
+      const turnoverGrid = readRange(ws, 'B24:B30');
+      const gamingTurnover = sumCol(turnoverGrid, 0);
+
+      // H24:H30 — gaming net per day
+      const netGrid = readRange(ws, 'H24:H30');
+      const gamingNet = sumCol(netGrid, 0);
+
+      const total = bistro + sportsBar + publicBar + taylors + food + gamingNet;
+      if (total === 0) { skipped++; errors.push(`${file.name}: all values are zero`); continue; }
+
+      const isoDate = excelSerialToISO(dateCell.v);
+      const bd = { bistro, sportsBar, publicBar, taylors, food, gamingTurnover, gamingNet };
+
+      const existing = rows.find(r => r.date === isoDate);
+      if (existing) {
+        existing[col] = total;
+        existing[bdKey] = bd;
+      } else {
+        rows.push({ id: Date.now() + Math.random(), date: isoDate, valA: col === 'valA' ? total : '', valB: col === 'valB' ? total : '', [bdKey]: bd });
+      }
+      imported++;
+    } catch(e) {
+      skipped++;
+      errors.push(`${file.name}: ${e.message}`);
+    }
+  }
+
+  rows.sort((a, b) => a.date.localeCompare(b.date));
+  save();
+  renderRows();
+
+  const notice = document.getElementById('dts-notice');
+  notice.style.display = 'block';
+  notice.className = 'notice';
+  const colLabel = col === 'valA' ? labelA : labelB;
+  let msg = `✓ Imported ${imported} file${imported !== 1 ? 's' : ''} into ${colLabel}`;
+  if (skipped) msg += ` — ${skipped} skipped`;
+  notice.textContent = msg;
+  if (errors.length) {
+    const ul = document.createElement('ul');
+    ul.style.cssText = 'margin-top:6px;padding-left:1.2em;font-size:11px;';
+    errors.forEach(e => { const li = document.createElement('li'); li.textContent = e; ul.appendChild(li); });
+    notice.appendChild(ul);
+  }
+
+  fileInput.value = '';
+  if (imported > 0) setTimeout(() => { showView('dashboard'); }, 1200);
 }
 
 // ── IMPORT ─────────────────────────────────────────────────────────────────
@@ -665,6 +840,7 @@ function renderDashboard() {
   // destroy old charts
   if (mainChartInst) { mainChartInst.destroy(); mainChartInst = null; }
   if (varChartInst) { varChartInst.destroy(); varChartInst = null; }
+  if (breakdownChartInst) { breakdownChartInst.destroy(); breakdownChartInst = null; }
 
   const gridColor = 'rgba(255,255,255,0.06)';
   const tickColor = '#666';
@@ -778,6 +954,83 @@ function renderDashboard() {
       }
     }
   });
+
+  // ── Venue breakdown chart (only when DTS data exists) ──
+  const VENUES = [
+    { key: 'bistro',        label: 'Bistro',       color: 'rgba(200,169,110,0.75)' },
+    { key: 'sportsBar',     label: 'Sports Bar',   color: 'rgba(93,170,133,0.75)'  },
+    { key: 'publicBar',     label: 'Public',       color: 'rgba(122,162,200,0.75)' },
+    { key: 'taylors',       label: "Taylor's",     color: 'rgba(212,120,80,0.75)'  },
+    { key: 'food',          label: 'Food',         color: 'rgba(170,148,100,0.75)' },
+    { key: 'gamingNet',     label: 'Gaming Net',   color: 'rgba(130,130,130,0.75)' },
+  ];
+
+  const bdRows = valid.filter(r => r.bdA);
+  const bdCard = document.getElementById('breakdown-card');
+  if (bdRows.length > 0) {
+    bdCard.style.display = 'block';
+    document.getElementById('breakdown-year').textContent = labelA;
+
+    const bdLabels = bdRows.map(r => {
+      const d = new Date(r.date + 'T00:00:00');
+      return d.toLocaleDateString('en-AU', { day: '2-digit', month: 'short' });
+    });
+
+    document.getElementById('breakdown-legend').innerHTML = VENUES.map(v =>
+      `<div class="legend-item"><div class="legend-swatch" style="background:${v.color};height:10px;width:10px;border-radius:2px;"></div><span>${v.label}</span></div>`
+    ).join('');
+
+    breakdownChartInst = new Chart(document.getElementById('breakdownChart'), {
+      type: 'bar',
+      data: {
+        labels: bdLabels,
+        datasets: VENUES.map(v => ({
+          label: v.label,
+          data: bdRows.map(r => r.bdA[v.key] || 0),
+          backgroundColor: v.color,
+          stack: 'venues',
+          borderRadius: 0,
+          borderSkipped: false,
+        })),
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#1a1a1a',
+            borderColor: 'rgba(255,255,255,0.12)',
+            borderWidth: 1,
+            titleColor: '#aaa',
+            bodyColor: '#f0ede8',
+            callbacks: {
+              label: ctx => `  ${ctx.dataset.label}: ${fmt(ctx.parsed.y)}`,
+              afterBody: items => {
+                const total = items.reduce((s, i) => s + i.parsed.y, 0);
+                return ['', `  Total: ${fmt(total)}`];
+              }
+            }
+          }
+        },
+        scales: {
+          x: {
+            stacked: true,
+            ticks: { color: tickColor, font: { size: 11, family: "'DM Mono', monospace" }, maxRotation: 45, autoSkip: false },
+            grid: { color: gridColor },
+          },
+          y: {
+            stacked: true,
+            ticks: { color: tickColor, font: { size: 11, family: "'DM Mono', monospace" }, callback: v => fmtK(v) },
+            grid: { color: gridColor },
+          }
+        }
+      }
+    });
+  } else {
+    bdCard.style.display = 'none';
+  }
 }
 
 // ── INIT ───────────────────────────────────────────────────────────────────
