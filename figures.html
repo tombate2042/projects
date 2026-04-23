@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Weekly Sales Comparison — The Republic Bar</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0f0f0f;
+    --surface: #181818;
+    --surface2: #222222;
+    --border: rgba(255,255,255,0.08);
+    --border2: rgba(255,255,255,0.14);
+    --text: #f0ede8;
+    --muted: #888;
+    --accent: #c8a96e;
+    --accent2: #8fc4a8;
+    --danger: #d4634a;
+    --green: #5daa85;
+    --red: #d4634a;
+    --mono: 'DM Mono', monospace;
+    --sans: 'DM Sans', sans-serif;
+  }
+
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  header {
+    border-bottom: 1px solid var(--border);
+    padding: 1.25rem 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--surface);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .logo {
+    font-family: var(--mono);
+    font-size: 13px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  .nav-tabs {
+    display: flex;
+    gap: 0;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+
+  .nav-tab {
+    padding: 0.45rem 1.1rem;
+    font-size: 12px;
+    font-family: var(--mono);
+    letter-spacing: 0.06em;
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    transition: all 0.15s;
+    text-transform: uppercase;
+  }
+
+  .nav-tab.active {
+    background: var(--accent);
+    color: #0f0f0f;
+    font-weight: 500;
+  }
+
+  .nav-tab:not(.active):hover { color: var(--text); background: var(--surface2); }
+
+  main { max-width: 1100px; margin: 0 auto; padding: 2rem; }
+
+  /* ── VIEWS ── */
+  .view { display: none; }
+  .view.active { display: block; }
+
+  /* ── DATA ENTRY ── */
+  .entry-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .entry-header h2 { font-size: 18px; font-weight: 500; }
+  .entry-header p { font-size: 13px; color: var(--muted); margin-top: 2px; }
+
+  .entry-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  .btn {
+    padding: 0.5rem 1rem;
+    border-radius: 5px;
+    border: 1px solid var(--border2);
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.15s;
+    background: transparent;
+    color: var(--text);
+  }
+
+  .btn:hover { border-color: var(--accent); color: var(--accent); }
+  .btn.primary { background: var(--accent); color: #0f0f0f; border-color: var(--accent); font-weight: 500; }
+  .btn.primary:hover { background: #d4b87a; border-color: #d4b87a; color: #0f0f0f; }
+  .btn.danger:hover { border-color: var(--danger); color: var(--danger); }
+
+  .year-labels {
+    display: grid;
+    grid-template-columns: 130px 1fr 1fr 36px;
+    gap: 8px;
+    padding: 0 0 8px 0;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 6px;
+  }
+
+  .year-labels span {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-align: center;
+  }
+
+  .year-labels span:first-child { text-align: left; }
+
+  .year-col-a { color: var(--accent) !important; }
+  .year-col-b { color: #888 !important; }
+
+  #rows-container { display: flex; flex-direction: column; gap: 4px; }
+
+  .row {
+    display: grid;
+    grid-template-columns: 130px 1fr 1fr 36px;
+    gap: 8px;
+    align-items: center;
+    animation: rowIn 0.18s ease;
+  }
+
+  @keyframes rowIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+
+  .row input[type="date"], .row input[type="number"] {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 0.5rem 0.7rem;
+    transition: border-color 0.15s;
+    -moz-appearance: textfield;
+  }
+
+  .row input::-webkit-outer-spin-button,
+  .row input::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+  .row input:focus { outline: none; border-color: var(--accent); }
+
+  .row input[type="number"].current { border-color: rgba(200,169,110,0.3); }
+  .row input[type="number"].prior { border-color: rgba(136,136,136,0.2); }
+
+  .row-delete {
+    width: 36px; height: 36px;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 16px;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s;
+    flex-shrink: 0;
+  }
+
+  .row-delete:hover { border-color: var(--danger); color: var(--danger); background: rgba(212,99,74,0.08); }
+
+  .add-row-area {
+    margin-top: 12px;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .divider { height: 1px; background: var(--border); margin: 1.5rem 0; }
+
+  .year-config {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 1.5rem;
+  }
+
+  .year-config label { display: block; font-size: 11px; font-family: var(--mono); text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 6px; }
+
+  .year-config input {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 13px;
+    padding: 0.5rem 0.7rem;
+  }
+
+  .year-config input:focus { outline: none; border-color: var(--accent); }
+
+  /* ── DASHBOARD ── */
+  .metrics {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+    margin-bottom: 2rem;
+  }
+
+  .metric {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem 1.25rem;
+  }
+
+  .metric-label { font-size: 11px; font-family: var(--mono); text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 6px; }
+  .metric-value { font-size: 22px; font-weight: 500; font-family: var(--mono); }
+  .metric-sub { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+  .chart-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .chart-title {
+    font-size: 11px;
+    font-family: var(--mono);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .legend {
+    display: flex;
+    gap: 16px;
+    font-size: 11px;
+    color: var(--muted);
+    font-family: var(--mono);
+  }
+
+  .legend-item { display: flex; align-items: center; gap: 6px; }
+  .legend-swatch { width: 18px; height: 2px; border-radius: 2px; flex-shrink: 0; }
+  .legend-swatch.dashed { background: repeating-linear-gradient(90deg, #888 0, #888 4px, transparent 4px, transparent 8px); height: 2px; }
+
+  .chart-wrap { position: relative; width: 100%; }
+
+  .empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    color: var(--muted);
+  }
+
+  .empty-state .icon { font-size: 2rem; margin-bottom: 1rem; opacity: 0.4; }
+  .empty-state p { font-size: 13px; }
+
+  /* ── IMPORT ── */
+  .import-area {
+    background: var(--surface);
+    border: 1px dashed var(--border2);
+    border-radius: 8px;
+    padding: 2rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .import-area label { display: block; font-size: 11px; font-family: var(--mono); text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 8px; }
+
+  .import-area textarea {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 0.75rem;
+    resize: vertical;
+    min-height: 160px;
+  }
+
+  .import-area textarea:focus { outline: none; border-color: var(--accent); }
+
+  .import-hint { font-size: 12px; color: var(--muted); margin-top: 8px; }
+
+  .notice {
+    background: rgba(200,169,110,0.08);
+    border: 1px solid rgba(200,169,110,0.2);
+    border-radius: 6px;
+    padding: 0.75rem 1rem;
+    font-size: 12px;
+    color: var(--accent);
+    margin-bottom: 1rem;
+    font-family: var(--mono);
+  }
+
+  /* scrollbar */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Republic Bar — Sales Tracker</div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showView('dashboard')">Dashboard</button>
+    <button class="nav-tab" onclick="showView('entry')">Data Entry</button>
+    <button class="nav-tab" onclick="showView('import')">Import</button>
+  </div>
+</header>
+
+<main>
+
+  <!-- DASHBOARD -->
+  <div class="view active" id="view-dashboard">
+    <div id="dashboard-empty" class="empty-state">
+      <div class="icon">📊</div>
+      <p>No data yet — go to <strong>Data Entry</strong> to add weeks, or use <strong>Import</strong> to paste data.</p>
+    </div>
+    <div id="dashboard-content" style="display:none;">
+      <div class="metrics" id="metrics"></div>
+      <div class="chart-card">
+        <div class="chart-title">
+          <span>Weekly sales — year on year</span>
+          <div class="legend">
+            <div class="legend-item"><div class="legend-swatch" style="background:#c8a96e; height:3px;"></div><span id="leg-a">Current</span></div>
+            <div class="legend-item"><div class="legend-swatch dashed"></div><span id="leg-b">Prior</span></div>
+          </div>
+        </div>
+        <div class="chart-wrap" style="height:320px;"><canvas id="mainChart"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Week-by-week variance</div>
+        <div class="chart-wrap" id="variance-wrap" style="height:160px;"><canvas id="varianceChart"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DATA ENTRY -->
+  <div class="view" id="view-entry">
+    <div class="year-config">
+      <div>
+        <label>Current year label</label>
+        <input type="text" id="label-a" value="2026" oninput="saveConfig()" placeholder="e.g. 2026">
+      </div>
+      <div>
+        <label>Prior year label</label>
+        <input type="text" id="label-b" value="2025" oninput="saveConfig()" placeholder="e.g. 2025">
+      </div>
+    </div>
+
+    <div class="entry-header">
+      <div>
+        <h2>Weekly figures</h2>
+        <p>Enter the week-ending date and sales totals for each week.</p>
+      </div>
+      <div class="entry-actions">
+        <button class="btn" onclick="clearAll()">Clear all</button>
+        <button class="btn primary" onclick="showView('dashboard'); renderDashboard();">View dashboard →</button>
+      </div>
+    </div>
+
+    <div class="year-labels">
+      <span>Week ending</span>
+      <span class="year-col-a" id="col-label-a">2026</span>
+      <span class="year-col-b" id="col-label-b">2025</span>
+      <span></span>
+    </div>
+
+    <div id="rows-container"></div>
+
+    <div class="add-row-area">
+      <button class="btn" onclick="addRow()">+ Add week</button>
+      <button class="btn" onclick="addMultipleRows(4)">+ Add 4 weeks</button>
+    </div>
+  </div>
+
+  <!-- IMPORT -->
+  <div class="view" id="view-import">
+    <div style="margin-bottom:1.5rem;">
+      <h2 style="font-size:18px;font-weight:500;margin-bottom:4px;">Paste & import data</h2>
+      <p style="font-size:13px;color:var(--muted);">Paste tab-separated or space-separated data. One row per week: date, current year sales, prior year sales.</p>
+    </div>
+    <div class="import-area">
+      <label>Raw data — paste below</label>
+      <textarea id="import-text" placeholder="04/01/26	70081.00	69604.82
+11/01/26	49777.88	47500.25
+18/01/26	82876.41	46783.61
+..."></textarea>
+      <div class="import-hint">Accepts DD/MM/YY, DD/MM/YYYY, or YYYY-MM-DD dates. Amounts can include $ and commas.</div>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn primary" onclick="importData()">Import data</button>
+      <button class="btn" onclick="document.getElementById('import-text').value=''">Clear</button>
+    </div>
+    <div id="import-notice" style="display:none;margin-top:1rem;"></div>
+  </div>
+
+</main>
+
+<script>
+// ── STATE ──────────────────────────────────────────────────────────────────
+let rows = [];
+let labelA = '2026';
+let labelB = '2025';
+let mainChartInst = null;
+let varChartInst = null;
+
+// ── PERSIST ────────────────────────────────────────────────────────────────
+function save() {
+  localStorage.setItem('rbar_sales_rows', JSON.stringify(rows));
+}
+
+function saveConfig() {
+  labelA = document.getElementById('label-a').value || '2026';
+  labelB = document.getElementById('label-b').value || '2025';
+  document.getElementById('col-label-a').textContent = labelA;
+  document.getElementById('col-label-b').textContent = labelB;
+  localStorage.setItem('rbar_sales_config', JSON.stringify({ labelA, labelB }));
+}
+
+function load() {
+  try {
+    const r = localStorage.getItem('rbar_sales_rows');
+    if (r) rows = JSON.parse(r);
+    const c = localStorage.getItem('rbar_sales_config');
+    if (c) {
+      const cfg = JSON.parse(c);
+      labelA = cfg.labelA || '2026';
+      labelB = cfg.labelB || '2025';
+      document.getElementById('label-a').value = labelA;
+      document.getElementById('label-b').value = labelB;
+      document.getElementById('col-label-a').textContent = labelA;
+      document.getElementById('col-label-b').textContent = labelB;
+    }
+  } catch(e) {}
+}
+
+// ── VIEWS ──────────────────────────────────────────────────────────────────
+function showView(name) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('view-' + name).classList.add('active');
+  document.querySelectorAll('.nav-tab').forEach(t => {
+    if (t.textContent.toLowerCase().includes(name === 'entry' ? 'data' : name)) t.classList.add('active');
+  });
+  if (name === 'dashboard') renderDashboard();
+}
+
+// ── ROWS ───────────────────────────────────────────────────────────────────
+function addRow(date='', valA='', valB='') {
+  const id = Date.now() + Math.random();
+  rows.push({ id, date, valA, valB });
+  renderRows();
+  save();
+}
+
+function addMultipleRows(n) {
+  for (let i = 0; i < n; i++) addRow();
+}
+
+function deleteRow(id) {
+  rows = rows.filter(r => r.id !== id);
+  renderRows();
+  save();
+}
+
+function updateRow(id, field, value) {
+  const row = rows.find(r => r.id === id);
+  if (row) { row[field] = value; save(); }
+}
+
+function clearAll() {
+  if (!confirm('Clear all rows?')) return;
+  rows = [];
+  renderRows();
+  save();
+}
+
+function renderRows() {
+  const container = document.getElementById('rows-container');
+  container.innerHTML = '';
+  rows.forEach(row => {
+    const div = document.createElement('div');
+    div.className = 'row';
+    div.innerHTML = `
+      <input type="date" value="${row.date}" onchange="updateRow(${row.id}, 'date', this.value)">
+      <input type="number" class="current" step="0.01" placeholder="0.00" value="${row.valA}" oninput="updateRow(${row.id}, 'valA', this.value)">
+      <input type="number" class="prior" step="0.01" placeholder="0.00" value="${row.valB}" oninput="updateRow(${row.id}, 'valB', this.value)">
+      <button class="row-delete" onclick="deleteRow(${row.id})" title="Delete row">×</button>
+    `;
+    container.appendChild(div);
+  });
+}
+
+// ── IMPORT ─────────────────────────────────────────────────────────────────
+function importData() {
+  const text = document.getElementById('import-text').value.trim();
+  if (!text) return;
+
+  const lines = text.split('\n').filter(l => l.trim());
+  let imported = 0, skipped = 0;
+
+  lines.forEach(line => {
+    const parts = line.trim().split(/[\t,]+/).map(s => s.trim());
+    if (parts.length < 2) { skipped++; return; }
+
+    const rawDate = parts[0];
+    const rawA = parts[1] ? parts[1].replace(/[$,\s]/g, '') : '';
+    const rawB = parts[2] ? parts[2].replace(/[$,\s]/g, '') : '';
+
+    // parse date formats: DD/MM/YY, DD/MM/YYYY, YYYY-MM-DD
+    let isoDate = '';
+    const ddmmyy = rawDate.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
+    const iso = rawDate.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (ddmmyy) {
+      let yr = ddmmyy[3];
+      if (yr.length === 2) yr = '20' + yr;
+      isoDate = `${yr}-${ddmmyy[2].padStart(2,'0')}-${ddmmyy[1].padStart(2,'0')}`;
+    } else if (iso) {
+      isoDate = rawDate;
+    } else { skipped++; return; }
+
+    const valA = parseFloat(rawA) || '';
+    const valB = parseFloat(rawB) || '';
+
+    rows.push({ id: Date.now() + Math.random(), date: isoDate, valA, valB });
+    imported++;
+  });
+
+  save();
+  renderRows();
+
+  const notice = document.getElementById('import-notice');
+  notice.style.display = 'block';
+  notice.className = 'notice';
+  notice.textContent = `✓ Imported ${imported} week${imported !== 1 ? 's' : ''}${skipped ? ` (${skipped} skipped)` : ''} — switch to Dashboard to view.`;
+
+  if (imported > 0) {
+    setTimeout(() => { showView('dashboard'); }, 1200);
+  }
+}
+
+// ── DASHBOARD ──────────────────────────────────────────────────────────────
+function fmt(v) { return '$' + Math.round(v).toLocaleString('en-AU'); }
+function fmtK(v) { return '$' + (Math.round(v/100)*100/1000).toFixed(0) + 'k'; }
+
+function renderDashboard() {
+  const valid = rows.filter(r => r.date && (r.valA || r.valB))
+    .sort((a,b) => a.date.localeCompare(b.date));
+
+  const empty = document.getElementById('dashboard-empty');
+  const content = document.getElementById('dashboard-content');
+
+  if (valid.length === 0) {
+    empty.style.display = 'block';
+    content.style.display = 'none';
+    return;
+  }
+
+  empty.style.display = 'none';
+  content.style.display = 'block';
+
+  // labels
+  document.getElementById('leg-a').textContent = labelA;
+  document.getElementById('leg-b').textContent = labelB;
+
+  const labels = valid.map(r => {
+    const d = new Date(r.date + 'T00:00:00');
+    return d.toLocaleDateString('en-AU', { day: '2-digit', month: 'short' });
+  });
+
+  const dataA = valid.map(r => parseFloat(r.valA) || 0);
+  const dataB = valid.map(r => parseFloat(r.valB) || 0);
+  const variance = dataA.map((a,i) => Math.round(a - dataB[i]));
+
+  // metrics
+  const activeA = dataA.filter(v => v > 0);
+  const activeB = dataB.filter(v => v > 0);
+  const totalA = activeA.reduce((s,v) => s+v, 0);
+  const totalB = activeB.reduce((s,v) => s+v, 0);
+  const totalVar = totalA - totalB;
+  const pct = totalB > 0 ? ((totalVar / totalB) * 100).toFixed(1) : '—';
+  const bestA = activeA.length ? Math.max(...activeA) : 0;
+  const avgA = activeA.length ? totalA / activeA.length : 0;
+
+  const varColor = totalVar >= 0 ? '#5daa85' : '#d4634a';
+  const varSign = totalVar >= 0 ? '+' : '';
+
+  document.getElementById('metrics').innerHTML = `
+    <div class="metric">
+      <div class="metric-label">${labelA} YTD total</div>
+      <div class="metric-value" style="color:var(--accent)">${fmt(totalA)}</div>
+      <div class="metric-sub">${activeA.length} weeks recorded</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">${labelB} same period</div>
+      <div class="metric-value">${fmt(totalB)}</div>
+      <div class="metric-sub">${activeB.length} weeks recorded</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Total variance</div>
+      <div class="metric-value" style="color:${varColor}">${varSign}${fmt(totalVar)}</div>
+      <div class="metric-sub">${varSign}${pct}% vs prior year</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Best week ${labelA}</div>
+      <div class="metric-value">${fmt(bestA)}</div>
+      <div class="metric-sub">avg ${fmt(avgA)}/week</div>
+    </div>
+  `;
+
+  // variance chart height
+  const vWrap = document.getElementById('variance-wrap');
+  vWrap.style.height = Math.max(120, labels.length * 22) + 'px';
+
+  // destroy old charts
+  if (mainChartInst) { mainChartInst.destroy(); mainChartInst = null; }
+  if (varChartInst) { varChartInst.destroy(); varChartInst = null; }
+
+  const gridColor = 'rgba(255,255,255,0.06)';
+  const tickColor = '#666';
+
+  mainChartInst = new Chart(document.getElementById('mainChart'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: labelA,
+          data: dataA,
+          borderColor: '#c8a96e',
+          backgroundColor: 'rgba(200,169,110,0.07)',
+          borderWidth: 2.5,
+          pointRadius: 4,
+          pointBackgroundColor: '#c8a96e',
+          fill: true,
+          tension: 0.3,
+        },
+        {
+          label: labelB,
+          data: dataB,
+          borderColor: '#555',
+          backgroundColor: 'transparent',
+          borderWidth: 1.5,
+          borderDash: [5,4],
+          pointRadius: 3,
+          pointBackgroundColor: '#555',
+          fill: false,
+          tension: 0.3,
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#1a1a1a',
+          borderColor: 'rgba(255,255,255,0.12)',
+          borderWidth: 1,
+          titleColor: '#aaa',
+          bodyColor: '#f0ede8',
+          callbacks: {
+            label: ctx => '  ' + ctx.dataset.label + ': ' + fmt(ctx.parsed.y),
+            afterBody: items => {
+              if (items.length < 2) return '';
+              const v = items[0].parsed.y - items[1].parsed.y;
+              const sign = v >= 0 ? '+' : '';
+              return ['', '  Variance: ' + sign + fmt(v)];
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          ticks: { color: tickColor, font: { size: 11, family: "'DM Mono', monospace" }, maxRotation: 45, autoSkip: false },
+          grid: { color: gridColor }
+        },
+        y: {
+          ticks: { color: tickColor, font: { size: 11, family: "'DM Mono', monospace" }, callback: v => fmtK(v) },
+          grid: { color: gridColor },
+        }
+      }
+    }
+  });
+
+  varChartInst = new Chart(document.getElementById('varianceChart'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Variance',
+        data: variance,
+        backgroundColor: variance.map(v => v >= 0 ? 'rgba(93,170,133,0.65)' : 'rgba(212,99,74,0.65)'),
+        borderColor: variance.map(v => v >= 0 ? '#5daa85' : '#d4634a'),
+        borderWidth: 1,
+        borderRadius: 3,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#1a1a1a',
+          borderColor: 'rgba(255,255,255,0.12)',
+          borderWidth: 1,
+          titleColor: '#aaa',
+          bodyColor: '#f0ede8',
+          callbacks: {
+            label: ctx => '  ' + (ctx.parsed.y >= 0 ? '+' : '') + fmt(ctx.parsed.y)
+          }
+        }
+      },
+      scales: {
+        x: {
+          ticks: { color: tickColor, font: { size: 11, family: "'DM Mono', monospace" }, maxRotation: 45, autoSkip: false },
+          grid: { color: gridColor }
+        },
+        y: {
+          ticks: { color: tickColor, font: { size: 11, family: "'DM Mono', monospace" }, callback: v => (v >= 0 ? '+' : '') + fmtK(v) },
+          grid: { color: gridColor }
+        }
+      }
+    }
+  });
+}
+
+// ── INIT ───────────────────────────────────────────────────────────────────
+load();
+renderRows();
+renderDashboard();
+</script>
+</body>
+</html>
