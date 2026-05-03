@@ -1245,8 +1245,9 @@ function generateSupplierChecklist() {
     return;
   }
 
-  const today = new Date();
-  const dateStr = today.toLocaleDateString('en-AU', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  const weekEnd = new Date(state.weekStart + 'T00:00:00');
+  weekEnd.setDate(weekEnd.getDate() + 6);
+  const dateStr = weekEnd.toLocaleDateString('en-AU', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
   const allItems = getAllItems();
   const rows = suppliers.map(s => {
@@ -1284,7 +1285,7 @@ function generateSupplierChecklist() {
     }
   </style></head><body>
   <h1>Order Checklist</h1>
-  <div class="date">${dateStr}</div>
+  <div class="date">Week ending ${dateStr}</div>
   <table>
     <thead>
       <tr>
