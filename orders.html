@@ -328,6 +328,10 @@
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
     Next Week
   </button>
+  <button class="btn no-print" onclick="generateSupplierChecklist()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+    Supplier Checklist
+  </button>
   <button class="btn btn-primary no-print" id="btnExport" onclick="exportPDF()">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
     Export PDF
@@ -1221,6 +1225,73 @@ function exportPDF() {
     html += `</div>`;
   });
   html += '</body></html>';
+
+  const win = window.open('', '_blank');
+  win.document.write(html);
+  win.document.close();
+  win.focus();
+  setTimeout(() => win.print(), 600);
+}
+
+function generateSupplierChecklist() {
+  const existing = new Set(getAllItems().map(m => m.supplier).filter(Boolean));
+  const suppliers = [...existing].sort((a, b) => {
+    const ai = SUPPLIER_ORDER.indexOf(a); const bi = SUPPLIER_ORDER.indexOf(b);
+    return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
+  });
+
+  if (!suppliers.length) {
+    alert('No suppliers found in the product list.');
+    return;
+  }
+
+  const today = new Date();
+  const dateStr = today.toLocaleDateString('en-AU', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+
+  const rows = suppliers.map(s => `
+    <tr>
+      <td class="supplier-name">${s}</td>
+      <td class="cb-cell"><input type="checkbox"></td>
+      <td class="cb-cell"><input type="checkbox"></td>
+      <td class="cb-cell"><input type="checkbox"></td>
+    </tr>`).join('');
+
+  const html = `<html><head><meta charset="UTF-8"><title>Supplier Checklist</title>
+  <style>
+    body { font-family: Arial, sans-serif; font-size: 13px; color: #111; margin: 32px 40px; }
+    h1 { font-size: 20px; margin: 0 0 4px; }
+    .date { color: #555; font-size: 13px; margin-bottom: 28px; }
+    table { width: 100%; border-collapse: collapse; max-width: 560px; }
+    thead tr { border-bottom: 2px solid #222; }
+    th { padding: 8px 12px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #444; }
+    th:first-child { text-align: left; }
+    th:not(:first-child) { text-align: center; width: 100px; }
+    tbody tr { border-bottom: 1px solid #e0e0e0; }
+    tbody tr:last-child { border-bottom: 2px solid #222; }
+    td { padding: 10px 12px; }
+    .supplier-name { font-size: 14px; font-weight: 500; }
+    .cb-cell { text-align: center; }
+    .cb-cell input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; accent-color: #333; }
+    @media print {
+      body { margin: 20px; }
+      .cb-cell input[type="checkbox"] { -webkit-appearance: none; appearance: none; width: 16px; height: 16px; border: 1.5px solid #333; border-radius: 2px; display: inline-block; vertical-align: middle; }
+      .cb-cell input[type="checkbox"]:checked { background: #333; }
+    }
+  </style></head><body>
+  <h1>Supplier Checklist</h1>
+  <div class="date">${dateStr}</div>
+  <table>
+    <thead>
+      <tr>
+        <th>Supplier</th>
+        <th>Ordered</th>
+        <th>Received</th>
+        <th>Invoiced</th>
+      </tr>
+    </thead>
+    <tbody>${rows}</tbody>
+  </table>
+  </body></html>`;
 
   const win = window.open('', '_blank');
   win.document.write(html);
