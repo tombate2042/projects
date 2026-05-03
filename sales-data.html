@@ -137,17 +137,17 @@
 
   /* TASKS PANEL */
   .tasks-day-label {
-    font-size: 12px;
+    font-size: 14px;
     font-weight: 700;
     letter-spacing: 0.18em;
     text-transform: uppercase;
     color: var(--muted);
-    padding: 10px 0 6px;
+    padding: 16px 0 12px;
     cursor: pointer;
     user-select: none;
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
     border-bottom: 1px solid var(--border);
   }
   .tasks-day-label:hover { color: var(--text); }
@@ -156,13 +156,13 @@
   .task-item {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 10px 8px;
+    gap: 14px;
+    padding: 16px 4px;
     border-bottom: 1px solid var(--border);
   }
   .task-item:last-child { border-bottom: none; }
-  .task-checkbox { width: 16px; height: 16px; accent-color: var(--accent-tasks); cursor: pointer; flex-shrink: 0; }
-  .task-label { font-size: 14px; color: var(--text); cursor: pointer; user-select: none; }
+  .task-checkbox { width: 20px; height: 20px; accent-color: var(--accent-tasks); cursor: pointer; flex-shrink: 0; }
+  .task-label { font-size: 17px; color: var(--text); cursor: pointer; user-select: none; }
   .task-item.done .task-label { color: var(--muted); text-decoration: line-through; }
 
   .layout {
@@ -1219,7 +1219,7 @@
 
   <!-- ===== TASKS ===== -->
   <div class="panel tasks" id="tasks-panel">
-    <div class="panel-inner" style="max-width:520px">
+    <div style="max-width:600px;margin:0 auto">
       <div id="tasksContent"></div>
     </div>
   </div>
