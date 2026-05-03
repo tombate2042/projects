@@ -303,14 +303,6 @@
   .form-select option { background: var(--surface); }
   .modal-sm { width: 360px; }
   .delete-item-name { font-weight: 600; color: var(--text); }
-
-  /* TASKS */
-  .task-list { padding: 4px 0; }
-  .task-item { display: flex; align-items: center; gap: 12px; padding: 10px 24px; border-bottom: 1px solid rgba(46,46,46,0.5); }
-  .task-item:last-child { border-bottom: none; }
-  .task-checkbox { width: 16px; height: 16px; accent-color: var(--accent); cursor: pointer; flex-shrink: 0; }
-  .task-label { font-size: 13px; color: var(--text); cursor: pointer; user-select: none; }
-  .task-item.done .task-label { color: var(--text3); text-decoration: line-through; }
 </style>
 </head>
 <body>
@@ -354,7 +346,6 @@
 
 <!-- NAV TABS -->
 <div class="nav-tabs no-print">
-  <button class="nav-tab" onclick="switchView('tasks',this)">Tasks</button>
   <button class="nav-tab active" onclick="switchView('order',this)">Order</button>
   <button class="nav-tab" onclick="switchView('count',this)">Count</button>
   <button class="nav-tab" onclick="switchView('stock',this)">Stock Data</button>
@@ -377,11 +368,6 @@
   </div>
 </div>
 </div><!-- end topBar -->
-
-<!-- TASKS VIEW -->
-<div class="view" id="view-tasks">
-  <div id="tasksContent"></div>
-</div>
 
 <!-- ORDER VIEW -->
 <div class="view active" id="view-order">
@@ -1353,7 +1339,6 @@ function switchView(view, tab) {
   document.getElementById('btnNextWeek').style.display = isOrder ? '' : 'none';
   document.getElementById('btnExport').style.display = isOrder ? '' : 'none';
   document.getElementById('orderFilters').style.display = isOrder ? '' : 'none';
-  if (view === 'tasks') renderTasks();
   if (view === 'order') { renderCategories(); updateStats(); }
   if (view === 'count') renderCount();
   if (view === 'manage') renderPM();
@@ -1495,58 +1480,6 @@ function printCountSheet() {
   const win = window.open('', '_blank');
   win.document.write(html);
   win.document.close();
-}
-
-// ─── TASKS ───────────────────────────────────────────────────────────────────
-const DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
-const TASKS = [{ key: 'safeCount', label: 'Safe Count' }];
-
-function renderTasks() {
-  const todayIdx = (new Date().getDay() + 6) % 7; // Mon=0 … Sun=6
-  const container = document.getElementById('tasksContent');
-  container.innerHTML = '';
-  if (!state.taskChecks) state.taskChecks = {};
-
-  DAYS.forEach((day, i) => {
-    const isToday = i === todayIdx;
-    const key = day.toLowerCase();
-    if (!state.taskChecks[key]) state.taskChecks[key] = {};
-    const section = document.createElement('div');
-    section.className = 'category-section';
-    section.innerHTML = `
-      <div class="category-header" onclick="toggleTaskDay('${key}')">
-        <div class="category-name">${day}</div>
-        <svg class="category-toggle${isToday ? '' : ' collapsed'}" id="tasktoggle-${key}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="6 9 12 15 18 9"/></svg>
-      </div>
-      <div class="task-list" id="taskbody-${key}" style="${isToday ? '' : 'display:none'}">
-        ${TASKS.map(t => {
-          const checked = !!state.taskChecks[key][t.key];
-          return `<div class="task-item${checked ? ' done' : ''}" id="taskitem-${key}-${t.key}">
-            <input class="task-checkbox" type="checkbox" id="cb-${key}-${t.key}"${checked ? ' checked' : ''}
-              onchange="toggleTask('${key}','${t.key}',this.checked)">
-            <label class="task-label" for="cb-${key}-${t.key}">${t.label}</label>
-          </div>`;
-        }).join('')}
-      </div>`;
-    container.appendChild(section);
-  });
-}
-
-function toggleTaskDay(key) {
-  const body = document.getElementById('taskbody-' + key);
-  const toggle = document.getElementById('tasktoggle-' + key);
-  const hidden = body.style.display === 'none';
-  body.style.display = hidden ? '' : 'none';
-  toggle.classList.toggle('collapsed', !hidden);
-}
-
-function toggleTask(dayKey, taskKey, checked) {
-  if (!state.taskChecks) state.taskChecks = {};
-  if (!state.taskChecks[dayKey]) state.taskChecks[dayKey] = {};
-  state.taskChecks[dayKey][taskKey] = checked;
-  const item = document.getElementById('taskitem-' + dayKey + '-' + taskKey);
-  if (item) item.classList.toggle('done', checked);
-  saveState();
 }
 
 function toggleCountCategory(cat) {

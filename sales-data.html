@@ -27,6 +27,8 @@
     --accent-float-dim: rgba(114,114,176,0.10);
     --accent-mach: #3a8fa8;
     --accent-mach-dim: rgba(58,143,168,0.10);
+    --accent-tasks: #8a7050;
+    --accent-tasks-dim: rgba(138,112,80,0.10);
     --mono: 'Courier Prime', monospace;
     --sans: 'Nunito', sans-serif;
   }
@@ -126,6 +128,42 @@
     color: var(--accent-mach);
     background: var(--accent-mach-dim);
   }
+
+  .tab-btn.active-tasks {
+    border-color: var(--accent-tasks);
+    color: var(--accent-tasks);
+    background: var(--accent-tasks-dim);
+  }
+
+  /* TASKS PANEL */
+  .tasks-day-label {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 10px 0 6px;
+    cursor: pointer;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border-bottom: 1px solid var(--border);
+  }
+  .tasks-day-label:hover { color: var(--text); }
+  .tasks-day-label .collapse-chevron { color: var(--muted); }
+  .tasks-day-label.collapsed .collapse-chevron { transform: rotate(-90deg); }
+  .task-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  .task-item:last-child { border-bottom: none; }
+  .task-checkbox { width: 16px; height: 16px; accent-color: var(--accent-tasks); cursor: pointer; flex-shrink: 0; }
+  .task-label { font-size: 14px; color: var(--text); cursor: pointer; user-select: none; }
+  .task-item.done .task-label { color: var(--muted); text-decoration: line-through; }
 
   .layout {
     min-height: calc(100vh - 61px);
@@ -1169,6 +1207,7 @@
   <div class="divider"></div>
   <h1 id="header-title">Till</h1>
   <div class="tabs">
+    <button class="tab-btn" id="tab-tasks" onclick="switchTab('tasks')">Tasks</button>
     <button class="tab-btn active-till" id="tab-till" onclick="switchTab('till')">Till</button>
     <button class="tab-btn" id="tab-safe" onclick="switchTab('safe')">Safe</button>
     <button class="tab-btn" id="tab-float" onclick="switchTab('float')">Float Rec</button>
@@ -1177,6 +1216,13 @@
 </header>
 
 <div class="layout">
+
+  <!-- ===== TASKS ===== -->
+  <div class="panel tasks" id="tasks-panel">
+    <div class="panel-inner" style="max-width:520px">
+      <div id="tasksContent"></div>
+    </div>
+  </div>
 
   <!-- ===== TILL ===== -->
   <div class="panel till active" id="till-panel">
@@ -2705,16 +2751,78 @@ function resetFloat() {
 
 // ─── Tabs ────────────────────────────────────────────────────────────────────
 
+// ─── Tasks ───────────────────────────────────────────────────────────────────
+const TASK_DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+const TASK_ITEMS = [{ key: 'safeCount', label: 'Safe Count' }];
+
+function loadTaskChecks() {
+  try { return JSON.parse(localStorage.getItem('sd_taskChecks') || '{}'); } catch(e) { return {}; }
+}
+function saveTaskChecks(checks) {
+  localStorage.setItem('sd_taskChecks', JSON.stringify(checks));
+}
+
+function renderTasks() {
+  const todayIdx = (new Date().getDay() + 6) % 7; // Mon=0 … Sun=6
+  const checks = loadTaskChecks();
+  const container = document.getElementById('tasksContent');
+  container.innerHTML = '';
+
+  TASK_DAYS.forEach((day, i) => {
+    const isToday = i === todayIdx;
+    const key = day.toLowerCase();
+    if (!checks[key]) checks[key] = {};
+    const bodyId = 'taskbody-' + key;
+    const labelId = 'tasklabel-' + key;
+
+    const wrap = document.createElement('div');
+    wrap.innerHTML = `
+      <div class="tasks-day-label${isToday ? '' : ' collapsed'}" id="${labelId}"
+           onclick="toggleTaskDay('${key}')">
+        <span class="collapse-chevron">▼</span>${day}
+      </div>
+      <div class="collapse-body${isToday ? '' : ' collapsed'}" id="${bodyId}">
+        ${TASK_ITEMS.map(t => {
+          const checked = !!checks[key][t.key];
+          return `<div class="task-item${checked ? ' done' : ''}" id="taskitem-${key}-${t.key}">
+            <input class="task-checkbox" type="checkbox" id="cb-${key}-${t.key}"${checked ? ' checked' : ''}
+              onchange="toggleTask('${key}','${t.key}',this.checked)">
+            <label class="task-label" for="cb-${key}-${t.key}">${t.label}</label>
+          </div>`;
+        }).join('')}
+      </div>`;
+    container.appendChild(wrap);
+  });
+}
+
+function toggleTaskDay(key) {
+  const body = document.getElementById('taskbody-' + key);
+  const label = document.getElementById('tasklabel-' + key);
+  body.classList.toggle('collapsed');
+  label.classList.toggle('collapsed');
+}
+
+function toggleTask(dayKey, taskKey, checked) {
+  const checks = loadTaskChecks();
+  if (!checks[dayKey]) checks[dayKey] = {};
+  checks[dayKey][taskKey] = checked;
+  saveTaskChecks(checks);
+  const item = document.getElementById('taskitem-' + dayKey + '-' + taskKey);
+  if (item) item.classList.toggle('done', checked);
+}
+
 function switchTab(which) {
-  ['till','safe','mach','float'].forEach(t => {
+  ['till','safe','mach','float','tasks'].forEach(t => {
     document.getElementById(t + '-panel').classList.toggle('active', which === t);
   });
   document.getElementById('tab-till').className  = 'tab-btn' + (which === 'till'  ? ' active-till'  : '');
   document.getElementById('tab-safe').className  = 'tab-btn' + (which === 'safe'  ? ' active-safe'  : '');
   document.getElementById('tab-mach').className  = 'tab-btn' + (which === 'mach'  ? ' active-mach'  : '');
   document.getElementById('tab-float').className = 'tab-btn' + (which === 'float' ? ' active-float' : '');
-  const titles = { till: 'Till', safe: 'Safe', mach: 'Gaming', float: 'Float Rec' };
+  document.getElementById('tab-tasks').className = 'tab-btn' + (which === 'tasks' ? ' active-tasks' : '');
+  const titles = { till: 'Till', safe: 'Safe', mach: 'Gaming', float: 'Float Rec', tasks: 'Tasks' };
   document.getElementById('header-title').textContent = titles[which] || which;
+  if (which === 'tasks') renderTasks();
 }
 
 // ─── Keyboard navigation ─────────────────────────────────────────────────────
