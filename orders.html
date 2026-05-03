@@ -330,7 +330,7 @@
   </button>
   <button class="btn no-print" onclick="generateSupplierChecklist()">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
-    Supplier Checklist
+    Order Checklist
   </button>
   <button class="btn btn-primary no-print" id="btnExport" onclick="exportPDF()">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
@@ -1248,15 +1248,19 @@ function generateSupplierChecklist() {
   const today = new Date();
   const dateStr = today.toLocaleDateString('en-AU', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
-  const rows = suppliers.map(s => `
+  const allItems = getAllItems();
+  const rows = suppliers.map(s => {
+    const hasOrder = allItems.some(m => m.supplier === s && Number(state.items[m.id]?.ordered) > 0);
+    return `
     <tr>
       <td class="supplier-name">${s}</td>
+      <td class="cb-cell"><input type="checkbox"${hasOrder ? ' checked' : ''}></td>
       <td class="cb-cell"><input type="checkbox"></td>
       <td class="cb-cell"><input type="checkbox"></td>
-      <td class="cb-cell"><input type="checkbox"></td>
-    </tr>`).join('');
+    </tr>`;
+  }).join('');
 
-  const html = `<html><head><meta charset="UTF-8"><title>Supplier Checklist</title>
+  const html = `<html><head><meta charset="UTF-8"><title>Order Checklist</title>
   <style>
     body { font-family: Arial, sans-serif; font-size: 13px; color: #111; margin: 32px 40px; }
     h1 { font-size: 20px; margin: 0 0 4px; }
@@ -1278,7 +1282,7 @@ function generateSupplierChecklist() {
       .cb-cell input[type="checkbox"]:checked { background: #333; }
     }
   </style></head><body>
-  <h1>Supplier Checklist</h1>
+  <h1>Order Checklist</h1>
   <div class="date">${dateStr}</div>
   <table>
     <thead>
