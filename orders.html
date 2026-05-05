@@ -461,13 +461,13 @@
       <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.07em;color:var(--text3);margin-bottom:10px">This session saves to</div>
       <div style="display:flex;gap:16px">
         <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text);cursor:pointer">
-          <input type="radio" name="activeGist" id="gactive-lo" value="lo" style="accent-color:var(--accent)"> L&amp;O
+          <input type="radio" name="activeGist" id="gactive-lo" value="lo" style="accent-color:var(--accent)" onchange="updateGistButtonStates()"> L&amp;O
         </label>
         <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text);cursor:pointer">
-          <input type="radio" name="activeGist" id="gactive-republic" value="republic" style="accent-color:var(--accent)"> Republic
+          <input type="radio" name="activeGist" id="gactive-republic" value="republic" style="accent-color:var(--accent)" onchange="updateGistButtonStates()"> Republic
         </label>
         <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text2);cursor:pointer">
-          <input type="radio" name="activeGist" id="gactive-none" value="" style="accent-color:var(--accent)"> None
+          <input type="radio" name="activeGist" id="gactive-none" value="" style="accent-color:var(--accent)" onchange="updateGistButtonStates()"> None
         </label>
       </div>
     </div>
@@ -726,7 +726,7 @@ function setWeekStart(val) {
   saveState();
 }
 
-const SUPPLIER_ORDER = ['ILG','CUB','Lion','Young Henrys','Joval','Bacchus','Bacchant','Fesq & Co.','Air Liquide','QCC','Select Fresh','A1 Chemicals','Supagas'];
+const SUPPLIER_ORDER = ['ILG','CUB','Lion','Young Henrys','Joval','Bacchus','Bacchant','Fesq & Co.','Air Liquide','QCC','Select Fresh','A1 Chemicals','Supagas','Master Distillers','4Food'];
 
 const SUPPLIER_DELIVERY = {
   'ILG':          'Wednesday',
@@ -742,6 +742,8 @@ const SUPPLIER_DELIVERY = {
   'Select Fresh': 'Varies',
   'A1 Chemicals': 'Wednesday',
   'Supagas':      'Monday or Thursday',
+  'Master Distillers': 'Tuesday',
+  '4Food':        'Wednesday',
 };
 
 function renderSupplierFilters() {
@@ -1028,7 +1030,7 @@ function openSettings() {
   document.querySelectorAll('input[name="activeGist"]').forEach(r => { r.checked = r.value === active; });
   document.getElementById('settings-gist-list').innerHTML = GIST_DEFS.map(def => {
     const c = cfg[def.id] || {};
-    const disabled = !c.gistId || !c.token;
+    const disabled = !c.gistId || !c.token || active !== def.id;
     return `
     <div style="padding:14px 0;border-bottom:1px solid var(--border)">
       <div style="margin-bottom:8px">
@@ -1040,14 +1042,29 @@ function openSettings() {
         <input class="form-input" id="gtoken-${def.id}" type="password" placeholder="GitHub Personal Access Token" value="${esc(c.token||'')}" style="font-family:var(--mono);font-size:12px">
       </div>
       <div style="display:flex;align-items:center;gap:8px;margin-top:8px">
-        <button class="btn" style="font-size:11px;padding:4px 12px;opacity:${disabled?'0.4':'1'}" ${disabled?'disabled':''} onclick="pullFromGist('${def.id}')">Pull</button>
-        <button class="btn" style="font-size:11px;padding:4px 12px;opacity:${disabled?'0.4':'1'}" ${disabled?'disabled':''} onclick="pushFromSettings('${def.id}')">Push</button>
+        <button id="gbtn-pull-${def.id}" class="btn" style="font-size:11px;padding:4px 12px;opacity:${disabled?'0.4':'1'}" ${disabled?'disabled':''} onclick="pullFromGist('${def.id}')">Pull</button>
+        <button id="gbtn-push-${def.id}" class="btn" style="font-size:11px;padding:4px 12px;opacity:${disabled?'0.4':'1'}" ${disabled?'disabled':''} onclick="pushFromSettings('${def.id}')">Push</button>
         <span id="gstatus-${def.id}" style="font-size:11px;font-family:var(--mono);color:var(--text3)"></span>
       </div>
     </div>`;
   }).join('');
   renderVenueEditor();
   document.getElementById('settingsModal').classList.add('open');
+}
+
+function updateGistButtonStates() {
+  const active = (document.querySelector('input[name="activeGist"]:checked') || {}).value || '';
+  const cfg = loadGistConfig();
+  GIST_DEFS.forEach(def => {
+    const c = cfg[def.id] || {};
+    const disabled = !c.gistId || !c.token || active !== def.id;
+    ['pull', 'push'].forEach(action => {
+      const btn = document.getElementById(`gbtn-${action}-${def.id}`);
+      if (!btn) return;
+      btn.disabled = disabled;
+      btn.style.opacity = disabled ? '0.4' : '1';
+    });
+  });
 }
 
 function applyTheme(activeGist) {
