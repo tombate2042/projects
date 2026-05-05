@@ -726,7 +726,23 @@ function setWeekStart(val) {
   saveState();
 }
 
-const SUPPLIER_ORDER = ['ILG','CUB','Lion','Young Henrys','Joval','Bacchus','Bacchant','Fesq & Co.','Air Liquide','QCC','Select Fresh','A1 Chemicals'];
+const SUPPLIER_ORDER = ['ILG','CUB','Lion','Young Henrys','Joval','Bacchus','Bacchant','Fesq & Co.','Air Liquide','QCC','Select Fresh','A1 Chemicals','Supagas'];
+
+const SUPPLIER_DELIVERY = {
+  'ILG':          'Wednesday',
+  'CUB':          'Wednesday',
+  'Lion':         'Tuesday',
+  'Young Henrys': 'Tuesday',
+  'Joval':        'Tuesday',
+  'Bacchus':      'Tuesday',
+  'Bacchant':     'Tuesday',
+  'Fesq & Co.':   'Tuesday',
+  'Air Liquide':  'Monday or Tuesday',
+  'QCC':          'Wednesday',
+  'Select Fresh': 'Varies',
+  'A1 Chemicals': 'Wednesday',
+  'Supagas':      'Monday or Thursday',
+};
 
 function renderSupplierFilters() {
   const existing = new Set(getAllItems().map(m => m.supplier).filter(Boolean));
@@ -1252,9 +1268,11 @@ function generateSupplierChecklist() {
   const allItems = getAllItems();
   const rows = suppliers.map(s => {
     const hasOrder = allItems.some(m => m.supplier === s && Number(state.items[m.id]?.ordered) > 0);
+    const delivery = SUPPLIER_DELIVERY[s] || '';
     return `
     <tr${hasOrder ? '' : ' class="no-order"'}>
       <td class="supplier-name">${s}</td>
+      <td class="delivery-day">${delivery}</td>
       <td class="cb-cell"><input type="checkbox"${hasOrder ? ' checked' : ''}></td>
       <td class="cb-cell"><input type="checkbox"></td>
       <td class="cb-cell"><input type="checkbox"></td>
@@ -1271,6 +1289,7 @@ function generateSupplierChecklist() {
     th { padding: 8px 12px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #444; }
     th:first-child { text-align: left; }
     th:not(:first-child) { text-align: center; width: 100px; }
+    .delivery-day { text-align: center; font-size: 13px; color: #444; }
     tbody tr { border-bottom: 1px solid #e0e0e0; }
     tbody tr:last-child { border-bottom: 2px solid #222; }
     td { padding: 10px 12px; }
@@ -1290,6 +1309,7 @@ function generateSupplierChecklist() {
     <thead>
       <tr>
         <th>Supplier</th>
+        <th>Est. Delivery</th>
         <th>Ordered</th>
         <th>Received</th>
         <th>Invoiced</th>

@@ -2753,7 +2753,10 @@ function resetFloat() {
 
 // ─── Tasks ───────────────────────────────────────────────────────────────────
 const TASK_DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
-const TASK_ITEMS = [{ key: 'safeCount', label: 'Safe Count' }];
+const TASK_ITEMS = {
+  default:  [{ key: 'safeCount', label: 'Safe Count' }],
+  monday:   [{ key: 'safeCount', label: 'Safe Count' }, { key: 'cellarCheck', label: 'Cellar Check' }, { key: 'djPosters', label: 'DJ Posters' }, { key: 'wastageSheet', label: 'Wastage Sheet' }],
+};
 
 function loadTaskChecks() {
   try { return JSON.parse(localStorage.getItem('sd_taskChecks') || '{}'); } catch(e) { return {}; }
@@ -2782,7 +2785,7 @@ function renderTasks() {
         <span class="collapse-chevron">▼</span>${day}
       </div>
       <div class="collapse-body${isToday ? '' : ' collapsed'}" id="${bodyId}">
-        ${TASK_ITEMS.map(t => {
+        ${(TASK_ITEMS[key] || TASK_ITEMS.default).map(t => {
           const checked = !!checks[key][t.key];
           return `<div class="task-item${checked ? ' done' : ''}" id="taskitem-${key}-${t.key}">
             <input class="task-checkbox" type="checkbox" id="cb-${key}-${t.key}"${checked ? ' checked' : ''}
