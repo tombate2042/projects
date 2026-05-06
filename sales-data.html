@@ -2854,6 +2854,23 @@ function hideAddTaskForm(key) {
   document.getElementById('add-label-' + key).value = '';
   document.getElementById('add-time-' + key).value = '';
 }
+function scheduleOneAlert(dayKey, task) {
+  if (!task.alertTime || !('Notification' in window) || Notification.permission !== 'granted') return;
+  const todayIdx = (new Date().getDay() + 6) % 7;
+  const todayKey = TASK_DAYS[todayIdx].toLowerCase();
+  if (dayKey !== todayKey) return;
+  const [h, m] = task.alertTime.split(':').map(Number);
+  const now = new Date();
+  const fire = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, 0);
+  const msUntil = fire - now;
+  if (msUntil < 0) return;
+  setTimeout(() => {
+    const checks = loadTaskChecks();
+    if (checks[dayKey] && checks[dayKey][task.key]) return;
+    new Notification('Task Reminder', { body: task.label, icon: '' });
+  }, msUntil);
+}
+
 function saveNewTask(key) {
   const label = document.getElementById('add-label-' + key).value.trim();
   if (!label) return;
@@ -2861,8 +2878,10 @@ function saveNewTask(key) {
   const customTasks = loadCustomTasks();
   if (!customTasks[key]) customTasks[key] = [];
   const taskKey = 'custom_' + Date.now();
-  customTasks[key].push({ key: taskKey, label, alertTime });
+  const task = { key: taskKey, label, alertTime };
+  customTasks[key].push(task);
   saveCustomTasks(customTasks);
+  scheduleOneAlert(key, task);
   renderTasks();
   if (!document.getElementById('taskbody-' + key).classList.contains('collapsed')) return;
   toggleTaskDay(key);
