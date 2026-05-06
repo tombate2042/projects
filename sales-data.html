@@ -164,6 +164,19 @@
   .task-checkbox { width: 20px; height: 20px; accent-color: var(--accent-tasks); cursor: pointer; flex-shrink: 0; }
   .task-label { font-size: 17px; color: var(--text); cursor: pointer; user-select: none; }
   .task-item.done .task-label { color: var(--muted); text-decoration: line-through; }
+  .task-delete { margin-left: auto; background: none; border: none; color: var(--muted); font-size: 16px; cursor: pointer; padding: 0 4px; line-height: 1; opacity: 0.4; }
+  .task-delete:hover { opacity: 1; color: var(--red, #ff6b6b); }
+  .task-alert-badge { font-size: 11px; color: var(--muted); margin-left: 6px; }
+  .add-task-btn { display: flex; align-items: center; gap: 8px; padding: 12px 4px; color: var(--muted); font-size: 13px; cursor: pointer; border: none; background: none; width: 100%; text-align: left; opacity: 0.6; }
+  .add-task-btn:hover { opacity: 1; color: var(--text); }
+  .add-task-form { display: flex; flex-direction: column; gap: 8px; padding: 12px 4px 16px; border-top: 1px solid var(--border); }
+  .add-task-row { display: flex; gap: 8px; align-items: center; }
+  .add-task-input { flex: 1; background: var(--surface, #1a1a1a); border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; color: var(--text); font-size: 14px; outline: none; }
+  .add-task-input:focus { border-color: var(--accent-tasks); }
+  .add-task-time { width: 100px; background: var(--surface, #1a1a1a); border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; color: var(--text); font-size: 14px; outline: none; }
+  .add-task-time:focus { border-color: var(--accent-tasks); }
+  .add-task-save { padding: 8px 16px; border-radius: 6px; border: none; background: var(--accent-tasks); color: #fff; font-size: 13px; font-weight: 600; cursor: pointer; }
+  .add-task-cancel { padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border); background: none; color: var(--muted); font-size: 13px; cursor: pointer; }
 
   .layout {
     min-height: calc(100vh - 61px);
@@ -2764,10 +2777,17 @@ function loadTaskChecks() {
 function saveTaskChecks(checks) {
   localStorage.setItem('sd_taskChecks', JSON.stringify(checks));
 }
+function loadCustomTasks() {
+  try { return JSON.parse(localStorage.getItem('sd_customTasks') || '{}'); } catch(e) { return {}; }
+}
+function saveCustomTasks(data) {
+  localStorage.setItem('sd_customTasks', JSON.stringify(data));
+}
 
 function renderTasks() {
-  const todayIdx = (new Date().getDay() + 6) % 7; // Mon=0 … Sun=6
+  const todayIdx = (new Date().getDay() + 6) % 7;
   const checks = loadTaskChecks();
+  const customTasks = loadCustomTasks();
   const container = document.getElementById('tasksContent');
   container.innerHTML = '';
 
@@ -2777,6 +2797,28 @@ function renderTasks() {
     if (!checks[key]) checks[key] = {};
     const bodyId = 'taskbody-' + key;
     const labelId = 'tasklabel-' + key;
+    const custom = customTasks[key] || [];
+
+    const builtInHTML = (TASK_ITEMS[key] || TASK_ITEMS.default).map(t => {
+      const checked = !!checks[key][t.key];
+      const badge = t.alertTime ? `<span class="task-alert-badge">⏰ ${t.alertTime}</span>` : '';
+      return `<div class="task-item${checked ? ' done' : ''}" id="taskitem-${key}-${t.key}">
+        <input class="task-checkbox" type="checkbox" id="cb-${key}-${t.key}"${checked ? ' checked' : ''}
+          onchange="toggleTask('${key}','${t.key}',this.checked)">
+        <label class="task-label" for="cb-${key}-${t.key}">${t.label}${badge}</label>
+      </div>`;
+    }).join('');
+
+    const customHTML = custom.map(t => {
+      const checked = !!checks[key][t.key];
+      const badge = t.alertTime ? `<span class="task-alert-badge">⏰ ${t.alertTime}</span>` : '';
+      return `<div class="task-item${checked ? ' done' : ''}" id="taskitem-${key}-${t.key}">
+        <input class="task-checkbox" type="checkbox" id="cb-${key}-${t.key}"${checked ? ' checked' : ''}
+          onchange="toggleTask('${key}','${t.key}',this.checked)">
+        <label class="task-label" for="cb-${key}-${t.key}">${t.label}${badge}</label>
+        <button class="task-delete" onclick="deleteCustomTask('${key}','${t.key}')" title="Remove task">✕</button>
+      </div>`;
+    }).join('');
 
     const wrap = document.createElement('div');
     wrap.innerHTML = `
@@ -2785,17 +2827,54 @@ function renderTasks() {
         <span class="collapse-chevron">▼</span>${day}
       </div>
       <div class="collapse-body${isToday ? '' : ' collapsed'}" id="${bodyId}">
-        ${(TASK_ITEMS[key] || TASK_ITEMS.default).map(t => {
-          const checked = !!checks[key][t.key];
-          return `<div class="task-item${checked ? ' done' : ''}" id="taskitem-${key}-${t.key}">
-            <input class="task-checkbox" type="checkbox" id="cb-${key}-${t.key}"${checked ? ' checked' : ''}
-              onchange="toggleTask('${key}','${t.key}',this.checked)">
-            <label class="task-label" for="cb-${key}-${t.key}">${t.label}</label>
-          </div>`;
-        }).join('')}
+        ${builtInHTML}${customHTML}
+        <button class="add-task-btn" onclick="showAddTaskForm('${key}')">+ Add task</button>
+        <div class="add-task-form" id="add-form-${key}" style="display:none">
+          <div class="add-task-row">
+            <input class="add-task-input" id="add-label-${key}" type="text" placeholder="Task name" onkeydown="if(event.key==='Enter')saveNewTask('${key}')">
+            <input class="add-task-time" id="add-time-${key}" type="time" title="Alert time (optional)">
+          </div>
+          <div class="add-task-row">
+            <button class="add-task-save" onclick="saveNewTask('${key}')">Save</button>
+            <button class="add-task-cancel" onclick="hideAddTaskForm('${key}')">Cancel</button>
+          </div>
+        </div>
       </div>`;
     container.appendChild(wrap);
   });
+}
+
+function showAddTaskForm(key) {
+  document.getElementById('add-form-' + key).style.display = 'flex';
+  document.getElementById('add-form-' + key).style.flexDirection = 'column';
+  document.getElementById('add-label-' + key).focus();
+}
+function hideAddTaskForm(key) {
+  document.getElementById('add-form-' + key).style.display = 'none';
+  document.getElementById('add-label-' + key).value = '';
+  document.getElementById('add-time-' + key).value = '';
+}
+function saveNewTask(key) {
+  const label = document.getElementById('add-label-' + key).value.trim();
+  if (!label) return;
+  const alertTime = document.getElementById('add-time-' + key).value || '';
+  const customTasks = loadCustomTasks();
+  if (!customTasks[key]) customTasks[key] = [];
+  const taskKey = 'custom_' + Date.now();
+  customTasks[key].push({ key: taskKey, label, alertTime });
+  saveCustomTasks(customTasks);
+  renderTasks();
+  if (!document.getElementById('taskbody-' + key).classList.contains('collapsed')) return;
+  toggleTaskDay(key);
+}
+function deleteCustomTask(dayKey, taskKey) {
+  const customTasks = loadCustomTasks();
+  if (customTasks[dayKey]) customTasks[dayKey] = customTasks[dayKey].filter(t => t.key !== taskKey);
+  saveCustomTasks(customTasks);
+  const checks = loadTaskChecks();
+  if (checks[dayKey]) delete checks[dayKey][taskKey];
+  saveTaskChecks(checks);
+  renderTasks();
 }
 
 function toggleTaskDay(key) {
@@ -2878,7 +2957,9 @@ function scheduleTaskAlerts() {
   const request = () => {
     const todayIdx = (new Date().getDay() + 6) % 7;
     const todayKey = TASK_DAYS[todayIdx].toLowerCase();
-    const items = TASK_ITEMS[todayKey] || TASK_ITEMS.default;
+    const builtIn = TASK_ITEMS[todayKey] || TASK_ITEMS.default;
+    const custom = (loadCustomTasks()[todayKey] || []).filter(t => t.alertTime);
+    const items = [...builtIn, ...custom];
 
     items.filter(t => t.alertTime).forEach(t => {
       const [h, m] = t.alertTime.split(':').map(Number);
