@@ -2754,7 +2754,7 @@ function resetFloat() {
 // ─── Tasks ───────────────────────────────────────────────────────────────────
 const TASK_DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
 const TASK_ITEMS = {
-  default:  [{ key: 'safeCount', label: 'Safe Count' }, { key: 'checkPublicWastage1', label: 'Check Public Bar Wastage - 4pm' }, { key: 'checkPublicWastage2', label: 'Check Public Bar Wastage - 7pm' }, { key: 'checkPublicWastage3', label: 'Check Public Bar Wastage - Close' }],
+  default:  [{ key: 'safeCount', label: 'Safe Count' }, { key: 'checkPublicWastage1', label: 'Check Public Bar Wastage - 4pm', alertTime: '16:00' }, { key: 'checkPublicWastage2', label: 'Check Public Bar Wastage - 7pm', alertTime: '19:00' }, { key: 'checkPublicWastage3', label: 'Check Public Bar Wastage - Close' }],
   monday:   [{ key: 'safeCount', label: 'Safe Count' }, { key: 'cellarCheck', label: 'Cellar Check' }, { key: 'djPosters', label: 'DJ Posters' }, { key: 'wastageSheet', label: 'Wastage Sheet' }],
 };
 
@@ -2870,6 +2870,38 @@ function setupNavigation() {
   });
 }
 
+// ─── Task Alerts ─────────────────────────────────────────────────────────────
+
+function scheduleTaskAlerts() {
+  if (!('Notification' in window)) return;
+
+  const request = () => {
+    const todayIdx = (new Date().getDay() + 6) % 7;
+    const todayKey = TASK_DAYS[todayIdx].toLowerCase();
+    const items = TASK_ITEMS[todayKey] || TASK_ITEMS.default;
+
+    items.filter(t => t.alertTime).forEach(t => {
+      const [h, m] = t.alertTime.split(':').map(Number);
+      const now = new Date();
+      const fire = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, 0);
+      const msUntil = fire - now;
+      if (msUntil < 0) return;
+
+      setTimeout(() => {
+        const checks = loadTaskChecks();
+        if (checks[todayKey] && checks[todayKey][t.key]) return;
+        new Notification('Task Reminder', { body: t.label, icon: '' });
+      }, msUntil);
+    });
+  };
+
+  if (Notification.permission === 'granted') {
+    request();
+  } else if (Notification.permission !== 'denied') {
+    Notification.requestPermission().then(p => { if (p === 'granted') request(); });
+  }
+}
+
 // ─── Init ────────────────────────────────────────────────────────────────────
 
 buildTill();
@@ -2879,6 +2911,7 @@ buildFloat();
 initATMDefaults();
 initCRTDefaults();
 setupNavigation();
+scheduleTaskAlerts();
 selectTill(document.querySelector('.till-check-label[data-key="bar"]'));
 </script>
 </body>
