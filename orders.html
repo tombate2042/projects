@@ -101,9 +101,13 @@
   .btn svg { width: 13px; height: 13px; }
 
   /* FILTERS */
-  .filters { padding: 12px 24px; border-bottom: 1px solid var(--border); display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-  .filter-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text3); margin-right: 4px; }
-  .filter-chip { padding: 4px 12px; border-radius: 20px; border: 1px solid var(--border); background: transparent; color: var(--text2); font-size: 12px; font-family: var(--sans); cursor: pointer; transition: all 0.12s; }
+  .filters { padding: 8px 24px; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 6px; }
+  .filter-row { display: flex; align-items: center; gap: 8px; }
+  .filter-row-supplier { display: flex; align-items: center; gap: 8px; overflow-x: auto; scrollbar-width: none; }
+  .filter-row-supplier::-webkit-scrollbar { display: none; }
+  #supplierFilters { display: flex; gap: 8px; flex-wrap: nowrap; }
+  .filter-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text3); margin-right: 4px; flex-shrink: 0; }
+  .filter-chip { padding: 4px 12px; border-radius: 20px; border: 1px solid var(--border); background: transparent; color: var(--text2); font-size: 12px; font-family: var(--sans); cursor: pointer; transition: all 0.12s; white-space: nowrap; }
   .filter-chip:hover { border-color: var(--border2); color: var(--text); }
   .filter-chip.active { background: var(--accent-dim2); border-color: rgba(200,245,106,0.4); color: var(--accent); }
   .filter-divider { width: 1px; height: 18px; background: var(--border); margin: 0 4px; }
@@ -354,17 +358,20 @@
 
 <!-- FILTERS -->
 <div class="filters no-print" id="orderFilters">
-  <span class="filter-label">Show</span>
-  <button class="filter-chip active" data-filter="all" onclick="setFilter('all',this)">All</button>
-  <button class="filter-chip" data-filter="ordered" onclick="setFilter('ordered',this)">Has Order</button>
-  <button class="filter-chip" data-filter="critical" onclick="setFilter('critical',this)">Critical</button>
-  <button class="filter-chip" data-filter="suggested" onclick="setFilter('suggested',this)">Needs Order</button>
-  <div class="filter-divider"></div>
-  <span class="filter-label">Supplier</span>
-  <div id="supplierFilters"></div>
-  <div class="search-wrap">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-    <input class="search" type="text" placeholder="Search items…" oninput="searchItems(this.value)">
+  <div class="filter-row">
+    <span class="filter-label">Show</span>
+    <button class="filter-chip active" data-filter="all" onclick="setFilter('all',this)">All</button>
+    <button class="filter-chip" data-filter="ordered" onclick="setFilter('ordered',this)">Has Order</button>
+    <button class="filter-chip" data-filter="critical" onclick="setFilter('critical',this)">Critical</button>
+    <button class="filter-chip" data-filter="suggested" onclick="setFilter('suggested',this)">Needs Order</button>
+    <div class="search-wrap">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input class="search" type="text" placeholder="Search items…" oninput="searchItems(this.value)">
+    </div>
+  </div>
+  <div class="filter-row-supplier">
+    <span class="filter-label">Supplier</span>
+    <div id="supplierFilters"></div>
   </div>
 </div>
 </div><!-- end topBar -->
