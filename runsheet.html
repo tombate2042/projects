@@ -1088,39 +1088,8 @@
           <div class="section-header"><span class="dot"></span>Add-Ons &amp; Modifiers</div>
           <div class="section-body">
             <div class="mm-section">
-              <div class="mm-section-title">Main Sides</div>
-              <div class="mm-items" id="mm-bistro-main-sides"></div>
-              <button class="btn btn-add" onclick="addMMItem('bistro-main-sides','')">+ Add option</button>
-            </div>
-            <div class="mm-section">
-              <div class="mm-section-title">Sauces</div>
-              <div class="mm-items" id="mm-bistro-sauces"></div>
-              <button class="btn btn-add" onclick="addMMItem('bistro-sauces','')">+ Add option</button>
-            </div>
-            <div class="mm-section">
-              <div class="mm-section-title">Steak Temp</div>
-              <div class="mm-items" id="mm-bistro-steak-temp"></div>
-              <button class="btn btn-add" onclick="addMMItem('bistro-steak-temp','')">+ Add option</button>
-            </div>
-            <div class="mm-section">
-              <div class="mm-section-title">Bowl Add Ons</div>
-              <div class="mm-items" id="mm-bistro-bowl-addons"></div>
-              <button class="btn btn-add" onclick="addMMItem('bistro-bowl-addons','')">+ Add option</button>
-            </div>
-            <div class="mm-section">
-              <div class="mm-section-title">Burger Add Ons</div>
-              <div class="mm-items" id="mm-bistro-burger-addons"></div>
-              <button class="btn btn-add" onclick="addMMItem('bistro-burger-addons','')">+ Add option</button>
-            </div>
-            <div class="mm-section">
-              <div class="mm-section-title">Schnitzel Upgrade</div>
-              <div class="mm-items" id="mm-bistro-schnitzel-upgrade"></div>
-              <button class="btn btn-add" onclick="addMMItem('bistro-schnitzel-upgrade','')">+ Add option</button>
-            </div>
-            <div class="mm-section">
-              <div class="mm-section-title">Extra Sauce</div>
-              <div class="mm-items" id="mm-bistro-extra-sauce"></div>
-              <button class="btn btn-add" onclick="addMMItem('bistro-extra-sauce','')">+ Add option</button>
+              <div class="mm-items" id="mm-bistro-addons"></div>
+              <button class="btn btn-add" onclick="addMMItem('bistro-addons','')">+ Add option</button>
             </div>
             <div class="mm-section">
               <div class="mm-section-title">Daily Specials</div>
@@ -1196,13 +1165,7 @@ let menuData = {
   bistroBowls: [],
   bistroMains: [],
   bistroSides: [],
-  bistroMainSides: [],
-  bistroSauces: [],
-  bistroSteakTemp: [],
-  bistroBowlAddOns: [],
-  bistroBurgerAddOns: [],
-  bistroSchnitzelUpgrade: [],
-  bistroExtraSauce: [],
+  bistroAddons: [],
   bistroItemAddons: {},
   grazingStations: [],
   grazingPlatters: [],
@@ -1219,7 +1182,7 @@ let selectedCanapeA = [];
 let selectedCanapeB = [];
 let selectedBanquet = [];
 let bistroRows = [];
-let mealModalState = { guestIdx: -1, dish: '', addOns: {}, notes: '' };
+let mealModalState = { guestIdx: -1, dish: '', addOns: [], notes: '' };
 let currentMenuType = null;
 
 /* ════════════════════════════════════════════
@@ -1401,6 +1364,17 @@ function showMMPanel(name) {
 }
 
 function addMMItem(type, value) {
+  if (type === 'bistro-addons') {
+    if (!menuData.bistroAddons) menuData.bistroAddons = [];
+    menuData.bistroAddons.push({ id: 'addon_' + Date.now(), name: value || '', category: '', price: '' });
+    saveMenus();
+    renderMMItems();
+    setTimeout(() => {
+      const el = document.getElementById('mm-bistro-addons');
+      if (el) { const inputs = el.querySelectorAll('input'); if (inputs.length) inputs[inputs.length - 3].focus(); }
+    }, 50);
+    return;
+  }
   const map = {
     'canape-small': 'canapeSmall',
     'canape-premium': 'canapePremium',
@@ -1416,13 +1390,6 @@ function addMMItem(type, value) {
     'bistro-bowls': 'bistroBowls',
     'bistro-mains': 'bistroMains',
     'bistro-sides': 'bistroSides',
-    'bistro-main-sides': 'bistroMainSides',
-    'bistro-sauces': 'bistroSauces',
-    'bistro-steak-temp': 'bistroSteakTemp',
-    'bistro-bowl-addons': 'bistroBowlAddOns',
-    'bistro-burger-addons': 'bistroBurgerAddOns',
-    'bistro-schnitzel-upgrade': 'bistroSchnitzelUpgrade',
-    'bistro-extra-sauce': 'bistroExtraSauce',
     'grazing-stations': 'grazingStations',
     'grazing-platters': 'grazingPlatters'
   };
@@ -1439,6 +1406,20 @@ function addMMItem(type, value) {
 }
 
 function removeMMItem(type, idx) {
+  if (type === 'bistro-addons') {
+    const removed = (menuData.bistroAddons || [])[idx];
+    if (removed) {
+      menuData.bistroAddons.splice(idx, 1);
+      // Remove this addon ID from all item assignments
+      Object.keys(menuData.bistroItemAddons || {}).forEach(dish => {
+        menuData.bistroItemAddons[dish] = (menuData.bistroItemAddons[dish] || []).filter(id => id !== removed.id);
+      });
+    }
+    saveMenus();
+    renderMMItems();
+    refreshFoodSelectors();
+    return;
+  }
   const map = {
     'canape-small': 'canapeSmall',
     'canape-premium': 'canapePremium',
@@ -1454,13 +1435,6 @@ function removeMMItem(type, idx) {
     'bistro-bowls': 'bistroBowls',
     'bistro-mains': 'bistroMains',
     'bistro-sides': 'bistroSides',
-    'bistro-main-sides': 'bistroMainSides',
-    'bistro-sauces': 'bistroSauces',
-    'bistro-steak-temp': 'bistroSteakTemp',
-    'bistro-bowl-addons': 'bistroBowlAddOns',
-    'bistro-burger-addons': 'bistroBurgerAddOns',
-    'bistro-schnitzel-upgrade': 'bistroSchnitzelUpgrade',
-    'bistro-extra-sauce': 'bistroExtraSauce',
     'grazing-stations': 'grazingStations',
     'grazing-platters': 'grazingPlatters'
   };
@@ -1486,16 +1460,14 @@ function updateMMItem(type, idx, field, val) {
     'bistro-bowls': 'bistroBowls',
     'bistro-mains': 'bistroMains',
     'bistro-sides': 'bistroSides',
-    'bistro-main-sides': 'bistroMainSides',
-    'bistro-sauces': 'bistroSauces',
-    'bistro-steak-temp': 'bistroSteakTemp',
-    'bistro-bowl-addons': 'bistroBowlAddOns',
-    'bistro-burger-addons': 'bistroBurgerAddOns',
-    'bistro-schnitzel-upgrade': 'bistroSchnitzelUpgrade',
-    'bistro-extra-sauce': 'bistroExtraSauce',
     'grazing-stations': 'grazingStations',
     'grazing-platters': 'grazingPlatters'
   };
+  if (type === 'bistro-addons') {
+    const item = (menuData.bistroAddons || [])[idx];
+    if (item) { item[field] = val; saveMenus(); renderMMItems(); refreshFoodSelectors(); }
+    return;
+  }
   const item = menuData[map[type]][idx];
   if (item && typeof item === 'object') item[field] = val;
   saveMenus();
@@ -1526,13 +1498,7 @@ function renderMMItems() {
   renderBistroMMList('mm-bistro-bowls',        'bistro-bowls',        menuData.bistroBowls       || []);
   renderBistroMMList('mm-bistro-mains',        'bistro-mains',        menuData.bistroMains       || []);
   renderBistroMMList('mm-bistro-sides',        'bistro-sides',        menuData.bistroSides       || []);
-  renderMMList('mm-bistro-main-sides',    'bistro-main-sides',    menuData.bistroMainSides     || [], noDesc);
-  renderMMList('mm-bistro-sauces',        'bistro-sauces',        menuData.bistroSauces        || [], noDesc);
-  renderMMList('mm-bistro-steak-temp',    'bistro-steak-temp',    menuData.bistroSteakTemp     || [], noDesc);
-  renderMMList('mm-bistro-bowl-addons',   'bistro-bowl-addons',   menuData.bistroBowlAddOns    || [], noDesc);
-  renderMMList('mm-bistro-burger-addons',      'bistro-burger-addons',      menuData.bistroBurgerAddOns      || [], noDesc);
-  renderMMList('mm-bistro-schnitzel-upgrade',  'bistro-schnitzel-upgrade',  menuData.bistroSchnitzelUpgrade  || [], noDesc);
-  renderMMList('mm-bistro-extra-sauce',        'bistro-extra-sauce',        menuData.bistroExtraSauce        || [], noDesc);
+  renderBistroAddonsList('mm-bistro-addons', menuData.bistroAddons || []);
   renderMMList('mm-grazing-stations-items', 'grazing-stations', menuData.grazingStations || [], all);
   renderMMList('mm-grazing-platters-items', 'grazing-platters', menuData.grazingPlatters || [], all);
   renderDailySpecials();
@@ -1566,6 +1532,27 @@ function renderMMList(containerId, type, items, fields) {
 
 function updateLimitInputs() {}
 
+function renderBistroAddonsList(containerId, addons) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  const header = addons.length
+    ? `<div class="mm-items-header" style="grid-template-columns:2fr 1fr 1fr 28px;"><span>Name</span><span>Category</span><span>Price</span><span></span></div>`
+    : '';
+  el.innerHTML = header + addons.map((a, i) => {
+    const n = escHtml(a.name || '');
+    const c = escHtml(a.category || '');
+    const p = escHtml(a.price || '');
+    return `<div class="mm-item-row">
+      <div class="mm-item-fields" style="grid-template-columns:2fr 1fr 1fr;">
+        <input type="text" value="${n}" placeholder="Option name..." oninput="updateMMItem('bistro-addons',${i},'name',this.value)">
+        <input type="text" value="${c}" placeholder="e.g. Side, Sauce..." oninput="updateMMItem('bistro-addons',${i},'category',this.value)">
+        <input type="text" value="${p}" placeholder="$0.00" oninput="updateMMItem('bistro-addons',${i},'price',this.value)">
+      </div>
+      <button class="btn-icon" onclick="removeMMItem('bistro-addons',${i})">✕</button>
+    </div>`;
+  }).join('');
+}
+
 function renderBistroMMList(containerId, type, items) {
   const el = document.getElementById(containerId);
   if (!el) return;
@@ -1576,13 +1563,16 @@ function renderBistroMMList(containerId, type, items) {
     const n = escHtml(item.name || '');
     const p = escHtml(item.price || '');
     const itemAddons = (menuData.bistroItemAddons || {})[item.name] || [];
-    const checkboxes = BISTRO_ADDONS.map(a =>
-      `<label style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text2);cursor:pointer;white-space:nowrap;">
-        <input type="checkbox" ${itemAddons.includes(a.id) ? 'checked' : ''}
-          onchange="toggleBistroItemAddon('${escJs(item.name)}','${a.id}',this.checked)"
-          style="accent-color:var(--accent-mid);width:13px;height:13px;">
-        ${escHtml(a.label)}</label>`
-    ).join('');
+    const allAddons  = menuData.bistroAddons || [];
+    const checkboxes = allAddons.length
+      ? allAddons.map(a =>
+          `<label style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text2);cursor:pointer;white-space:nowrap;">
+            <input type="checkbox" ${itemAddons.includes(a.id) ? 'checked' : ''}
+              onchange="toggleBistroItemAddon('${escJs(item.name)}','${escJs(a.id)}',this.checked)"
+              style="accent-color:var(--accent-mid);width:13px;height:13px;">
+            ${escHtml(a.name)}${a.category ? ` <span style="color:var(--text3);font-size:11px;">(${escHtml(a.category)})</span>` : ''}</label>`
+        ).join('')
+      : '<span style="font-size:12px;color:var(--text3);font-style:italic;">No add-ons defined yet — add them in Add-Ons &amp; Modifiers above.</span>';
     return `<div class="mm-item-row">
       <div class="mm-item-fields" style="grid-template-columns:2fr 1fr;">
         <input type="text" value="${n}" placeholder="Item name..." oninput="updateMMItem('${type}',${i},'name',this.value)">
@@ -1679,10 +1669,12 @@ function loadMenus() {
         delete menuData.bistroDishes;
       }
       // Ensure all arrays exist and migrate legacy strings to objects
+      if (!menuData.bistroAddons) menuData.bistroAddons = [];
+      // Ensure every addon has an id (migration for any old data)
+      menuData.bistroAddons.forEach(a => { if (!a.id) a.id = 'addon_' + Date.now() + Math.random(); });
       const keys = ['canapeSmall','canapePremium','canapeSubstantial','canapeSliders','canapeDessert',
                     'banquetMains','banquetSides','banquetDessert',
                     'bistroSnacks','bistroBurgers','bistroPubClassics','bistroBowls','bistroMains','bistroSides',
-                    'bistroMainSides','bistroSauces','bistroSteakTemp','bistroBowlAddOns','bistroBurgerAddOns','bistroSchnitzelUpgrade','bistroExtraSauce',
                     'grazingStations','grazingPlatters'];
       keys.forEach(k => {
         if (!menuData[k]) menuData[k] = [];
@@ -2114,10 +2106,9 @@ function renderBistroRows() {
   const tbody = document.getElementById('bistro-rows');
   if (!tbody) return;
   tbody.innerHTML = bistroRows.map((row, i) => {
-    const addOnText = Object.entries(row.addOns || {})
-      .filter(([, v]) => Array.isArray(v) ? v.length > 0 : v)
-      .map(([, v]) => Array.isArray(v) ? v.map(escHtml).join(' & ') : escHtml(v))
-      .join(' · ');
+    const addOnText = (Array.isArray(row.addOns) ? row.addOns : [])
+      .map(id => { const a = (menuData.bistroAddons || []).find(x => x.id === id); return a ? escHtml(a.name) : null; })
+      .filter(Boolean).join(' · ');
     const mealHtml = row.dish
       ? `<div class="bistro-meal-dish">${escHtml(row.dish)}</div>${addOnText ? `<div class="bistro-meal-addons">${addOnText}</div>` : ''}${row.notes ? `<div class="bistro-meal-addons" style="font-style:italic;">${escHtml(row.notes)}</div>` : ''}`
       : `<span class="bistro-no-meal">No meal selected</span>`;
@@ -2135,7 +2126,7 @@ function renderBistroRows() {
 function openMealModal(guestIdx) {
   mealModalState.guestIdx = guestIdx;
   mealModalState.dish    = bistroRows[guestIdx]?.dish  || '';
-  mealModalState.addOns  = { ...(bistroRows[guestIdx]?.addOns || {}) };
+  mealModalState.addOns  = [...(bistroRows[guestIdx]?.addOns || [])];
   mealModalState.notes   = bistroRows[guestIdx]?.notes || '';
   document.getElementById('meal-modal').style.display = 'flex';
   showMealStep1();
@@ -2173,39 +2164,34 @@ function selectMealItem(dishName) {
 }
 
 function showMealStep2() {
-  const dishName      = mealModalState.dish;
-  const enabledAddons = (menuData.bistroItemAddons || {})[dishName] || [];
-  const relevant      = BISTRO_ADDONS.filter(a => enabledAddons.includes(a.id));
+  const dishName     = mealModalState.dish;
+  const enabledIds   = (menuData.bistroItemAddons || {})[dishName] || [];
+  const allAddons    = menuData.bistroAddons || [];
+  const relevant     = allAddons.filter(a => enabledIds.includes(a.id));
 
   document.getElementById('meal-modal-title').textContent = dishName;
 
-  let html = '';
+  // Group by category
+  const groups = {};
+  const noCategory = [];
   relevant.forEach(a => {
-    const options = (menuData[a.key] || [])
-      .map(d => typeof d === 'object' ? d.name : d)
-      .filter(Boolean);
-    if (!options.length) return;
-    if (a.multi) {
-      const current = Array.isArray(mealModalState.addOns[a.id]) ? mealModalState.addOns[a.id] : [];
-      const atMax   = current.length >= a.max;
-      const counter = `<span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text3);margin-left:6px;">${current.length}/${a.max}</span>`;
-      html += `<div class="meal-cat-title">${escHtml(a.label)}${counter}</div><div class="meal-item-grid">`;
-      options.forEach(n => {
-        const sel      = current.includes(n);
-        const disabled = !sel && atMax;
-        html += `<button class="meal-item-btn${sel ? ' selected' : ''}"
-          style="${disabled ? 'opacity:0.38;cursor:default;' : ''}"
-          onclick="selectAddon('${escJs(a.id)}','${escJs(n)}')">${escHtml(n)}</button>`;
-      });
-    } else {
-      html += `<div class="meal-cat-title">${escHtml(a.label)}</div><div class="meal-item-grid">`;
-      options.forEach(n => {
-        const sel = mealModalState.addOns[a.id] === n ? ' selected' : '';
-        html += `<button class="meal-item-btn${sel}" onclick="selectAddon('${escJs(a.id)}','${escJs(n)}')">${escHtml(n)}</button>`;
-      });
-    }
-    html += `</div>`;
+    const cat = (a.category || '').trim();
+    if (cat) { if (!groups[cat]) groups[cat] = []; groups[cat].push(a); }
+    else noCategory.push(a);
   });
+
+  let html = '';
+  const renderGroup = (label, items) => {
+    if (!items.length) return;
+    html += `<div class="meal-cat-title">${escHtml(label)}</div><div class="meal-item-grid">`;
+    items.forEach(a => {
+      const sel = mealModalState.addOns.includes(a.id) ? ' selected' : '';
+      html += `<button class="meal-item-btn${sel}" onclick="selectAddon('${escJs(a.id)}')">${escHtml(a.name)}</button>`;
+    });
+    html += `</div>`;
+  };
+  Object.entries(groups).forEach(([cat, items]) => renderGroup(cat, items));
+  if (noCategory.length) renderGroup('Other', noCategory);
 
   html += `<div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border);">
     <div class="meal-cat-title" style="margin-top:0;">Notes <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text3);">optional</span></div>
@@ -2214,26 +2200,16 @@ function showMealStep2() {
       placeholder="Dietary requirements, allergies, preferences…"
       oninput="mealModalState.notes=this.value">${escHtml(mealModalState.notes)}</textarea>
   </div>`;
-  document.getElementById('meal-modal-body').innerHTML = html || '<p class="meal-no-addons">No add-ons for this item.</p>';
+  document.getElementById('meal-modal-body').innerHTML = html || '<p class="meal-no-addons">No add-ons assigned to this item.</p>';
   document.getElementById('meal-modal-footer').innerHTML =
     `<button class="btn" onclick="showMealStep1()">← Back</button>
      <button class="btn btn-primary" onclick="saveMeal()">Save</button>`;
 }
 
-function selectAddon(addonId, value) {
-  const addon = BISTRO_ADDONS.find(a => a.id === addonId);
-  if (addon?.multi) {
-    const current = Array.isArray(mealModalState.addOns[addonId]) ? [...mealModalState.addOns[addonId]] : [];
-    const idx = current.indexOf(value);
-    if (idx > -1) {
-      current.splice(idx, 1);
-    } else if (current.length < addon.max) {
-      current.push(value);
-    }
-    mealModalState.addOns[addonId] = current;
-  } else {
-    mealModalState.addOns[addonId] = mealModalState.addOns[addonId] === value ? '' : value;
-  }
+function selectAddon(addonId) {
+  const idx = mealModalState.addOns.indexOf(addonId);
+  if (idx > -1) mealModalState.addOns.splice(idx, 1);
+  else mealModalState.addOns.push(addonId);
   showMealStep2();
 }
 
@@ -2241,7 +2217,7 @@ function saveMeal() {
   const idx = mealModalState.guestIdx;
   if (idx < 0 || !bistroRows[idx]) return;
   bistroRows[idx].dish   = mealModalState.dish;
-  bistroRows[idx].addOns = { ...mealModalState.addOns };
+  bistroRows[idx].addOns = [...mealModalState.addOns];
   bistroRows[idx].notes  = mealModalState.notes;
   closeMealModal();
   renderBistroRows();
@@ -2360,20 +2336,19 @@ function exportBistroOrderForm() {
 </div>
 <script>
 const DISH_CATS=[{label:'Snacks & Sharing',key:'bistroSnacks'},{label:'Burgers',key:'bistroBurgers'},{label:'Pub Classics',key:'bistroPubClassics'},{label:'Bowls',key:'bistroBowls'},{label:'Mains',key:'bistroMains'},{label:'Sides',key:'bistroSides'}];
-const ADDONS=[{id:'mainSide',label:'Main Side',key:'bistroMainSides',multi:true,max:2},{id:'sauce',label:'Sauce',key:'bistroSauces'},{id:'steakTemp',label:'Steak Temp',key:'bistroSteakTemp'},{id:'bowlAddOn',label:'Bowl Add-On',key:'bistroBowlAddOns'},{id:'burgerAddOn',label:'Burger Add-On',key:'bistroBurgerAddOns'},{id:'schnitzelUpgrade',label:'Schnitzel Upgrade',key:'bistroSchnitzelUpgrade'},{id:'extraSauce',label:'Extra Sauce',key:'bistroExtraSauce'}];
 const menuData=${embeddedMenu};
 let guests=[];
 let modal={guestIdx:-1,dish:'',addOns:{},notes:''};
 function addGuest(){guests.push({name:'',dish:'',addOns:{},notes:''});renderGuests();setTimeout(()=>{const i=document.querySelectorAll('.guest-name-input');if(i.length)i[i.length-1].focus();},50);}
 function removeGuest(i){guests.splice(i,1);renderGuests();}
-function renderGuests(){document.getElementById('guestBody').innerHTML=guests.map((g,i)=>{const at=Object.entries(g.addOns||{}).filter(([,v])=>Array.isArray(v)?v.length:v).map(([,v])=>Array.isArray(v)?v.map(esc).join(' & '):esc(v)).join(' · ');const mh=g.dish?\`<div class="meal-dish">\${esc(g.dish)}</div>\${at?\`<div class="meal-addons">\${at}</div>\`:''}\${g.notes?\`<div class="meal-notes">\${esc(g.notes)}</div>\`:''}\':\`<span class="no-meal">No meal selected</span>\`;return\`<tr><td class="guest-num">\${i+1}</td><td><input class="guest-name-input" type="text" value="\${esc(g.name)}" placeholder="Guest name" oninput="guests[\${i}].name=this.value"></td><td>\${mh}</td><td class="no-print"><button class="btn" style="font-size:12px;padding:5px 12px" onclick="openModal(\${i})">\${g.dish?'Edit':'Select meal'}</button></td><td class="no-print"><button class="btn-icon" onclick="removeGuest(\${i})">✕</button></td></tr>\`;}).join('');}
-function openModal(i){modal.guestIdx=i;modal.dish=guests[i]?.dish||'';modal.addOns={...(guests[i]?.addOns||{})};modal.notes=guests[i]?.notes||'';document.getElementById('mealModal').classList.add('open');showStep1();}
+function renderGuests(){document.getElementById('guestBody').innerHTML=guests.map((g,i)=>{const at=(Array.isArray(g.addOns)?g.addOns:[]).map(id=>{const a=(menuData.bistroAddons||[]).find(x=>x.id===id);return a?esc(a.name):null;}).filter(Boolean).join(' · ');const mh=g.dish?\`<div class="meal-dish">\${esc(g.dish)}</div>\${at?\`<div class="meal-addons">\${at}</div>\`:''}\${g.notes?\`<div class="meal-notes">\${esc(g.notes)}</div>\`:''}\':\`<span class="no-meal">No meal selected</span>\`;return\`<tr><td class="guest-num">\${i+1}</td><td><input class="guest-name-input" type="text" value="\${esc(g.name)}" placeholder="Guest name" oninput="guests[\${i}].name=this.value"></td><td>\${mh}</td><td class="no-print"><button class="btn" style="font-size:12px;padding:5px 12px" onclick="openModal(\${i})">\${g.dish?'Edit':'Select meal'}</button></td><td class="no-print"><button class="btn-icon" onclick="removeGuest(\${i})">✕</button></td></tr>\`;}).join('');}
+function openModal(i){modal.guestIdx=i;modal.dish=guests[i]?.dish||'';modal.addOns=[...(guests[i]?.addOns||[])];modal.notes=guests[i]?.notes||'';document.getElementById('mealModal').classList.add('open');showStep1();}
 function closeModal(){document.getElementById('mealModal').classList.remove('open');}
 function showStep1(){const n=guests[modal.guestIdx]?.name||\`Guest \${modal.guestIdx+1}\`;document.getElementById('modalTitle').textContent=\`Select Meal — \${n}\`;let h='';DISH_CATS.forEach(({label,key})=>{const items=(menuData[key]||[]).map(i=>typeof i==='object'?i.name:i).filter(Boolean);if(!items.length)return;h+=\`<div class="cat-title">\${esc(label)}</div><div class="item-grid">\`;items.forEach(n=>{h+=\`<button class="item-btn\${n===modal.dish?' selected':''}" onclick="pickDish('\${escJs(n)}')">\${esc(n)}</button>\`;});h+='</div>';});document.getElementById('modalBody').innerHTML=h||'<p class="no-items">No bistro items found.</p>';document.getElementById('modalFooter').innerHTML='<button class="btn" onclick="closeModal()">Cancel</button>';}
-function pickDish(d){modal.dish=d;modal.addOns={};showStep2();}
-function showStep2(){document.getElementById('modalTitle').textContent=modal.dish;const en=(menuData.bistroItemAddons||{})[modal.dish]||[];const rel=ADDONS.filter(a=>en.includes(a.id));let h='';rel.forEach(a=>{const opts=(menuData[a.key]||[]).map(d=>typeof d==='object'?d.name:d).filter(Boolean);if(!opts.length)return;if(a.multi){const cur=Array.isArray(modal.addOns[a.id])?modal.addOns[a.id]:[];const atMax=cur.length>=a.max;h+=\`<div class="cat-title">\${esc(a.label)} <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text3)">\${cur.length}/\${a.max}</span></div><div class="item-grid">\`;opts.forEach(n=>{const s=cur.includes(n);h+=\`<button class="item-btn\${s?' selected':''}" style="\${!s&&atMax?'opacity:.35;cursor:default;':''}" onclick="pickAddon('\${escJs(a.id)}','\${escJs(n)}')">\${esc(n)}</button>\`;});}else{h+=\`<div class="cat-title">\${esc(a.label)}</div><div class="item-grid">\`;opts.forEach(n=>{h+=\`<button class="item-btn\${modal.addOns[a.id]===n?' selected':''}" onclick="pickAddon('\${escJs(a.id)}','\${escJs(n)}')">\${esc(n)}</button>\`;});}h+='</div>';});h+=\`<div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border)"><div class="cat-title" style="margin-top:0">Notes <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text3)">optional</span></div><textarea rows="2" style="width:100%;border:1px solid var(--border);border-radius:var(--radius);padding:8px 10px;font-family:var(--sans);font-size:13px;color:var(--text);background:var(--surface2);resize:vertical;outline:none" placeholder="Dietary requirements, allergies…" oninput="modal.notes=this.value">\${esc(modal.notes)}</textarea></div>\`;document.getElementById('modalBody').innerHTML=h;document.getElementById('modalFooter').innerHTML='<button class="btn" onclick="showStep1()">← Back</button><button class="btn btn-primary" onclick="saveMeal()">Save</button>';}
-function pickAddon(id,v){const a=ADDONS.find(x=>x.id===id);if(a?.multi){const c=Array.isArray(modal.addOns[id])?[...modal.addOns[id]]:[];const i=c.indexOf(v);if(i>-1)c.splice(i,1);else if(c.length<a.max)c.push(v);modal.addOns[id]=c;}else{modal.addOns[id]=modal.addOns[id]===v?'':v;}showStep2();}
-function saveMeal(){const i=modal.guestIdx;if(i<0||!guests[i])return;guests[i].dish=modal.dish;guests[i].addOns={...modal.addOns};guests[i].notes=modal.notes;closeModal();renderGuests();}
+function pickDish(d){modal.dish=d;modal.addOns=[];showStep2();}
+function showStep2(){const dish=modal.dish;const enabledIds=(menuData.bistroItemAddons||{})[dish]||[];const allAddons=menuData.bistroAddons||[];const relevant=allAddons.filter(a=>enabledIds.includes(a.id));document.getElementById('modalTitle').textContent=dish;const groups={};const none=[];relevant.forEach(a=>{const c=(a.category||'').trim();if(c){if(!groups[c])groups[c]=[];groups[c].push(a);}else none.push(a);});let h='';const rg=(label,items)=>{if(!items.length)return;h+=\`<div class="cat-title">\${esc(label)}</div><div class="item-grid">\`;items.forEach(a=>{h+=\`<button class="item-btn\${modal.addOns.includes(a.id)?' selected':''}" onclick="pickAddon('\${escJs(a.id)}')">\${esc(a.name)}</button>\`;});h+='</div>';};Object.entries(groups).forEach(([c,items])=>rg(c,items));if(none.length)rg('Other',none);h+=\`<div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border)"><div class="cat-title" style="margin-top:0">Notes <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text3)">optional</span></div><textarea rows="2" style="width:100%;border:1px solid var(--border);border-radius:var(--radius);padding:8px 10px;font-family:var(--sans);font-size:13px;color:var(--text);background:var(--surface2);resize:vertical;outline:none" placeholder="Dietary requirements, allergies…" oninput="modal.notes=this.value">\${esc(modal.notes)}</textarea></div>\`;document.getElementById('modalBody').innerHTML=h||'<p class="no-items">No add-ons assigned to this item.</p>';document.getElementById('modalFooter').innerHTML='<button class="btn" onclick="showStep1()">← Back</button><button class="btn btn-primary" onclick="saveMeal()">Save</button>';}
+function pickAddon(id){const i=modal.addOns.indexOf(id);if(i>-1)modal.addOns.splice(i,1);else modal.addOns.push(id);showStep2();}
+function saveMeal(){const i=modal.guestIdx;if(i<0||!guests[i])return;guests[i].dish=modal.dish;guests[i].addOns=[...modal.addOns];guests[i].notes=modal.notes;closeModal();renderGuests();}
 function esc(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function escJs(s){return String(s).replace(/\\\\/g,'\\\\\\\\').replace(/'/g,"\\\\\'");}
 addGuest();
@@ -2472,10 +2447,9 @@ function buildRunsheet() {
   } else if (d.menuType === 'bistro') {
     const rows = d.bistroRows || [];
     const tableRows = rows.filter(r => r.name || r.dish).map((r, i) => {
-      const addOnText = Object.values(r.addOns || {})
-        .filter(v => Array.isArray(v) ? v.length > 0 : v)
-        .map(v => `<span style="color:#888;font-size:12px;margin-left:6px;">· ${Array.isArray(v) ? v.map(escHtml).join(' & ') : escHtml(v)}</span>`)
-        .join('');
+      const addOnText = (Array.isArray(r.addOns) ? r.addOns : [])
+        .map(id => { const a = (menuData.bistroAddons || []).find(x => x.id === id); return a ? `<span style="color:#888;font-size:12px;margin-left:6px;">· ${escHtml(a.name)}</span>` : null; })
+        .filter(Boolean).join('');
       return `<tr>
         <td class="rs-bistro-num">${i + 1}</td>
         <td>${escHtml(r.name) || '—'}</td>
