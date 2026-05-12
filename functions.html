@@ -210,6 +210,68 @@
 
   /* ── EMPTY ── */
   .empty { font-size: 13px; color: var(--text3); font-style: italic; }
+
+  /* ── DIETARY FILTER BAR ── */
+  .diet-bar {
+    position: sticky;
+    top: 54px;
+    z-index: 99;
+    background: #fff;
+    border-bottom: 1px solid var(--border);
+    display: none;
+  }
+  .diet-bar.visible { display: block; }
+  .diet-bar-inner {
+    max-width: var(--max);
+    margin: 0 auto;
+    padding: 0 2rem;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .diet-bar-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: var(--text3);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .diet-btns { display: flex; gap: 6px; flex-wrap: wrap; }
+  .diet-btn {
+    padding: 4px 12px;
+    border: 1px solid var(--border);
+    border-radius: 99px;
+    font-family: var(--sans);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    background: #fff;
+    color: var(--text2);
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .diet-btn:hover { border-color: var(--green2); color: var(--green2); }
+  .diet-btn.on    { background: var(--green); border-color: var(--green); color: #fff; }
+  .diet-clear {
+    margin-left: auto;
+    font-size: 12px;
+    color: var(--text3);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: var(--radius);
+    flex-shrink: 0;
+    display: none;
+  }
+  .diet-clear:hover { color: var(--text); background: var(--cream2); }
+
+  /* ── FADED ITEM ── */
+  .item-row { transition: opacity 0.2s; }
+  .item-row.faded { opacity: 0.15; }
 </style>
 </head>
 <body>
@@ -227,6 +289,20 @@
   <div class="hero-tagline" id="hero-tagline"></div>
   <p class="hero-intro" id="hero-intro"></p>
 </section>
+
+<div class="diet-bar" id="diet-bar">
+  <div class="diet-bar-inner">
+    <span class="diet-bar-label">Filter:</span>
+    <div class="diet-btns">
+      <button class="diet-btn" onclick="toggleFilter('V',this)">Vegetarian</button>
+      <button class="diet-btn" onclick="toggleFilter('VG',this)">Vegan</button>
+      <button class="diet-btn" onclick="toggleFilter('GF',this)">Gluten Free</button>
+      <button class="diet-btn" onclick="toggleFilter('DF',this)">Dairy Free</button>
+      <button class="diet-btn" onclick="toggleFilter('NF',this)">Nut Free</button>
+    </div>
+    <button class="diet-clear" id="diet-clear" onclick="clearFilters()">✕ Clear</button>
+  </div>
+</div>
 
 <div id="page-body"></div>
 
@@ -331,12 +407,11 @@ data.menus.forEach((menu, mi) => {
     const items = (sub.items || []).filter(i => i.name);
     if (!items.length) return '';
     const itemsHtml = items.map(item => {
-      const diets = (item.dietaries || []).map(d => `<span class="diet-badge">${esc(d)}</span>`).join('');
-      return `<div class="item-row">
+      const diets = (item.dietaries || []).join(',');
+      return `<div class="item-row" data-dietaries="${esc(diets)}">
         <div class="item-info">
           <div class="item-name">${esc(item.name)}</div>
           ${item.description ? `<div class="item-desc">${esc(item.description)}</div>` : ''}
-          ${diets ? `<div class="item-diets">${diets}</div>` : ''}
         </div>
         ${item.price ? `<div class="item-price">${esc(item.price)}</div>` : ''}
       </div>`;
@@ -391,6 +466,37 @@ body.innerHTML = sections.join('') || `
   <div style="text-align:center;padding:6rem 2rem;color:#8a8278;font-size:14px;">
     No content yet — open <strong>menu-manager.html</strong> to get started.
   </div>`;
+
+/* ── show filter bar if any items have dietary tags ── */
+const hasTaggedItems = data.menus.some(m =>
+  m.subcategories?.some(s => s.items?.some(i => i.dietaries?.length))
+);
+if (hasTaggedItems) document.getElementById('diet-bar').classList.add('visible');
+
+/* ── dietary filter logic ── */
+const activeFilters = new Set();
+
+function toggleFilter(tag, btn) {
+  if (activeFilters.has(tag)) { activeFilters.delete(tag); btn.classList.remove('on'); }
+  else                        { activeFilters.add(tag);    btn.classList.add('on'); }
+  document.getElementById('diet-clear').style.display = activeFilters.size ? 'inline' : 'none';
+  applyFilters();
+}
+
+function clearFilters() {
+  activeFilters.clear();
+  document.querySelectorAll('.diet-btn').forEach(b => b.classList.remove('on'));
+  document.getElementById('diet-clear').style.display = 'none';
+  applyFilters();
+}
+
+function applyFilters() {
+  document.querySelectorAll('.item-row').forEach(row => {
+    if (!activeFilters.size) { row.classList.remove('faded'); return; }
+    const tags = new Set((row.dataset.dietaries || '').split(',').filter(Boolean));
+    row.classList.toggle('faded', ![...activeFilters].every(f => tags.has(f)));
+  });
+}
 </script>
 </body>
 </html>
