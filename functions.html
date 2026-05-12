@@ -213,19 +213,23 @@
 
   /* ── DIETARY FILTER BAR ── */
   .diet-bar {
-    position: sticky;
-    top: 54px;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
     z-index: 99;
     background: #fff;
-    border-bottom: 1px solid var(--border);
-    display: none;
+    border-top: 1px solid var(--border);
+    box-shadow: 0 -2px 16px rgba(0,0,0,0.08);
+    transform: translateY(100%);
+    transition: transform 0.3s cubic-bezier(0.34, 1.1, 0.64, 1);
   }
-  .diet-bar.visible { display: block; }
+  .diet-bar.visible { transform: translateY(0); }
   .diet-bar-inner {
     max-width: var(--max);
     margin: 0 auto;
     padding: 0 2rem;
-    height: 48px;
+    height: 56px;
     display: flex;
     align-items: center;
     gap: 10px;
@@ -467,11 +471,21 @@ body.innerHTML = sections.join('') || `
     No content yet — open <strong>menu-manager.html</strong> to get started.
   </div>`;
 
-/* ── show filter bar if any items have dietary tags ── */
+/* ── show filter bar (bottom) when a menu section is in view ── */
 const hasTaggedItems = data.menus.some(m =>
   m.subcategories?.some(s => s.items?.some(i => i.dietaries?.length))
 );
-if (hasTaggedItems) document.getElementById('diet-bar').classList.add('visible');
+if (hasTaggedItems) {
+  document.body.style.paddingBottom = '64px';
+  const dietBar = document.getElementById('diet-bar');
+  const menuSections = document.querySelectorAll('[id^="menu-"]');
+  const inView = new Set();
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => e.isIntersecting ? inView.add(e.target) : inView.delete(e.target));
+    dietBar.classList.toggle('visible', inView.size > 0);
+  }, { threshold: 0 });
+  menuSections.forEach(s => observer.observe(s));
+}
 
 /* ── dietary filter logic ── */
 const activeFilters = new Set();
