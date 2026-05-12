@@ -1366,12 +1366,12 @@ function showMMPanel(name) {
 function addMMItem(type, value) {
   if (type === 'bistro-addons') {
     if (!menuData.bistroAddons) menuData.bistroAddons = [];
-    menuData.bistroAddons.push({ id: 'addon_' + Date.now(), name: value || '', category: '', price: '' });
+    menuData.bistroAddons.push({ id: 'addon_' + Date.now(), name: value || '', shortName: '', category: '', price: '' });
     saveMenus();
     renderMMItems();
     setTimeout(() => {
       const el = document.getElementById('mm-bistro-addons');
-      if (el) { const inputs = el.querySelectorAll('input'); if (inputs.length) inputs[inputs.length - 3].focus(); }
+      if (el) { const inputs = el.querySelectorAll('input'); if (inputs.length) inputs[inputs.length - 4].focus(); }
     }, 50);
     return;
   }
@@ -1536,15 +1536,17 @@ function renderBistroAddonsList(containerId, addons) {
   const el = document.getElementById(containerId);
   if (!el) return;
   const header = addons.length
-    ? `<div class="mm-items-header" style="grid-template-columns:2fr 1fr 1fr 28px;"><span>Name</span><span>Category</span><span>Price</span><span></span></div>`
+    ? `<div class="mm-items-header" style="grid-template-columns:2fr 1fr 1fr 1fr 28px;"><span>Name</span><span>BOH short name</span><span>Category</span><span>Price</span><span></span></div>`
     : '';
   el.innerHTML = header + addons.map((a, i) => {
     const n = escHtml(a.name || '');
+    const s = escHtml(a.shortName || '');
     const c = escHtml(a.category || '');
     const p = escHtml(a.price || '');
     return `<div class="mm-item-row">
-      <div class="mm-item-fields" style="grid-template-columns:2fr 1fr 1fr;">
+      <div class="mm-item-fields" style="grid-template-columns:2fr 1fr 1fr 1fr;">
         <input type="text" value="${n}" placeholder="Option name..." oninput="updateMMItem('bistro-addons',${i},'name',this.value)">
+        <input type="text" value="${s}" placeholder="e.g. GF bun..." oninput="updateMMItem('bistro-addons',${i},'shortName',this.value)">
         <input type="text" value="${c}" placeholder="e.g. Side, Sauce..." oninput="updateMMItem('bistro-addons',${i},'category',this.value)">
         <input type="text" value="${p}" placeholder="$0.00" oninput="updateMMItem('bistro-addons',${i},'price',this.value)">
       </div>
