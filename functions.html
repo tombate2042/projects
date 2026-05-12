@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>The Republic — Bookings & Events</title>
+<title>The Republic Hotel — Bookings & Events</title>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -388,7 +388,7 @@
 <!-- NAV -->
 <nav class="site-nav">
   <div class="nav-inner">
-    <a class="nav-brand" href="#top">The Republic</a>
+    <a class="nav-brand" href="#top">The Republic Hotel</a>
     <ul class="nav-links">
       <li><a href="#spaces">Spaces</a></li>
       <li><a href="#canape">Canapés</a></li>
@@ -403,7 +403,7 @@
 <!-- HERO -->
 <section class="hero" id="top">
   <div class="hero-eyebrow">Bookings &amp; Events</div>
-  <h1>The Republic</h1>
+  <h1>The Republic Hotel</h1>
   <div class="hero-sub">Four Levels, One Republic</div>
   <p class="hero-intro" id="hero-intro"></p>
 </section>
@@ -448,7 +448,7 @@
   <div class="section">
     <div class="section-label">Sit-Down Dining</div>
     <h2 class="section-title">Banquet Menu</h2>
-    <p style="font-size:14px;color:var(--text2);margin-bottom:2rem;max-width:560px;">A great choice for a group of 10 or more guests. Enjoy a selection of mains, sides and dessert shared at the table.</p>
+    <p style="font-size:14px;color:var(--text2);margin-bottom:2rem;max-width:560px;">A great choice for a group of 10 or more guests. Enjoy a selection of 3 mains, 2 sides and a dessert shared at the table.</p>
     <div class="banquet-cols" id="banquet-menu"></div>
   </div>
 </div>
@@ -587,7 +587,6 @@ document.getElementById('hero-intro').textContent = venue.intro || VENUE_DEFAULT
             <div class="menu-item-name">${esc(itemName(i))}</div>
             ${itemDesc(i) ? `<div class="menu-item-desc">${esc(itemDesc(i))}</div>` : ''}
           </div>
-          ${itemPrice(i) ? `<div class="menu-item-price">${esc(itemPrice(i))}</div>` : ''}
         </div>`).join('')}
       </div>
     </div>`;
