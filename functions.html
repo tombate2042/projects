@@ -3,33 +3,28 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>The Republic Hotel — Bookings & Events</title>
+<title>Bookings &amp; Events</title>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   :root {
-    --cream:   #faf6ed;
-    --cream2:  #f2ece0;
-    --green:   #013128;
-    --green2:  #1a5c38;
-    --green3:  #2d8a58;
-    --green-light: #e4ede7;
-    --text:    #1a1814;
-    --text2:   #4a4640;
-    --text3:   #8a8278;
-    --border:  #d8d0c4;
-    --serif:   'Georgia', 'Times New Roman', serif;
-    --sans:    'Helvetica Neue', Arial, sans-serif;
-    --radius:  8px;
-    --max:     1080px;
+    --cream:        #faf6ed;
+    --cream2:       #f2ece0;
+    --green:        #013128;
+    --green2:       #1a5c38;
+    --green3:       #2d8a58;
+    --green-light:  #e4ede7;
+    --text:         #1a1814;
+    --text2:        #4a4640;
+    --text3:        #8a8278;
+    --border:       #d8d0c4;
+    --serif:        'Georgia', 'Times New Roman', serif;
+    --sans:         'Helvetica Neue', Arial, sans-serif;
+    --radius:       8px;
+    --max:          1080px;
   }
 
-  body {
-    font-family: var(--sans);
-    background: var(--cream);
-    color: var(--text);
-    line-height: 1.6;
-  }
+  body { font-family: var(--sans); background: var(--cream); color: var(--text); line-height: 1.6; }
 
   /* ── NAV ── */
   .site-nav {
@@ -57,12 +52,7 @@
     white-space: nowrap;
     text-decoration: none;
   }
-  .nav-links {
-    display: flex;
-    gap: 0;
-    list-style: none;
-    overflow-x: auto;
-  }
+  .nav-links { display: flex; list-style: none; overflow-x: auto; }
   .nav-links a {
     display: block;
     padding: 0 14px;
@@ -100,7 +90,7 @@
     line-height: 1.15;
     margin-bottom: 0.5rem;
   }
-  .hero-sub {
+  .hero-tagline {
     font-size: 13px;
     letter-spacing: 3px;
     text-transform: uppercase;
@@ -115,18 +105,11 @@
     line-height: 1.7;
   }
 
-  /* ── SECTIONS ── */
+  /* ── GENERIC SECTION ── */
   .section {
     max-width: var(--max);
     margin: 0 auto;
     padding: 4rem 2rem;
-  }
-  .section + .section { padding-top: 0; }
-  .section-divider {
-    border: none;
-    border-top: 1px solid var(--border);
-    max-width: var(--max);
-    margin: 0 auto;
   }
   .section-label {
     font-size: 10px;
@@ -144,559 +127,270 @@
     line-height: 1.2;
     margin-bottom: 2rem;
   }
-  .section-title-center { text-align: center; }
+  .band-cream  { background: var(--cream); }
+  .band-cream2 { background: var(--cream2); }
+  .band-white  { background: #fff; }
+  .band-green  { background: var(--green); color: #fff; }
+  hr.divider   { border: none; border-top: 1px solid var(--border); max-width: var(--max); margin: 0 auto; }
 
   /* ── SPACES ── */
   .spaces-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
     gap: 1.25rem;
   }
-  .space-card {
-    background: #fff;
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    overflow: hidden;
-  }
-  .space-card-header {
-    background: var(--green);
-    color: #fff;
-    padding: 18px 20px 14px;
-  }
-  .space-card-floor {
-    font-size: 10px;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    color: rgba(255,255,255,0.5);
-    margin-bottom: 4px;
-  }
-  .space-card-name {
-    font-family: var(--serif);
-    font-size: 1.3rem;
-    font-weight: normal;
-  }
-  .space-card-capacity {
-    margin-top: 4px;
-    font-size: 12px;
-    color: var(--green3);
-    letter-spacing: 0.3px;
-  }
-  .space-card-body {
-    padding: 18px 20px;
-  }
-  .space-card-desc {
-    font-size: 13.5px;
-    color: var(--text2);
-    line-height: 1.65;
-    margin-bottom: 14px;
-  }
-  .space-features {
-    list-style: none;
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-  }
+  .space-card { background: #fff; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+  .space-card-head { background: var(--green); color: #fff; padding: 18px 20px 14px; }
+  .space-floor { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: rgba(255,255,255,0.5); margin-bottom: 4px; }
+  .space-name  { font-family: var(--serif); font-size: 1.25rem; font-weight: normal; }
+  .space-cap   { margin-top: 4px; font-size: 12px; color: var(--green3); }
+  .space-body  { padding: 18px 20px; }
+  .space-desc  { font-size: 13.5px; color: var(--text2); line-height: 1.65; margin-bottom: 14px; }
+  .space-features { list-style: none; display: flex; flex-direction: column; gap: 5px; }
   .space-features li {
-    display: flex;
-    align-items: center;
-    gap: 7px;
-    font-size: 12.5px;
-    color: var(--text2);
+    display: flex; align-items: center; gap: 7px;
+    font-size: 12.5px; color: var(--text2);
   }
   .space-features li::before {
     content: '';
     display: inline-block;
-    width: 14px;
-    height: 14px;
+    width: 14px; height: 14px;
     background: var(--green2);
     border-radius: 50%;
     flex-shrink: 0;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2 6l3 3 5-5' stroke='white' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-    background-size: 10px;
-    background-position: center;
-    background-repeat: no-repeat;
+    background-size: 10px; background-position: center; background-repeat: no-repeat;
   }
 
-  /* ── PACKAGES BANNER ── */
-  .pkg-banner {
-    background: var(--green);
-    color: #fff;
-    padding: 3.5rem 2rem;
-  }
-  .pkg-inner {
-    max-width: var(--max);
-    margin: 0 auto;
-  }
-  .pkg-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 1.5rem;
-    margin-top: 2rem;
-  }
-  .pkg-card {
-    background: rgba(255,255,255,0.07);
-    border: 1px solid rgba(255,255,255,0.12);
-    border-radius: var(--radius);
-    padding: 22px 24px;
-  }
-  .pkg-card-title {
-    font-size: 10px;
-    letter-spacing: 2.5px;
-    text-transform: uppercase;
-    color: var(--green3);
-    margin-bottom: 8px;
-  }
-  .pkg-card-price {
-    font-family: var(--serif);
-    font-size: 2rem;
-    line-height: 1;
-    margin-bottom: 4px;
-  }
-  .pkg-card-pieces {
-    font-size: 13px;
-    color: rgba(255,255,255,0.6);
-    margin-bottom: 14px;
-  }
-  .pkg-card-sel {
-    font-size: 13px;
-    color: rgba(255,255,255,0.8);
-    line-height: 1.6;
-    border-top: 1px solid rgba(255,255,255,0.12);
-    padding-top: 14px;
-  }
-  .pkg-note {
-    margin-top: 1.5rem;
-    font-size: 12px;
-    color: rgba(255,255,255,0.4);
-    font-style: italic;
-    text-align: center;
-  }
+  /* ── PACKAGES ── */
+  .pkg-inner { max-width: var(--max); margin: 0 auto; padding: 3.5rem 2rem; }
+  .pkg-grid  { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.5rem; margin-top: 2rem; }
+  .pkg-card  { background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.12); border-radius: var(--radius); padding: 22px 24px; }
+  .pkg-card-label { font-size: 10px; letter-spacing: 2.5px; text-transform: uppercase; color: var(--green3); margin-bottom: 8px; }
+  .pkg-card-price { font-family: var(--serif); font-size: 2rem; line-height: 1; margin-bottom: 14px; }
+  .pkg-card-desc  { font-size: 13px; color: rgba(255,255,255,0.8); line-height: 1.6; border-top: 1px solid rgba(255,255,255,0.12); padding-top: 14px; }
 
   /* ── MENU ITEMS ── */
-  .menu-cols {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 2rem 3rem;
-  }
-  .menu-subhead {
+  .menu-cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem 3.5rem; }
+  .sub-head  {
     font-family: var(--serif);
     font-size: 1.1rem;
     color: var(--green);
     border-bottom: 1px solid var(--border);
     padding-bottom: 8px;
     margin-bottom: 1rem;
-  }
-  .menu-subhead-note {
-    font-family: var(--sans);
-    font-size: 12px;
-    color: var(--text3);
-    font-style: italic;
-    margin-left: 8px;
-  }
-  .menu-item-list {
     display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-  .menu-item {
-    display: flex;
-    justify-content: space-between;
     align-items: baseline;
     gap: 8px;
   }
-  .menu-item-info { flex: 1; }
-  .menu-item-name {
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--text);
-  }
-  .menu-item-desc {
-    font-size: 12.5px;
-    color: var(--text3);
-    margin-top: 1px;
-    line-height: 1.5;
-  }
-  .menu-item-price {
-    font-size: 13px;
+  .sub-price-note { font-family: var(--sans); font-size: 12px; color: var(--text3); font-style: italic; }
+  .item-list  { display: flex; flex-direction: column; gap: 12px; }
+  .item-row   { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .item-info  { flex: 1; }
+  .item-name  { font-size: 14px; font-weight: 600; color: var(--text); }
+  .item-desc  { font-size: 12.5px; color: var(--text3); margin-top: 2px; line-height: 1.5; }
+  .item-price { font-size: 13px; color: var(--green2); font-weight: 600; white-space: nowrap; }
+  .item-diets { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 4px; }
+  .diet-badge {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    padding: 1px 5px;
+    border-radius: 99px;
+    background: var(--green-light);
     color: var(--green2);
-    font-weight: 600;
-    white-space: nowrap;
-  }
-  .menu-empty {
-    font-size: 13px;
-    color: var(--text3);
-    font-style: italic;
-  }
-
-  /* ── BANQUET / GRAZING LAYOUT ── */
-  .banquet-cols {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 2rem 3rem;
+    border: 1px solid #b8d4c0;
   }
 
   /* ── CONTACT ── */
-  .contact-section {
-    background: var(--green);
-    color: #fff;
-    padding: 4rem 2rem;
-    text-align: center;
-  }
-  .contact-grid {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 3rem;
-    margin-top: 2.5rem;
-  }
-  .contact-item-label {
-    font-size: 10px;
-    letter-spacing: 2.5px;
-    text-transform: uppercase;
-    color: rgba(255,255,255,0.45);
-    margin-bottom: 6px;
-  }
-  .contact-item-value {
-    font-size: 16px;
-    color: #fff;
-    font-weight: 500;
-  }
+  .contact-wrap { max-width: var(--max); margin: 0 auto; padding: 4rem 2rem; text-align: center; }
+  .contact-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 3rem; margin-top: 2.5rem; }
+  .contact-label { font-size: 10px; letter-spacing: 2.5px; text-transform: uppercase; color: rgba(255,255,255,0.45); margin-bottom: 6px; }
+  .contact-value { font-size: 16px; color: #fff; font-weight: 500; }
 
-  /* ── SECTION BANDS ── */
-  .band-cream { background: var(--cream); }
-  .band-cream2 { background: var(--cream2); }
-  .band-white { background: #fff; }
-
-  /* ── EMPTY STATE ── */
-  .empty-notice {
-    background: var(--green-light);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 24px;
-    text-align: center;
-    color: var(--text2);
-    font-size: 13px;
-  }
-
-  @media print {
-    .site-nav { display: none; }
-  }
+  /* ── EMPTY ── */
+  .empty { font-size: 13px; color: var(--text3); font-style: italic; }
 </style>
 </head>
 <body>
 
-<!-- NAV -->
 <nav class="site-nav">
   <div class="nav-inner">
-    <a class="nav-brand" href="#top">The Republic Hotel</a>
-    <ul class="nav-links">
-      <li><a href="#spaces">Spaces</a></li>
-      <li><a href="#canape">Canapés</a></li>
-      <li><a href="#banquet">Banquet</a></li>
-      <li><a href="#grazing">Grazing</a></li>
-      <li><a href="#bistro">Bistro</a></li>
-      <li><a href="#contact">Contact</a></li>
-    </ul>
+    <a class="nav-brand" href="#top" id="nav-brand">Bookings &amp; Events</a>
+    <ul class="nav-links" id="nav-links"></ul>
   </div>
 </nav>
 
-<!-- HERO -->
 <section class="hero" id="top">
   <div class="hero-eyebrow">Bookings &amp; Events</div>
-  <h1>The Republic Hotel</h1>
-  <div class="hero-sub">Four Levels, One Republic</div>
+  <h1 id="hero-name"></h1>
+  <div class="hero-tagline" id="hero-tagline"></div>
   <p class="hero-intro" id="hero-intro"></p>
 </section>
 
-<!-- SPACES -->
-<div class="band-cream" id="spaces">
-  <div class="section">
-    <div class="section-label">Our Spaces</div>
-    <h2 class="section-title">Find your perfect space</h2>
-    <div class="spaces-grid" id="spaces-grid"></div>
-  </div>
-</div>
-
-<hr class="section-divider">
-
-<!-- CANAPE PACKAGES -->
-<div class="pkg-banner" id="canape">
-  <div class="pkg-inner">
-    <div style="text-align:center;">
-      <div class="section-label" style="color:rgba(255,255,255,0.45);">Food & Beverage</div>
-      <h2 class="section-title" style="color:#fff;margin-bottom:0.5rem;">Canapé Packages</h2>
-      <p style="font-size:14px;color:rgba(255,255,255,0.6);max-width:520px;margin:0 auto;">Customise your own canapés — your choice of 2-or-3 hour package, or order canapés individually.</p>
-    </div>
-    <div class="pkg-grid" id="pkg-grid"></div>
-    <p class="pkg-note">Additional items may be added to all packages</p>
-  </div>
-</div>
-
-<!-- CANAPE MENU -->
-<div class="band-white">
-  <div class="section">
-    <div class="section-label">Canapé Menu</div>
-    <h2 class="section-title">Menu selections</h2>
-    <div class="menu-cols" id="canape-menu"></div>
-  </div>
-</div>
-
-<hr class="section-divider">
-
-<!-- BANQUET -->
-<div class="band-cream2" id="banquet">
-  <div class="section">
-    <div class="section-label">Sit-Down Dining</div>
-    <h2 class="section-title">Banquet Menu</h2>
-    <p style="font-size:14px;color:var(--text2);margin-bottom:2rem;max-width:560px;">A great choice for a group of 10 or more guests. Enjoy a selection of 3 mains, 2 sides and a dessert shared at the table.</p>
-    <div class="banquet-cols" id="banquet-menu"></div>
-  </div>
-</div>
-
-<hr class="section-divider">
-
-<!-- GRAZING -->
-<div class="band-cream" id="grazing">
-  <div class="section">
-    <div class="section-label">Grazing</div>
-    <h2 class="section-title">Grazing Stations &amp; Platters</h2>
-    <div class="menu-cols" id="grazing-menu"></div>
-  </div>
-</div>
-
-<hr class="section-divider">
-
-<!-- BISTRO -->
-<div class="band-white" id="bistro">
-  <div class="section">
-    <div class="section-label">À La Carte</div>
-    <h2 class="section-title">Bistro Menu</h2>
-    <div class="menu-cols" id="bistro-menu"></div>
-  </div>
-</div>
-
-<!-- CONTACT -->
-<section class="contact-section" id="contact">
-  <div style="max-width:var(--max);margin:0 auto;">
-    <div class="section-label" style="color:rgba(255,255,255,0.45);">Get In Touch</div>
-    <h2 class="section-title" style="color:#fff;margin-bottom:0.75rem;">We'd love to host your next event</h2>
-    <p style="font-size:14px;color:rgba(255,255,255,0.6);max-width:480px;margin:0 auto;">Please reach out with any questions, or to organise a site viewing of any of our spaces.</p>
-    <div class="contact-grid" id="contact-grid"></div>
-  </div>
-</section>
+<div id="page-body"></div>
 
 <script>
-/* ── helpers ── */
+/* ── utils ── */
 function esc(s) {
   if (!s) return '';
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
-
-function itemName(i)  { return typeof i === 'object' ? (i.name || '') : (i || ''); }
-function itemDesc(i)  { return typeof i === 'object' ? (i.description || '') : ''; }
-function itemPrice(i) { return typeof i === 'object' ? (i.price || '') : ''; }
+function slug(s) { return (s || '').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,''); }
 
 /* ── load data ── */
-const VENUE_DEFAULTS = {
-  intro: 'Four distinctly different experiences under one iconic roof in the heart of Sydney.',
-  spaces: [
-    { name: 'Public Bar',      floor: 'Ground Floor',  capacity: '',             description: '', features: '' },
-    { name: 'Sports Bar',      floor: 'First Floor',   capacity: '75 Cocktail',  description: '', features: '' },
-    { name: 'Inna Lounge',     floor: 'Second Floor',  capacity: '75 Cocktail',  description: '', features: '' },
-    { name: 'Taylors Rooftop', floor: 'Third Floor',   capacity: '200 Cocktail', description: '', features: '' }
-  ],
-  canapePackage2hr: { price: '$45pp', pieces: '6 Piece', selections: '2 Small, 2 Premium, 1 Slider, 1 Substantial' },
-  canapePackage3hr: { price: '$59pp', pieces: '8 Piece', selections: '2 Small, 2 Premium, 2 Sliders, 2 Substantial' },
-  contact: { email: '', phone: '', website: '', address: '' }
-};
+let data = { venue: { name:'', tagline:'', intro:'', spaces:[], packages:[], contact:{} }, menus:[] };
+try { const s = localStorage.getItem('vmm_data'); if (s) data = JSON.parse(s); } catch(e) {}
+if (!data.venue)            data.venue = {};
+if (!data.venue.spaces)     data.venue.spaces = [];
+if (!data.venue.packages)   data.venue.packages = [];
+if (!data.venue.contact)    data.venue.contact = {};
+if (!data.menus)            data.menus = [];
 
-let venue = JSON.parse(JSON.stringify(VENUE_DEFAULTS));
-try {
-  const sv = localStorage.getItem('rr_venue');
-  if (sv) venue = Object.assign(JSON.parse(JSON.stringify(VENUE_DEFAULTS)), JSON.parse(sv));
-} catch(e) {}
+const v = data.venue;
 
-let menus = {};
-try {
-  const sm = localStorage.getItem('rr_menus');
-  if (sm) menus = JSON.parse(sm);
-} catch(e) {}
+/* ── hero ── */
+const heroName = document.getElementById('hero-name');
+const heroTag  = document.getElementById('hero-tagline');
+const heroIntr = document.getElementById('hero-intro');
+const navBrand = document.getElementById('nav-brand');
+heroName.textContent  = v.name    || 'Bookings & Events';
+heroTag.textContent   = v.tagline || '';
+heroIntr.textContent  = v.intro   || '';
+navBrand.textContent  = v.name    || 'Bookings & Events';
+if (v.name) document.title = v.name + ' — Bookings & Events';
+if (!v.tagline) heroTag.style.display = 'none';
 
-/* ── render hero ── */
-document.getElementById('hero-intro').textContent = venue.intro || VENUE_DEFAULTS.intro;
+/* ── nav ── */
+const navLinks = document.getElementById('nav-links');
+const navItems = [];
+if (v.spaces?.length)   navItems.push({ label: 'Spaces',   href: '#spaces' });
+if (v.packages?.length) navItems.push({ label: 'Packages', href: '#packages' });
+data.menus.forEach(m => { if (m.name) navItems.push({ label: m.name, href: '#menu-' + slug(m.name) }); });
+const c = v.contact || {};
+if (c.email || c.phone || c.address) navItems.push({ label: 'Contact', href: '#contact' });
+navLinks.innerHTML = navItems.map(n => `<li><a href="${n.href}">${esc(n.label)}</a></li>`).join('');
 
-/* ── render spaces ── */
-(function() {
-  const grid = document.getElementById('spaces-grid');
-  const spaces = venue.spaces || [];
-  if (!spaces.length) { grid.innerHTML = '<p class="menu-empty">No spaces configured yet.</p>'; return; }
-  grid.innerHTML = spaces.map(sp => {
-    const features = (sp.features || '').split('\n').map(f => f.trim()).filter(Boolean);
+/* ── build page ── */
+const body = document.getElementById('page-body');
+const sections = [];
+
+/* Spaces */
+if (v.spaces?.length) {
+  const cards = v.spaces.map(sp => {
+    const feats = (sp.features || '').split('\n').map(f => f.trim()).filter(Boolean);
     return `<div class="space-card">
-      <div class="space-card-header">
-        <div class="space-card-floor">${esc(sp.floor)}</div>
-        <div class="space-card-name">${esc(sp.name)}</div>
-        ${sp.capacity ? `<div class="space-card-capacity">${esc(sp.capacity)} Capacity</div>` : ''}
+      <div class="space-card-head">
+        <div class="space-floor">${esc(sp.floor)}</div>
+        <div class="space-name">${esc(sp.name)}</div>
+        ${sp.capacity ? `<div class="space-cap">${esc(sp.capacity)} Capacity</div>` : ''}
       </div>
-      <div class="space-card-body">
-        ${sp.description ? `<p class="space-card-desc">${esc(sp.description)}</p>` : ''}
-        ${features.length ? `<ul class="space-features">${features.map(f => `<li>${esc(f)}</li>`).join('')}</ul>` : ''}
+      <div class="space-body">
+        ${sp.description ? `<p class="space-desc">${esc(sp.description)}</p>` : ''}
+        ${feats.length ? `<ul class="space-features">${feats.map(f => `<li>${esc(f)}</li>`).join('')}</ul>` : ''}
       </div>
     </div>`;
   }).join('');
-})();
+  sections.push(`
+    <div class="band-cream" id="spaces">
+      <div class="section">
+        <div class="section-label">Our Spaces</div>
+        <h2 class="section-title">Find your perfect space</h2>
+        <div class="spaces-grid">${cards}</div>
+      </div>
+    </div>`);
+}
 
-/* ── render canape packages ── */
-(function() {
-  const grid = document.getElementById('pkg-grid');
-  const pkgs = [
-    { label: '2 Hour Canape Service', data: venue.canapePackage2hr },
-    { label: '3 Hour Canape Service', data: venue.canapePackage3hr }
-  ];
-  grid.innerHTML = pkgs.map(({ label, data }) => `
+/* Packages */
+if (v.packages?.length) {
+  const cards = v.packages.map(p => `
     <div class="pkg-card">
-      <div class="pkg-card-title">${esc(label)}</div>
-      <div class="pkg-card-price">${esc(data.price)}</div>
-      <div class="pkg-card-pieces">${esc(data.pieces)}</div>
-      <div class="pkg-card-sel">${esc(data.selections)}</div>
+      <div class="pkg-card-label">${esc(p.name)}</div>
+      <div class="pkg-card-price">${esc(p.price)}</div>
+      ${p.description ? `<div class="pkg-card-desc">${esc(p.description)}</div>` : ''}
     </div>`).join('');
-})();
-
-/* ── render canape menu ── */
-(function() {
-  const container = document.getElementById('canape-menu');
-  const sections = [
-    { label: 'Small',       note: '$6 each',    key: 'canapeSmall' },
-    { label: 'Premium',     note: '$9.50 each',  key: 'canapePremium' },
-    { label: 'Substantial', note: '$9.50 each',  key: 'canapeSubstantial' },
-    { label: 'Sliders',     note: '$9.50 each',  key: 'canapeSliders' },
-    { label: 'Dessert',     note: '$4.50 each',  key: 'canapeDessert' },
-  ];
-  const populated = sections.filter(s => (menus[s.key] || []).filter(i => itemName(i)).length > 0);
-  if (!populated.length) {
-    container.innerHTML = '<p class="menu-empty">Canapé menu items will appear here once added in the Menu Manager.</p>';
-    return;
-  }
-  container.innerHTML = populated.map(s => {
-    const items = (menus[s.key] || []).filter(i => itemName(i));
-    return `<div>
-      <h3 class="menu-subhead">${esc(s.label)}<span class="menu-subhead-note">${esc(s.note)}</span></h3>
-      <div class="menu-item-list">
-        ${items.map(i => `<div class="menu-item">
-          <div class="menu-item-info">
-            <div class="menu-item-name">${esc(itemName(i))}</div>
-            ${itemDesc(i) ? `<div class="menu-item-desc">${esc(itemDesc(i))}</div>` : ''}
-          </div>
-        </div>`).join('')}
-      </div>
-    </div>`;
-  }).join('');
-})();
-
-/* ── render banquet menu ── */
-(function() {
-  const container = document.getElementById('banquet-menu');
-  const sections = [
-    { label: 'Mains',   key: 'banquetMains' },
-    { label: 'Sides',   key: 'banquetSides' },
-    { label: 'Dessert', key: 'banquetDessert' },
-  ];
-  const populated = sections.filter(s => (menus[s.key] || []).filter(i => itemName(i)).length > 0);
-  if (!populated.length) {
-    container.innerHTML = '<p class="menu-empty">Banquet menu items will appear here once added in the Menu Manager.</p>';
-    return;
-  }
-  container.innerHTML = populated.map(s => {
-    const items = (menus[s.key] || []).filter(i => itemName(i));
-    return `<div>
-      <h3 class="menu-subhead">${esc(s.label)}</h3>
-      <div class="menu-item-list">
-        ${items.map(i => `<div class="menu-item">
-          <div class="menu-item-info">
-            <div class="menu-item-name">${esc(itemName(i))}</div>
-            ${itemDesc(i) ? `<div class="menu-item-desc">${esc(itemDesc(i))}</div>` : ''}
-          </div>
-        </div>`).join('')}
-      </div>
-    </div>`;
-  }).join('');
-})();
-
-/* ── render grazing ── */
-(function() {
-  const container = document.getElementById('grazing-menu');
-  const stations = (menus.grazingStations || []).filter(i => itemName(i));
-  const platters  = (menus.grazingPlatters || []).filter(i => itemName(i));
-  if (!stations.length && !platters.length) {
-    container.innerHTML = '<p class="menu-empty">Grazing items will appear here once added in the Menu Manager.</p>';
-    return;
-  }
-  const block = (label, items) => `<div>
-    <h3 class="menu-subhead">${esc(label)}</h3>
-    <div class="menu-item-list">
-      ${items.map(i => `<div class="menu-item">
-        <div class="menu-item-info">
-          <div class="menu-item-name">${esc(itemName(i))}</div>
-          ${itemDesc(i) ? `<div class="menu-item-desc">${esc(itemDesc(i))}</div>` : ''}
+  sections.push(`
+    <div class="band-green" id="packages">
+      <div class="pkg-inner">
+        <div style="text-align:center;">
+          <div class="section-label" style="color:rgba(255,255,255,0.45);">Packages</div>
+          <h2 class="section-title" style="color:#fff;margin-bottom:0;">Our packages</h2>
         </div>
-        ${itemPrice(i) ? `<div class="menu-item-price">${esc(itemPrice(i))}</div>` : ''}
-      </div>`).join('')}
-    </div>
-  </div>`;
-  container.innerHTML = [
-    stations.length ? block('Grazing Stations', stations) : '',
-    platters.length  ? block('Grazing Platters', platters)  : ''
-  ].filter(Boolean).join('');
-})();
-
-/* ── render bistro ── */
-(function() {
-  const container = document.getElementById('bistro-menu');
-  const sections = [
-    { label: 'Snacks & Sharing', key: 'bistroSnacks' },
-    { label: 'Burgers',          key: 'bistroBurgers' },
-    { label: 'Pub Classics',     key: 'bistroPubClassics' },
-    { label: 'Bowls',            key: 'bistroBowls' },
-    { label: 'Mains',            key: 'bistroMains' },
-    { label: 'Sides',            key: 'bistroSides' },
-  ];
-  const populated = sections.filter(s => (menus[s.key] || []).filter(i => itemName(i)).length > 0);
-  if (!populated.length) {
-    container.innerHTML = '<p class="menu-empty">Bistro menu items will appear here once added in the Menu Manager.</p>';
-    return;
-  }
-  container.innerHTML = populated.map(s => {
-    const items = (menus[s.key] || []).filter(i => itemName(i));
-    return `<div>
-      <h3 class="menu-subhead">${esc(s.label)}</h3>
-      <div class="menu-item-list">
-        ${items.map(i => `<div class="menu-item">
-          <div class="menu-item-info">
-            <div class="menu-item-name">${esc(itemName(i))}</div>
-          </div>
-          ${itemPrice(i) ? `<div class="menu-item-price">${esc(itemPrice(i))}</div>` : ''}
-        </div>`).join('')}
+        <div class="pkg-grid">${cards}</div>
       </div>
-    </div>`;
-  }).join('');
-})();
+    </div>`);
+}
 
-/* ── render contact ── */
-(function() {
-  const c = venue.contact || {};
-  const items = [
-    { label: 'Email',   value: c.email },
-    { label: 'Phone',   value: c.phone },
-    { label: 'Website', value: c.website },
-    { label: 'Address', value: c.address },
-  ].filter(i => i.value);
-  const grid = document.getElementById('contact-grid');
-  grid.innerHTML = items.map(i => `
-    <div>
-      <div class="contact-item-label">${esc(i.label)}</div>
-      <div class="contact-item-value">${esc(i.value)}</div>
-    </div>`).join('');
-})();
+/* Menus */
+const bands = ['band-white', 'band-cream2', 'band-cream'];
+data.menus.forEach((menu, mi) => {
+  const hasSubs = menu.subcategories?.some(s => s.items?.some(i => i.name));
+  if (!hasSubs) return;
+
+  const subsHtml = menu.subcategories.map(sub => {
+    const items = (sub.items || []).filter(i => i.name);
+    if (!items.length) return '';
+    const itemsHtml = items.map(item => {
+      const diets = (item.dietaries || []).map(d => `<span class="diet-badge">${esc(d)}</span>`).join('');
+      return `<div class="item-row">
+        <div class="item-info">
+          <div class="item-name">${esc(item.name)}</div>
+          ${item.description ? `<div class="item-desc">${esc(item.description)}</div>` : ''}
+          ${diets ? `<div class="item-diets">${diets}</div>` : ''}
+        </div>
+        ${item.price ? `<div class="item-price">${esc(item.price)}</div>` : ''}
+      </div>`;
+    }).join('');
+    return `<div>
+      <div class="sub-head">
+        ${esc(sub.name)}
+        ${sub.priceNote ? `<span class="sub-price-note">${esc(sub.priceNote)}</span>` : ''}
+      </div>
+      <div class="item-list">${itemsHtml}</div>
+    </div>`;
+  }).filter(Boolean).join('');
+
+  if (!subsHtml) return;
+  const band = bands[mi % bands.length];
+  sections.push(`
+    <hr class="divider">
+    <div class="${band}" id="menu-${slug(menu.name)}">
+      <div class="section">
+        <div class="section-label">Menu</div>
+        <h2 class="section-title">${esc(menu.name)}</h2>
+        <div class="menu-cols">${subsHtml}</div>
+      </div>
+    </div>`);
+});
+
+/* Contact */
+const contactItems = [
+  { label: 'Email',   value: c.email },
+  { label: 'Phone',   value: c.phone },
+  { label: 'Website', value: c.website },
+  { label: 'Address', value: c.address },
+].filter(i => i.value);
+
+if (contactItems.length) {
+  sections.push(`
+    <div class="band-green" id="contact">
+      <div class="contact-wrap">
+        <div class="section-label" style="color:rgba(255,255,255,0.45);">Get In Touch</div>
+        <h2 class="section-title" style="color:#fff;margin-bottom:0.75rem;">We'd love to hear from you</h2>
+        <div class="contact-grid">
+          ${contactItems.map(i => `<div>
+            <div class="contact-label">${esc(i.label)}</div>
+            <div class="contact-value">${esc(i.value)}</div>
+          </div>`).join('')}
+        </div>
+      </div>
+    </div>`);
+}
+
+body.innerHTML = sections.join('') || `
+  <div style="text-align:center;padding:6rem 2rem;color:#8a8278;font-size:14px;">
+    No content yet — open <strong>menu-manager.html</strong> to get started.
+  </div>`;
 </script>
 </body>
 </html>
