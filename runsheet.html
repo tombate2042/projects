@@ -1465,7 +1465,7 @@ function updateMMItem(type, idx, field, val) {
   };
   if (type === 'bistro-addons') {
     const item = (menuData.bistroAddons || [])[idx];
-    if (item) { item[field] = val; saveMenus(); renderMMItems(); refreshFoodSelectors(); }
+    if (item) { item[field] = val; saveMenus(); refreshFoodSelectors(); }
     return;
   }
   const item = menuData[map[type]][idx];
