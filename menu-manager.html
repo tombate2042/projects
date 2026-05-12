@@ -189,7 +189,7 @@
   /* ── ITEMS ── */
   .items-cols-head {
     display: grid;
-    grid-template-columns: 2fr 3fr 1fr auto auto;
+    grid-template-columns: 2fr 3fr 1fr auto auto auto;
     gap: 6px;
     padding: 6px 12px;
     font-size: 10px;
@@ -199,15 +199,15 @@
     color: var(--text3);
     border-bottom: 1px solid var(--border);
   }
+  .item-wrap { border-bottom: 1px solid var(--border); }
+  .items-list .item-wrap:last-child { border-bottom: none; }
   .item-row {
     display: grid;
-    grid-template-columns: 2fr 3fr 1fr auto auto;
+    grid-template-columns: 2fr 3fr 1fr auto auto auto;
     gap: 6px;
     padding: 7px 12px;
     align-items: center;
-    border-bottom: 1px solid var(--border);
   }
-  .item-row:last-of-type { border-bottom: none; }
   .item-row input {
     border: 1px solid var(--border);
     border-radius: var(--radius);
@@ -236,6 +236,50 @@
     letter-spacing: 0.2px;
   }
   .diet-chip.on { background: var(--accent-light); border-color: var(--accent-mid); color: var(--accent); }
+
+  /* ── MODIFIER PANEL ── */
+  .mod-toggle { font-size: 11px; transition: transform 0.15s; }
+  .mod-toggle.open { transform: rotate(90deg); color: var(--accent-mid); }
+  .mod-panel {
+    display: none;
+    padding: 10px 12px 12px;
+    background: #f4f2ec;
+    border-top: 1px solid var(--border);
+  }
+  .mod-panel.open { display: block; }
+  .mod-panel-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+  .mod-label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--text2);
+  }
+  .mod-label-note { font-weight: 400; text-transform: none; letter-spacing: 0; color: var(--text3); }
+  .mod-row {
+    display: grid;
+    grid-template-columns: 1fr 2fr auto;
+    gap: 6px;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+  .mod-row:last-child { margin-bottom: 0; }
+  .mod-row input {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 5px 8px;
+    font-size: 12px;
+    background: var(--surface);
+    color: var(--text);
+    outline: none;
+    width: 100%;
+  }
+  .mod-row input:focus { border-color: var(--accent-mid); }
 
   .sub-foot { padding: 8px 12px; }
 
@@ -471,6 +515,7 @@ let data = {
 let gistCfg = { token: '', gistId: '' };
 let currentMenuId  = null;
 let syncDebounce   = null;
+const expandedItems = new Set();
 
 /* ════════════════════════════════════
    UTILS
@@ -594,7 +639,7 @@ function addItem(menuId, subId) {
   const m = data.menus.find(m => m.id === menuId);
   const s = m?.subcategories.find(s => s.id === subId);
   if (!s) return;
-  const item = { id: genId(), name: '', description: '', price: '', dietaries: [] };
+  const item = { id: genId(), name: '', description: '', price: '', dietaries: [], modifiers: [] };
   s.items.push(item);
   save(); renderMain();
   setTimeout(() => {
@@ -617,6 +662,50 @@ function updateItem(menuId, subId, itemId, field, val) {
   const s = m?.subcategories.find(s => s.id === subId);
   const item = s?.items.find(i => i.id === itemId);
   if (item) { item[field] = val; save(); }
+}
+
+/* ── Modifiers ── */
+function toggleModPanel(itemId) {
+  const panel = document.getElementById('mod-panel-' + itemId);
+  if (!panel) return;
+  const btn = panel.previousElementSibling.querySelector('.mod-toggle');
+  if (expandedItems.has(itemId)) {
+    expandedItems.delete(itemId);
+    panel.classList.remove('open');
+    if (btn) btn.classList.remove('open');
+  } else {
+    expandedItems.add(itemId);
+    panel.classList.add('open');
+    if (btn) btn.classList.add('open');
+  }
+}
+
+function addModifier(menuId, subId, itemId) {
+  const m = data.menus.find(m => m.id === menuId);
+  const s = m?.subcategories.find(s => s.id === subId);
+  const item = s?.items.find(i => i.id === itemId);
+  if (!item) return;
+  if (!item.modifiers) item.modifiers = [];
+  item.modifiers.push({ id: genId(), group: '', options: '' });
+  expandedItems.add(itemId);
+  save(); renderMain();
+}
+
+function deleteModifier(menuId, subId, itemId, modId) {
+  const m = data.menus.find(m => m.id === menuId);
+  const s = m?.subcategories.find(s => s.id === subId);
+  const item = s?.items.find(i => i.id === itemId);
+  if (!item) return;
+  item.modifiers = (item.modifiers || []).filter(mod => mod.id !== modId);
+  save(); renderMain();
+}
+
+function updateModifier(menuId, subId, itemId, modId, field, val) {
+  const m = data.menus.find(m => m.id === menuId);
+  const s = m?.subcategories.find(s => s.id === subId);
+  const item = s?.items.find(i => i.id === itemId);
+  const mod = item?.modifiers?.find(mod => mod.id === modId);
+  if (mod) { mod[field] = val; save(); }
 }
 
 function toggleDiet(menuId, subId, itemId, tag, el) {
@@ -667,9 +756,11 @@ function renderMain() {
 function renderSub(menuId, sub) {
   const itemsHtml = sub.items.length ? `
     <div class="items-cols-head">
-      <span>Name</span><span>Description</span><span>Price</span><span>Dietaries</span><span></span>
+      <span>Name</span><span>Description</span><span>Price</span><span>Dietaries</span><span></span><span></span>
     </div>
-    ${sub.items.map(item => renderItem(menuId, sub.id, item)).join('')}` : '';
+    <div class="items-list">
+      ${sub.items.map(item => renderItem(menuId, sub.id, item)).join('')}
+    </div>` : '';
 
   return `
     <div class="subcategory" data-sub-id="${sub.id}">
@@ -693,13 +784,32 @@ function renderItem(menuId, subId, item) {
   const chips = DIETARY_TAGS.map(t =>
     `<span class="diet-chip${item.dietaries.includes(t) ? ' on' : ''}" onclick="toggleDiet('${menuId}','${subId}','${item.id}','${t}',this)">${t}</span>`
   ).join('');
+  const mods   = item.modifiers || [];
+  const isOpen = expandedItems.has(item.id);
+  const modsHtml = mods.length ? mods.map(mod => `
+    <div class="mod-row">
+      <input type="text" value="${esc(mod.group)}"   placeholder="Group name (e.g. Pick a side)"       oninput="updateModifier('${menuId}','${subId}','${item.id}','${mod.id}','group',this.value)">
+      <input type="text" value="${esc(mod.options)}" placeholder="Options separated by commas"          oninput="updateModifier('${menuId}','${subId}','${item.id}','${mod.id}','options',this.value)">
+      <button class="btn-icon" onclick="deleteModifier('${menuId}','${subId}','${item.id}','${mod.id}')">✕</button>
+    </div>`).join('')
+    : '<p style="font-size:12px;color:var(--text3);margin-bottom:6px;">No choice groups yet.</p>';
   return `
-    <div class="item-row">
-      <input type="text" value="${esc(item.name)}"        placeholder="Item name…"    oninput="updateItem('${menuId}','${subId}','${item.id}','name',this.value)">
-      <input type="text" value="${esc(item.description)}" placeholder="Description…"  oninput="updateItem('${menuId}','${subId}','${item.id}','description',this.value)">
-      <input type="text" value="${esc(item.price)}"       placeholder="$0.00"         oninput="updateItem('${menuId}','${subId}','${item.id}','price',this.value)">
-      <div class="diet-chips">${chips}</div>
-      <button class="btn-icon" onclick="deleteItem('${menuId}','${subId}','${item.id}')">✕</button>
+    <div class="item-wrap">
+      <div class="item-row">
+        <input type="text" value="${esc(item.name)}"        placeholder="Item name…"   oninput="updateItem('${menuId}','${subId}','${item.id}','name',this.value)">
+        <input type="text" value="${esc(item.description)}" placeholder="Description…" oninput="updateItem('${menuId}','${subId}','${item.id}','description',this.value)">
+        <input type="text" value="${esc(item.price)}"       placeholder="$0.00"        oninput="updateItem('${menuId}','${subId}','${item.id}','price',this.value)">
+        <div class="diet-chips">${chips}</div>
+        <button class="btn-icon mod-toggle${isOpen ? ' open' : ''}" onclick="toggleModPanel('${item.id}')" title="Choice groups (BOH only)">▶</button>
+        <button class="btn-icon" onclick="deleteItem('${menuId}','${subId}','${item.id}')">✕</button>
+      </div>
+      <div class="mod-panel${isOpen ? ' open' : ''}" id="mod-panel-${item.id}">
+        <div class="mod-panel-head">
+          <span class="mod-label">Choice groups <span class="mod-label-note">(BOH only — not shown to customers)</span></span>
+          <button class="btn btn-add btn-sm" onclick="addModifier('${menuId}','${subId}','${item.id}')">+ Add group</button>
+        </div>
+        ${modsHtml}
+      </div>
     </div>`;
 }
 
