@@ -982,6 +982,7 @@
         <button class="mm-menu-btn" onclick="showMMPanel('bistro')">Bistro</button>
         <button class="mm-menu-btn" onclick="showMMPanel('grazing-stations')">Grazing Stations</button>
         <button class="mm-menu-btn" onclick="showMMPanel('grazing-platters')">Grazing Platters</button>
+        <button class="mm-menu-btn" onclick="showMMPanel('venue-info')" style="margin-top:12px;border-top:1px solid var(--border);padding-top:14px;">Venue Info</button>
       </div>
       <div style="margin-top:1.5rem;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);font-size:12px;color:var(--text2);line-height:1.5;">
         Changes save automatically to your browser.
@@ -1120,6 +1121,64 @@
             <div class="mm-items" id="mm-grazing-platters-items"></div>
             <button class="btn btn-add" onclick="addMMItem('grazing-platters','')">+ Add item</button>
           </div>
+        </div>
+      </div>
+
+      <!-- Venue Info -->
+      <div class="mm-panel" id="mmp-venue-info">
+        <div class="section-card">
+          <div class="section-header"><span class="dot"></span>Venue Overview</div>
+          <div class="section-body">
+            <div class="field" style="margin-bottom:0;">
+              <label style="font-size:12px;font-weight:600;color:var(--text2);display:block;margin-bottom:6px;">Intro text</label>
+              <textarea id="vi-intro" rows="3" style="width:100%;border:1px solid var(--border);border-radius:var(--radius);padding:8px 10px;font-family:var(--sans);font-size:13px;color:var(--text);background:var(--surface);resize:vertical;" oninput="saveVenue()"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-card">
+          <div class="section-header"><span class="dot"></span>Spaces</div>
+          <div class="section-body" id="vi-spaces-body" style="display:flex;flex-direction:column;gap:20px;"></div>
+        </div>
+
+        <div class="section-card">
+          <div class="section-header"><span class="dot"></span>Canapé Packages</div>
+          <div class="section-body">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+              <div>
+                <div class="mm-section-title" style="margin-bottom:10px;">2 Hour Package</div>
+                <div style="display:flex;flex-direction:column;gap:8px;">
+                  <div><label style="font-size:12px;color:var(--text2);display:block;margin-bottom:3px;">Price per person</label><input type="text" id="vi-pkg2-price" placeholder="e.g. $45pp" oninput="saveVenue()" style="width:100%;border:1px solid var(--border);border-radius:var(--radius);padding:7px 10px;font-size:13px;"></div>
+                  <div><label style="font-size:12px;color:var(--text2);display:block;margin-bottom:3px;">Pieces</label><input type="text" id="vi-pkg2-pieces" placeholder="e.g. 6 Piece" oninput="saveVenue()" style="width:100%;border:1px solid var(--border);border-radius:var(--radius);padding:7px 10px;font-size:13px;"></div>
+                  <div><label style="font-size:12px;color:var(--text2);display:block;margin-bottom:3px;">Selections</label><input type="text" id="vi-pkg2-sel" placeholder="e.g. 2 Small, 2 Premium…" oninput="saveVenue()" style="width:100%;border:1px solid var(--border);border-radius:var(--radius);padding:7px 10px;font-size:13px;"></div>
+                </div>
+              </div>
+              <div>
+                <div class="mm-section-title" style="margin-bottom:10px;">3 Hour Package</div>
+                <div style="display:flex;flex-direction:column;gap:8px;">
+                  <div><label style="font-size:12px;color:var(--text2);display:block;margin-bottom:3px;">Price per person</label><input type="text" id="vi-pkg3-price" placeholder="e.g. $59pp" oninput="saveVenue()" style="width:100%;border:1px solid var(--border);border-radius:var(--radius);padding:7px 10px;font-size:13px;"></div>
+                  <div><label style="font-size:12px;color:var(--text2);display:block;margin-bottom:3px;">Pieces</label><input type="text" id="vi-pkg3-pieces" placeholder="e.g. 8 Piece" oninput="saveVenue()" style="width:100%;border:1px solid var(--border);border-radius:var(--radius);padding:7px 10px;font-size:13px;"></div>
+                  <div><label style="font-size:12px;color:var(--text2);display:block;margin-bottom:3px;">Selections</label><input type="text" id="vi-pkg3-sel" placeholder="e.g. 2 Small, 2 Premium…" oninput="saveVenue()" style="width:100%;border:1px solid var(--border);border-radius:var(--radius);padding:7px 10px;font-size:13px;"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-card">
+          <div class="section-header"><span class="dot"></span>Contact Details</div>
+          <div class="section-body">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+              <div><label style="font-size:12px;color:var(--text2);display:block;margin-bottom:3px;">Email</label><input type="text" id="vi-email" oninput="saveVenue()" style="width:100%;border:1px solid var(--border);border-radius:var(--radius);padding:7px 10px;font-size:13px;"></div>
+              <div><label style="font-size:12px;color:var(--text2);display:block;margin-bottom:3px;">Phone</label><input type="text" id="vi-phone" oninput="saveVenue()" style="width:100%;border:1px solid var(--border);border-radius:var(--radius);padding:7px 10px;font-size:13px;"></div>
+              <div><label style="font-size:12px;color:var(--text2);display:block;margin-bottom:3px;">Website</label><input type="text" id="vi-website" oninput="saveVenue()" style="width:100%;border:1px solid var(--border);border-radius:var(--radius);padding:7px 10px;font-size:13px;"></div>
+              <div><label style="font-size:12px;color:var(--text2);display:block;margin-bottom:3px;">Address</label><input type="text" id="vi-address" oninput="saveVenue()" style="width:100%;border:1px solid var(--border);border-radius:var(--radius);padding:7px 10px;font-size:13px;"></div>
+            </div>
+          </div>
+        </div>
+
+        <div style="padding:12px;background:var(--accent-light);border:1px solid var(--accent-mid);border-radius:var(--radius);font-size:12px;color:var(--accent);margin-top:4px;">
+          These details appear on the customer-facing <strong>functions.html</strong> page. Open it in your browser to preview.
         </div>
       </div>
 
@@ -1333,6 +1392,7 @@ function init() {
   loadGistConfig();
   loadMenus();
   loadFormData();
+  loadVenue();
   renderMMItems();
   updateLimitInputs();
   if (gistReady()) pullFromGist();
@@ -1359,8 +1419,8 @@ function showMMPanel(name) {
   document.querySelectorAll('.mm-panel').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.mm-menu-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('mmp-' + name).classList.add('active');
-  const map = { 'canape-a': 0, 'banquet': 1, 'bistro': 2, 'grazing-stations': 3, 'grazing-platters': 4 };
-  document.querySelectorAll('.mm-menu-btn')[map[name]].classList.add('active');
+  const map = { 'canape-a': 0, 'banquet': 1, 'bistro': 2, 'grazing-stations': 3, 'grazing-platters': 4, 'venue-info': 5 };
+  if (map[name] !== undefined) document.querySelectorAll('.mm-menu-btn')[map[name]].classList.add('active');
 }
 
 function addMMItem(type, value) {
@@ -1684,6 +1744,89 @@ function loadMenus() {
       });
     }
   } catch(e) {}
+}
+
+/* ════════════════════════════════════════════
+   VENUE INFO
+════════════════════════════════════════════ */
+const VENUE_DEFAULTS = {
+  intro: 'Four distinctly different experiences under one iconic roof in the heart of Sydney.',
+  spaces: [
+    { name: 'Public Bar',      floor: 'Ground Floor',  capacity: '',             description: 'At street level, we\'re an escape from the bustling streets. Step inside (or outside) for after-work catch-ups & casual get togethers. With indoor & outdoor spaces, Public Bar is the perfect meeting spot.', features: 'AV Options\nWheelchair Accessible\nPrivate Bar (For exclusive venue hire only)\nFlexible Furniture Layout\nStreet Accessible\nCasual Bookings' },
+    { name: 'Sports Bar',      floor: 'First Floor',   capacity: '75 Cocktail',  description: 'On the first floor, we have our Sports Bar — whether you are looking to catch a game live & loud, enjoy a meal with work colleagues or friends, or just looking for a haven away from the bustling streets.', features: 'AV Options\nExclusive Use Available\nWheelchair Accessible\nBathrooms on same level\nPrivate Bar (For exclusive venue hire only)\nFlexible Furniture Layout\nCasual Bookings' },
+    { name: 'Inna Lounge',     floor: 'Second Floor',  capacity: '75 Cocktail',  description: 'A one of a kind celebration space for those that enjoy the finer things in life. Whether a celebration for the ages or a small intimate function, we\'re here for you to sip, savour and indulge.', features: 'AV Options\nExclusive Use\nWheelchair Accessible\nBathrooms on same level\nPrivate Bar (For exclusive venue hire only)\nFlexible Furniture Layout' },
+    { name: 'Taylors Rooftop', floor: 'Third Floor',   capacity: '200 Cocktail', description: 'Our renowned open-air rooftop offering live DJs & a retractable roof — the perfect choice for your special event across any season. Whether a casual get together or a cocktail style event, you\'re spoilt for choice.', features: 'AV Options\nRetractable Roof\nWheelchair Accessible\nDance Floor Option\nPrivate Bar (For exclusive venue hire only)\nFlexible Furniture Layout\nCasual Bookings' }
+  ],
+  canapePackage2hr: { price: '$45pp', pieces: '6 Piece', selections: '2 Small, 2 Premium, 1 Slider, 1 Substantial' },
+  canapePackage3hr: { price: '$59pp', pieces: '8 Piece', selections: '2 Small, 2 Premium, 2 Sliders, 2 Substantial' },
+  contact: { email: 'info@republichotel.com', phone: '(02) 9252 6522', website: 'Republichotel.com', address: '69-73 Pitt Street Sydney NSW 2000' }
+};
+
+let venueData = JSON.parse(JSON.stringify(VENUE_DEFAULTS));
+
+function saveVenue() {
+  venueData.intro = document.getElementById('vi-intro').value;
+  venueData.spaces.forEach((sp, i) => {
+    sp.floor       = document.getElementById('vi-sp-floor-' + i)?.value || sp.floor;
+    sp.capacity    = document.getElementById('vi-sp-cap-' + i)?.value   || '';
+    sp.description = document.getElementById('vi-sp-desc-' + i)?.value  || '';
+    sp.features    = document.getElementById('vi-sp-feat-' + i)?.value  || '';
+  });
+  venueData.canapePackage2hr = {
+    price:      document.getElementById('vi-pkg2-price').value,
+    pieces:     document.getElementById('vi-pkg2-pieces').value,
+    selections: document.getElementById('vi-pkg2-sel').value
+  };
+  venueData.canapePackage3hr = {
+    price:      document.getElementById('vi-pkg3-price').value,
+    pieces:     document.getElementById('vi-pkg3-pieces').value,
+    selections: document.getElementById('vi-pkg3-sel').value
+  };
+  venueData.contact = {
+    email:   document.getElementById('vi-email').value,
+    phone:   document.getElementById('vi-phone').value,
+    website: document.getElementById('vi-website').value,
+    address: document.getElementById('vi-address').value
+  };
+  localStorage.setItem('rr_venue', JSON.stringify(venueData));
+}
+
+function loadVenue() {
+  try {
+    const saved = localStorage.getItem('rr_venue');
+    if (saved) venueData = Object.assign(JSON.parse(JSON.stringify(VENUE_DEFAULTS)), JSON.parse(saved));
+  } catch(e) {}
+  renderVenuePanel();
+}
+
+function renderVenuePanel() {
+  document.getElementById('vi-intro').value        = venueData.intro || '';
+  document.getElementById('vi-pkg2-price').value   = venueData.canapePackage2hr?.price || '';
+  document.getElementById('vi-pkg2-pieces').value  = venueData.canapePackage2hr?.pieces || '';
+  document.getElementById('vi-pkg2-sel').value     = venueData.canapePackage2hr?.selections || '';
+  document.getElementById('vi-pkg3-price').value   = venueData.canapePackage3hr?.price || '';
+  document.getElementById('vi-pkg3-pieces').value  = venueData.canapePackage3hr?.pieces || '';
+  document.getElementById('vi-pkg3-sel').value     = venueData.canapePackage3hr?.selections || '';
+  document.getElementById('vi-email').value        = venueData.contact?.email || '';
+  document.getElementById('vi-phone').value        = venueData.contact?.phone || '';
+  document.getElementById('vi-website').value      = venueData.contact?.website || '';
+  document.getElementById('vi-address').value      = venueData.contact?.address || '';
+
+  const body = document.getElementById('vi-spaces-body');
+  body.innerHTML = (venueData.spaces || []).map((sp, i) => `
+    <div style="border:1px solid var(--border);border-radius:var(--radius);padding:14px;">
+      <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px;">${esc(sp.name)}</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+        <div><label style="font-size:12px;color:var(--text2);display:block;margin-bottom:3px;">Floor</label>
+          <input type="text" id="vi-sp-floor-${i}" value="${esc(sp.floor)}" oninput="saveVenue()" style="width:100%;border:1px solid var(--border);border-radius:var(--radius);padding:7px 10px;font-size:13px;"></div>
+        <div><label style="font-size:12px;color:var(--text2);display:block;margin-bottom:3px;">Capacity</label>
+          <input type="text" id="vi-sp-cap-${i}" value="${esc(sp.capacity)}" placeholder="e.g. 75 Cocktail" oninput="saveVenue()" style="width:100%;border:1px solid var(--border);border-radius:var(--radius);padding:7px 10px;font-size:13px;"></div>
+      </div>
+      <div style="margin-bottom:8px;"><label style="font-size:12px;color:var(--text2);display:block;margin-bottom:3px;">Description</label>
+        <textarea id="vi-sp-desc-${i}" rows="2" oninput="saveVenue()" style="width:100%;border:1px solid var(--border);border-radius:var(--radius);padding:8px 10px;font-family:var(--sans);font-size:13px;resize:vertical;">${esc(sp.description)}</textarea></div>
+      <div><label style="font-size:12px;color:var(--text2);display:block;margin-bottom:3px;">Features (one per line)</label>
+        <textarea id="vi-sp-feat-${i}" rows="4" oninput="saveVenue()" style="width:100%;border:1px solid var(--border);border-radius:var(--radius);padding:8px 10px;font-family:var(--sans);font-size:13px;resize:vertical;">${esc(sp.features)}</textarea></div>
+    </div>`).join('');
 }
 
 const LOCATION_PALETTES = {
