@@ -471,13 +471,30 @@ const hasTaggedItems = data.menus.some(m =>
 );
 if (hasTaggedItems) {
   const dietBar = document.getElementById('diet-bar');
-  const menuSections = document.querySelectorAll('[id^="menu-"]');
+  const menuSections = [...document.querySelectorAll('[id^="menu-"]')];
   const inView = new Set();
-  const observer = new IntersectionObserver(entries => {
+  let afterVisible = false;
+
+  function updateBar() {
+    dietBar.classList.toggle('visible', inView.size > 0 && !afterVisible);
+  }
+
+  const menuObs = new IntersectionObserver(entries => {
     entries.forEach(e => e.isIntersecting ? inView.add(e.target) : inView.delete(e.target));
-    dietBar.classList.toggle('visible', inView.size > 0);
+    updateBar();
   }, { threshold: 0 });
-  menuSections.forEach(s => observer.observe(s));
+  menuSections.forEach(s => menuObs.observe(s));
+
+  // hide when the section after the last menu comes into view
+  const lastMenu = menuSections[menuSections.length - 1];
+  let afterEl = lastMenu?.nextElementSibling;
+  while (afterEl && afterEl.tagName === 'HR') afterEl = afterEl.nextElementSibling;
+  if (afterEl) {
+    new IntersectionObserver(entries => {
+      afterVisible = entries[0].isIntersecting;
+      updateBar();
+    }, { threshold: 0 }).observe(afterEl);
+  }
 }
 
 /* ── dietary filter logic ── */
