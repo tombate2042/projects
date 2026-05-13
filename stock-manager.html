@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stock Manager</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f0f0f;
+    --surface: #1a1a1a;
+    --surface2: #222222;
+    --border: #2e2e2e;
+    --border2: #3a3a3a;
+    --text: #e8e8e8;
+    --text2: #888;
+    --text3: #555;
+    --accent: #c8f56a;
+    --accent-dim: rgba(200,245,106,0.08);
+    --accent-dim2: rgba(200,245,106,0.15);
+    --red: #ff6b6b;
+    --red-dim: rgba(255,107,107,0.1);
+    --amber: #ffc14a;
+    --amber-dim: rgba(255,193,74,0.1);
+    --green: #6adf99;
+    --green-dim: rgba(106,223,153,0.1);
+    --mono: 'DM Sans', sans-serif;
+    --sans: 'DM Sans', sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 14px; min-height: 100vh; }
+
+  /* HEADER */
+  .header {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(15,15,15,0.97);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    display: flex; align-items: center; gap: 12px;
+    height: 56px;
+  }
+  .header-title { font-size: 13px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text2); }
+  .header-spacer { flex: 1; }
+  .header-gist-status { font-family: var(--mono); font-size: 11px; color: var(--text3); }
+
+  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 5px; border: 1px solid var(--border2); background: var(--surface2); color: var(--text); font-family: var(--sans); font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
+  .btn:hover { border-color: var(--text3); color: var(--text); background: #2a2a2a; }
+  .btn:disabled { opacity: 0.4; cursor: default; pointer-events: none; }
+  .btn-primary { background: var(--accent); color: #0f0f0f; border-color: var(--accent); font-weight: 600; }
+  .btn-primary:hover { background: #d6ff7a; border-color: #d6ff7a; color: #0f0f0f; }
+  .btn-sm { padding: 4px 10px; font-size: 11px; }
+  .btn-danger { color: var(--red); border-color: rgba(255,107,107,0.3); }
+  .btn-danger:hover { background: var(--red-dim); border-color: var(--red); }
+
+  /* TOOLBAR */
+  .toolbar {
+    padding: 10px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .search-wrap { position: relative; display: flex; align-items: center; }
+  .search-wrap svg { position: absolute; left: 9px; color: var(--text3); width: 14px; height: 14px; }
+  .search { background: var(--surface); border: 1px solid var(--border); border-radius: 5px; color: var(--text); font-family: var(--sans); font-size: 13px; padding: 7px 10px 7px 30px; outline: none; }
+  .search:focus { border-color: var(--border2); }
+  .filter-chips { display: flex; gap: 6px; align-items: center; }
+  .chip { padding: 5px 12px; border-radius: 20px; border: 1px solid var(--border); background: transparent; color: var(--text2); font-size: 11px; font-weight: 500; cursor: pointer; transition: all 0.15s; }
+  .chip:hover { border-color: var(--border2); color: var(--text); }
+  .chip.active { background: var(--accent-dim2); border-color: rgba(200,245,106,0.4); color: var(--accent); }
+
+  /* SUMMARY BAR */
+  .summary-bar {
+    padding: 8px 24px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    display: flex; gap: 28px; align-items: center;
+  }
+  .stat { display: flex; flex-direction: column; }
+  .stat-val { font-family: var(--mono); font-size: 15px; font-weight: 500; }
+  .stat-lbl { font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text3); margin-top: 1px; }
+
+  /* TABLE */
+  .category-section { border-bottom: 1px solid var(--border); }
+  .category-header {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 24px; cursor: pointer;
+    background: rgba(255,255,255,0.02);
+    user-select: none;
+  }
+  .category-header:hover { background: rgba(255,255,255,0.04); }
+  .category-name { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text2); }
+  .category-count { font-size: 11px; color: var(--text3); }
+  .category-toggle { color: var(--text3); transition: transform 0.2s; flex-shrink: 0; margin-left: auto; }
+  .category-toggle.collapsed { transform: rotate(-90deg); }
+
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; min-width: 900px; }
+  thead th {
+    font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em;
+    color: var(--text3); background: var(--surface); border-bottom: 1px solid var(--border);
+    padding: 8px 10px; white-space: nowrap;
+  }
+  thead th:first-child { padding-left: 24px; text-align: left; }
+  thead th.r { text-align: right; }
+  thead th.c { text-align: center; }
+  tbody tr { border-bottom: 1px solid rgba(255,255,255,0.04); }
+  tbody tr:hover { background: rgba(255,255,255,0.02); }
+  tbody td { padding: 7px 10px; vertical-align: middle; }
+  tbody td:first-child { padding-left: 24px; }
+
+  .item-name { font-size: 13px; font-weight: 500; color: var(--text); }
+  .item-sub { font-size: 11px; color: var(--text3); margin-top: 1px; }
+  .mono { font-family: var(--mono); }
+
+  /* INLINE INPUTS */
+  .cell-input {
+    background: transparent; border: 1px solid transparent; border-radius: 4px;
+    color: var(--text); font-family: var(--sans); font-size: 13px;
+    padding: 3px 6px; outline: none; width: 100%;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .cell-input:hover { border-color: var(--border2); background: var(--surface); }
+  .cell-input:focus { border-color: var(--accent); background: var(--surface2); }
+  .cell-input.num { text-align: right; width: 80px; font-family: var(--mono); }
+  .cell-input.wide { width: 160px; }
+  .cell-input.deals { width: 220px; }
+  .cell-input.changed { border-color: rgba(200,245,106,0.4); }
+
+  /* GP COLOURS */
+  .gp-high { color: var(--green); }
+  .gp-mid  { color: var(--amber); }
+  .gp-low  { color: var(--red); }
+  .gp-na   { color: var(--text3); }
+
+  /* MODALS */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 200; align-items: center; justify-content: center; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 24px; width: 440px; max-width: 95vw; }
+  .modal h3 { font-size: 15px; font-weight: 600; margin-bottom: 16px; }
+  .modal-actions { display: flex; gap: 8px; margin-top: 20px; justify-content: flex-end; }
+  .form-row { display: flex; flex-direction: column; gap: 4px; margin-bottom: 12px; }
+  .form-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text3); }
+  .form-input { background: var(--surface2); border: 1px solid var(--border); border-radius: 5px; color: var(--text); font-family: var(--sans); font-size: 13px; padding: 8px 10px; outline: none; width: 100%; }
+  .form-input:focus { border-color: var(--accent); }
+
+  .gist-section { padding: 14px 0; border-bottom: 1px solid var(--border); }
+  .gist-section:last-child { border-bottom: none; }
+  .gist-section-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text3); margin-bottom: 8px; }
+  .gist-actions { display: flex; gap: 8px; align-items: center; margin-top: 8px; }
+  .gist-status { font-size: 11px; font-family: var(--mono); color: var(--text3); }
+
+  .hidden-row { display: none; }
+  .no-items-msg { padding: 24px; color: var(--text3); font-size: 13px; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-title">Stock Manager</div>
+  <div class="header-spacer"></div>
+  <span class="header-gist-status" id="syncStatus"></span>
+  <button class="btn" onclick="openGistModal()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+    Gist Sync
+  </button>
+  <a href="orders.html" class="btn" style="text-decoration:none">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><polyline points="15 18 9 12 15 6"/></svg>
+    Orders
+  </a>
+</div>
+
+<!-- TOOLBAR -->
+<div class="toolbar">
+  <div class="search-wrap">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input class="search" type="text" placeholder="Search items…" oninput="doSearch(this.value)" style="width:220px">
+  </div>
+  <div class="filter-chips" id="catChips">
+    <button class="chip active" data-cat="all" onclick="setCatFilter('all',this)">All</button>
+  </div>
+  <div style="flex:1"></div>
+  <button class="btn btn-sm" onclick="autoSave()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+    Save
+  </button>
+</div>
+
+<!-- SUMMARY BAR -->
+<div class="summary-bar" id="summaryBar">
+  <div class="stat">
+    <div class="stat-val" id="statItems">—</div>
+    <div class="stat-lbl">Items</div>
+  </div>
+  <div class="stat">
+    <div class="stat-val" id="statAvgGP">—</div>
+    <div class="stat-lbl">Avg GP%</div>
+  </div>
+  <div class="stat">
+    <div class="stat-val gp-high" id="statHighGP">—</div>
+    <div class="stat-lbl">High GP (&ge;60%)</div>
+  </div>
+  <div class="stat">
+    <div class="stat-val gp-low" id="statLowGP">—</div>
+    <div class="stat-lbl">Low GP (&lt;40%)</div>
+  </div>
+  <div class="stat">
+    <div class="stat-val" id="statWithDeals">—</div>
+    <div class="stat-lbl">With Deals</div>
+  </div>
+</div>
+
+<!-- CONTENT -->
+<div id="content"></div>
+
+<!-- GIST MODAL -->
+<div class="modal-overlay" id="gistModal">
+  <div class="modal">
+    <h3>Gist Sync</h3>
+    <div style="margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border)">
+      <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.07em;color:var(--text3);margin-bottom:8px">Active Gist</div>
+      <div style="display:flex;gap:16px">
+        <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text);cursor:pointer">
+          <input type="radio" name="activeGist" value="lo" style="accent-color:var(--accent)" onchange="updateGistButtons()"> L&amp;O
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text);cursor:pointer">
+          <input type="radio" name="activeGist" value="republic" style="accent-color:var(--accent)" onchange="updateGistButtons()"> Republic
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text2);cursor:pointer">
+          <input type="radio" name="activeGist" value="" style="accent-color:var(--accent)" onchange="updateGistButtons()"> None
+        </label>
+      </div>
+    </div>
+    <div id="gistDefList"></div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeGistModal()">Close</button>
+      <button class="btn btn-primary" onclick="saveGistConfig2()">Save Settings</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── CONSTANTS ────────────────────────────────────────────────────────────────
+const GIST_DEFS = [
+  { id: 'lo',       label: 'L&O',     filename: 'lo-data.json' },
+  { id: 'republic', label: 'Republic', filename: 'republic-data.json' }
+];
+
+const CATEGORIES = [
+  'Vodka','Gin','Tequila & Mezcal','Rum','Scotch','Bourbon & Whiskey',
+  'Liqueurs','Other','Wines','Packaged','Kegs','Gas',
+  'Post-Mix Syrups','Fruit & Juice','Consumables','Chemicals'
+];
+
+// ─── STATE ────────────────────────────────────────────────────────────────────
+let state = loadState();
+let searchQ = '';
+let activeCat = 'all';
+
+function loadState() {
+  try {
+    const s = localStorage.getItem('stockorder_v2');
+    if (s) return normalise(JSON.parse(s));
+  } catch(e) {}
+  return { weekNum:1, weekStart:'', items:{}, catalog:[], venues:[] };
+}
+
+function normalise(s) {
+  if (!s || typeof s !== 'object' || Array.isArray(s)) return { weekNum:1, weekStart:'', items:{}, catalog:[], venues:[] };
+  if (!s.items || Array.isArray(s.items)) s.items = {};
+  if (!s.catalog || !Array.isArray(s.catalog)) s.catalog = [];
+  if (!s.productOverrides) s.productOverrides = {};
+  return s;
+}
+
+function saveState() {
+  try { localStorage.setItem('stockorder_v2', JSON.stringify(state)); } catch(e) { alert('Save failed: ' + e.message); }
+}
+
+function autoSave() {
+  saveState();
+  setSyncStatus('Saved ✓', 1800);
+}
+
+// ─── GIST CONFIG ──────────────────────────────────────────────────────────────
+function loadGistConfig() {
+  try { return JSON.parse(localStorage.getItem('stockorder_gist_config') || '{}'); } catch(e) { return {}; }
+}
+function saveGistConfigRaw(cfg) {
+  localStorage.setItem('stockorder_gist_config', JSON.stringify(cfg));
+}
+
+// ─── ITEMS ────────────────────────────────────────────────────────────────────
+function getAllItems() {
+  const deleted = new Set(state.deletedIds || []);
+  const overrides = state.productOverrides || {};
+  const catalog = state.catalog || [];
+  return catalog.filter(m => !deleted.has(m.id)).map(m => {
+    const ov = overrides[m.id] || {};
+    return { ...m, ...ov };
+  });
+}
+
+function getField(id, field) {
+  const ov = (state.productOverrides || {})[id] || {};
+  const cat = (state.catalog || []).find(x => x.id === id) || {};
+  return ov[field] !== undefined ? ov[field] : cat[field];
+}
+
+function setField(id, field, value) {
+  if (!state.productOverrides) state.productOverrides = {};
+  if (!state.productOverrides[id]) state.productOverrides[id] = {};
+  if (value === '' || value === null || value === undefined) {
+    delete state.productOverrides[id][field];
+  } else {
+    state.productOverrides[id][field] = value;
+  }
+  saveState();
+}
+
+// ─── CALCULATIONS ─────────────────────────────────────────────────────────────
+function calcGP(cost, sell) {
+  const c = parseFloat(cost), s = parseFloat(sell);
+  if (!s || !c || s <= 0) return null;
+  return (s - c) / s;
+}
+
+function gpClass(gp) {
+  if (gp === null) return 'gp-na';
+  if (gp >= 0.6) return 'gp-high';
+  if (gp >= 0.4) return 'gp-mid';
+  return 'gp-low';
+}
+
+function fmtPct(n) {
+  if (n === null) return '—';
+  return (n * 100).toFixed(1) + '%';
+}
+
+function fmtMoney(n) {
+  const v = parseFloat(n);
+  if (!v && v !== 0) return '—';
+  return '$' + v.toFixed(2);
+}
+
+function esc(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ─── SEARCH & FILTER ──────────────────────────────────────────────────────────
+function doSearch(q) {
+  searchQ = q.toLowerCase();
+  applyFilters();
+}
+
+function setCatFilter(cat, el) {
+  activeCat = cat;
+  document.querySelectorAll('.chip[data-cat]').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  applyFilters();
+}
+
+function applyFilters() {
+  getAllItems().forEach(m => {
+    const row = document.getElementById('smrow-' + m.id);
+    if (!row) return;
+    let show = true;
+    if (searchQ) show = m.item.toLowerCase().includes(searchQ) || (m.supplier||'').toLowerCase().includes(searchQ) || (m.brand_owner||'').toLowerCase().includes(searchQ);
+    if (show && activeCat !== 'all') show = m.category === activeCat;
+    row.classList.toggle('hidden-row', !show);
+  });
+  updateCatCounts();
+  updateSummary();
+}
+
+function updateCatCounts() {
+  const allItems = getAllItems();
+  const cats = [...new Set(allItems.map(m => m.category))];
+  cats.forEach(cat => {
+    const key = catKey(cat);
+    const vis = allItems.filter(m => m.category === cat && !document.getElementById('smrow-' + m.id)?.classList.contains('hidden-row')).length;
+    const el = document.getElementById('smcount-' + key);
+    if (el) el.textContent = vis + ' items';
+    const body = document.getElementById('smbody-' + key);
+    if (body) body.closest('.category-section').style.display = vis === 0 ? 'none' : '';
+  });
+}
+
+function catKey(cat) { return cat.replace(/\s+/g, '-').replace(/[&]/g,'n'); }
+
+// ─── SUMMARY ──────────────────────────────────────────────────────────────────
+function updateSummary() {
+  const visible = getAllItems().filter(m => !document.getElementById('smrow-' + m.id)?.classList.contains('hidden-row'));
+  const withGP = visible.filter(m => calcGP(m.cost, m.sell) !== null);
+  const avg = withGP.length ? withGP.reduce((s, m) => s + calcGP(m.cost, m.sell), 0) / withGP.length : null;
+  const high = withGP.filter(m => calcGP(m.cost, m.sell) >= 0.6).length;
+  const low  = withGP.filter(m => calcGP(m.cost, m.sell) < 0.4).length;
+  const deals = visible.filter(m => m.brand_deals && String(m.brand_deals).trim()).length;
+  document.getElementById('statItems').textContent = visible.length;
+  document.getElementById('statAvgGP').textContent = avg !== null ? fmtPct(avg) : '—';
+  document.getElementById('statHighGP').textContent = high;
+  document.getElementById('statLowGP').textContent = low;
+  document.getElementById('statWithDeals').textContent = deals;
+}
+
+// ─── RENDER ───────────────────────────────────────────────────────────────────
+function render() {
+  const allItems = getAllItems();
+  const cats = [...new Set(allItems.map(m => m.category))].sort((a, b) => {
+    const ai = CATEGORIES.indexOf(a), bi = CATEGORIES.indexOf(b);
+    return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
+  });
+
+  // rebuild category chips
+  const chipsEl = document.getElementById('catChips');
+  chipsEl.innerHTML = '<button class="chip active" data-cat="all" onclick="setCatFilter(\'all\',this)">All</button>';
+  cats.forEach(cat => {
+    chipsEl.innerHTML += `<button class="chip" data-cat="${esc(cat)}" onclick="setCatFilter('${cat.replace(/'/g,"\\'")}',this)">${cat}</button>`;
+  });
+
+  const content = document.getElementById('content');
+  content.innerHTML = '';
+
+  if (!allItems.length) {
+    content.innerHTML = '<div class="no-items-msg">No items found. Pull from Gist to load your product list.</div>';
+    updateSummary();
+    return;
+  }
+
+  cats.forEach(cat => {
+    const items = allItems.filter(m => m.category === cat).sort((a, b) => (a.position || 99) - (b.position || 99) || a.item.localeCompare(b.item));
+    const key = catKey(cat);
+
+    const section = document.createElement('div');
+    section.className = 'category-section';
+    section.innerHTML = `
+      <div class="category-header" onclick="toggleCat('${key}')">
+        <div class="category-name">${cat}</div>
+        <div class="category-count" id="smcount-${key}">${items.length} items</div>
+        <svg class="category-toggle" id="smtoggle-${key}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="table-wrap" id="smbody-${key}">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:220px">Item</th>
+              <th style="width:90px">Size</th>
+              <th style="width:100px">Supplier</th>
+              <th class="r" style="width:90px">Cost</th>
+              <th class="r" style="width:90px">Sell</th>
+              <th class="r" style="width:75px">GP$</th>
+              <th class="r" style="width:75px">GP%</th>
+              <th style="width:150px">Brand Owner</th>
+              <th style="width:240px">Brand Deals</th>
+            </tr>
+          </thead>
+          <tbody id="smtbody-${key}"></tbody>
+        </table>
+      </div>`;
+    content.appendChild(section);
+
+    const tbody = document.getElementById('smtbody-' + key);
+    items.forEach(m => {
+      const gp = calcGP(m.cost, m.sell);
+      const gpDollar = (m.sell && m.cost) ? (parseFloat(m.sell) - parseFloat(m.cost)) : null;
+      const cls = gpClass(gp);
+      const tr = document.createElement('tr');
+      tr.id = 'smrow-' + m.id;
+      tr.innerHTML = `
+        <td>
+          <div class="item-name">${esc(m.item)}</div>
+          ${m.size ? `<div class="item-sub">${esc(m.size)}</div>` : ''}
+        </td>
+        <td style="color:var(--text3);font-size:12px">${esc(m.size||'')}</td>
+        <td style="color:var(--text2);font-size:12px">${esc(m.supplier||'')}</td>
+        <td style="text-align:right">
+          <input class="cell-input num" type="number" step="0.01" min="0"
+            value="${m.cost ? Number(m.cost).toFixed(2) : ''}"
+            placeholder="—"
+            onchange="fieldChanged('${m.id}','cost',this)"
+            oninput="this.classList.add('changed')">
+        </td>
+        <td style="text-align:right">
+          <input class="cell-input num" type="number" step="0.01" min="0"
+            value="${m.sell ? Number(m.sell).toFixed(2) : ''}"
+            placeholder="—"
+            onchange="fieldChanged('${m.id}','sell',this)"
+            oninput="this.classList.add('changed')">
+        </td>
+        <td class="mono ${cls}" style="text-align:right;font-size:13px" id="gpd-${m.id}">
+          ${gpDollar !== null ? fmtMoney(gpDollar) : '—'}
+        </td>
+        <td class="mono ${cls}" style="text-align:right;font-size:13px;font-weight:500" id="gpp-${m.id}">
+          ${fmtPct(gp)}
+        </td>
+        <td>
+          <input class="cell-input wide" type="text"
+            value="${esc(m.brand_owner||'')}"
+            placeholder="—"
+            onchange="fieldChanged('${m.id}','brand_owner',this)"
+            oninput="this.classList.add('changed')">
+        </td>
+        <td>
+          <input class="cell-input deals" type="text"
+            value="${esc(m.brand_deals||'')}"
+            placeholder="e.g. 10% volume rebate, marketing support…"
+            onchange="fieldChanged('${m.id}','brand_deals',this)"
+            oninput="this.classList.add('changed')">
+        </td>`;
+      tbody.appendChild(tr);
+    });
+  });
+
+  updateSummary();
+}
+
+function toggleCat(key) {
+  const body = document.getElementById('smbody-' + key);
+  const tog  = document.getElementById('smtoggle-' + key);
+  const hidden = body.style.display === 'none';
+  body.style.display = hidden ? '' : 'none';
+  tog.classList.toggle('collapsed', !hidden);
+}
+
+// ─── FIELD CHANGE ─────────────────────────────────────────────────────────────
+function fieldChanged(id, field, input) {
+  input.classList.remove('changed');
+  const raw = input.value.trim();
+  const isNum = field === 'cost' || field === 'sell';
+  const val = isNum ? (raw === '' ? '' : parseFloat(raw) || 0) : raw;
+  setField(id, field, val);
+
+  // live-update GP cells
+  if (field === 'cost' || field === 'sell') {
+    const m = getAllItems().find(x => x.id === id);
+    if (m) {
+      const gp = calcGP(m.cost, m.sell);
+      const gpDollar = (m.sell && m.cost) ? (parseFloat(m.sell) - parseFloat(m.cost)) : null;
+      const cls = gpClass(gp);
+      const gpdEl = document.getElementById('gpd-' + id);
+      const gppEl = document.getElementById('gpp-' + id);
+      if (gpdEl) { gpdEl.textContent = gpDollar !== null ? fmtMoney(gpDollar) : '—'; gpdEl.className = `mono ${cls}`; gpdEl.style.textAlign = 'right'; gpdEl.style.fontSize = '13px'; }
+      if (gppEl) { gppEl.textContent = fmtPct(gp); gppEl.className = `mono ${cls}`; gppEl.style.textAlign = 'right'; gppEl.style.fontSize = '13px'; gppEl.style.fontWeight = '500'; }
+      updateSummary();
+    }
+  }
+}
+
+// ─── SYNC STATUS ──────────────────────────────────────────────────────────────
+let _statusTimer = null;
+function setSyncStatus(msg, clearAfterMs) {
+  document.getElementById('syncStatus').textContent = msg;
+  if (_statusTimer) clearTimeout(_statusTimer);
+  if (clearAfterMs) _statusTimer = setTimeout(() => { document.getElementById('syncStatus').textContent = ''; }, clearAfterMs);
+}
+
+// ─── GIST MODAL ───────────────────────────────────────────────────────────────
+function openGistModal() {
+  const cfg = loadGistConfig();
+  const active = cfg.activeGist || '';
+  document.querySelectorAll('input[name="activeGist"]').forEach(r => { r.checked = r.value === active; });
+  document.getElementById('gistDefList').innerHTML = GIST_DEFS.map(def => {
+    const c = cfg[def.id] || {};
+    const disabled = !c.gistId || !c.token || active !== def.id;
+    return `
+    <div class="gist-section">
+      <div class="gist-section-title">${def.label} <span style="font-family:var(--mono);font-size:10px;color:var(--text3)">${def.filename}</span></div>
+      <div class="form-row">
+        <div class="form-label">Gist ID</div>
+        <input class="form-input" id="gid-${def.id}" type="text" placeholder="Gist ID" value="${esc(c.gistId||'')}" style="font-family:var(--mono);font-size:12px">
+      </div>
+      <div class="form-row">
+        <div class="form-label">Token</div>
+        <input class="form-input" id="gtoken-${def.id}" type="password" placeholder="GitHub Personal Access Token" value="${esc(c.token||'')}" style="font-family:var(--mono);font-size:12px">
+      </div>
+      <div class="gist-actions">
+        <button id="gbtn-pull-${def.id}" class="btn btn-sm" ${disabled?'disabled':''} onclick="pullFromGist('${def.id}')">Pull</button>
+        <button id="gbtn-push-${def.id}" class="btn btn-sm" ${disabled?'disabled':''} onclick="pushToGist('${def.id}')">Push</button>
+        <span id="gstatus-${def.id}" class="gist-status"></span>
+      </div>
+    </div>`;
+  }).join('');
+  document.getElementById('gistModal').classList.add('open');
+}
+
+function closeGistModal() {
+  document.getElementById('gistModal').classList.remove('open');
+}
+
+function updateGistButtons() {
+  const active = (document.querySelector('input[name="activeGist"]:checked') || {}).value || '';
+  const cfg = loadGistConfig();
+  GIST_DEFS.forEach(def => {
+    const c = cfg[def.id] || {};
+    const gid = (document.getElementById('gid-' + def.id)||{}).value?.trim() || c.gistId;
+    const tok = (document.getElementById('gtoken-' + def.id)||{}).value?.trim() || c.token;
+    const disabled = !gid || !tok || active !== def.id;
+    ['pull','push'].forEach(a => {
+      const btn = document.getElementById(`gbtn-${a}-${def.id}`);
+      if (btn) { btn.disabled = disabled; }
+    });
+  });
+}
+
+function saveGistConfig2() {
+  const cfg = loadGistConfig();
+  const activeRadio = document.querySelector('input[name="activeGist"]:checked');
+  cfg.activeGist = activeRadio ? activeRadio.value : '';
+  GIST_DEFS.forEach(def => {
+    cfg[def.id] = {
+      gistId: (document.getElementById('gid-' + def.id)||{}).value?.trim() || '',
+      token:  (document.getElementById('gtoken-' + def.id)||{}).value?.trim() || ''
+    };
+  });
+  saveGistConfigRaw(cfg);
+  closeGistModal();
+  setSyncStatus('Settings saved', 2000);
+}
+
+async function pullFromGist(defId) {
+  const def = GIST_DEFS.find(d => d.id === defId);
+  const cfg = loadGistConfig();
+  const gistId = (document.getElementById('gid-' + defId)||{}).value?.trim() || (cfg[defId]||{}).gistId;
+  const token  = (document.getElementById('gtoken-' + defId)||{}).value?.trim() || (cfg[defId]||{}).token;
+  if (!gistId || !token) { alert('Enter a Gist ID and token first.'); return; }
+  if (!confirm(`Pull from ${def.label}? This will overwrite your local data.`)) return;
+  const statusEl = document.getElementById('gstatus-' + defId);
+  statusEl.textContent = 'Pulling…';
+  try {
+    const res = await fetch(`https://api.github.com/gists/${gistId}`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (!res.ok) throw new Error(`GitHub API ${res.status}`);
+    const data = await res.json();
+    const file = data.files[def.filename];
+    if (!file) throw new Error(`${def.filename} not found in gist`);
+    const pulled = normalise(JSON.parse(file.content));
+    localStorage.setItem('stockorder_v2', JSON.stringify(pulled));
+    state = pulled;
+    statusEl.textContent = `Pulled ✓ (${(state.catalog||[]).length} items)`;
+    closeGistModal();
+    render();
+    setSyncStatus(`Pulled from ${def.label} ✓`, 3000);
+  } catch(err) {
+    console.error('Pull failed:', err);
+    statusEl.textContent = 'Pull failed: ' + err.message;
+  }
+}
+
+async function pushToGist(defId) {
+  const def = GIST_DEFS.find(d => d.id === defId);
+  const cfg = loadGistConfig();
+  const gistId = (document.getElementById('gid-' + defId)||{}).value?.trim() || (cfg[defId]||{}).gistId;
+  const token  = (document.getElementById('gtoken-' + defId)||{}).value?.trim() || (cfg[defId]||{}).token;
+  if (!gistId || !token) { alert('Enter a Gist ID and token first.'); return; }
+  const statusEl = document.getElementById('gstatus-' + defId);
+  statusEl.textContent = 'Pushing…';
+  try {
+    const body = JSON.stringify({
+      files: { [def.filename]: { content: JSON.stringify(state, null, 2) } }
+    });
+    const res = await fetch(`https://api.github.com/gists/${gistId}`, {
+      method: 'PATCH',
+      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body
+    });
+    if (!res.ok) throw new Error(`GitHub API ${res.status}`);
+    const count = (state.catalog||[]).length;
+    statusEl.textContent = `Pushed ✓ (${count} items)`;
+    setSyncStatus(`Pushed to ${def.label} ✓`, 3000);
+  } catch(err) {
+    console.error('Push failed:', err);
+    statusEl.textContent = 'Push failed: ' + err.message;
+  }
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+render();
+</script>
+</body>
+</html>

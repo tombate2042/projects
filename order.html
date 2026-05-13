@@ -360,6 +360,55 @@
   /* ── FADED ITEM ── */
   .item-row { transition: background 0.12s, opacity 0.2s; }
   .item-row.faded { opacity: 0.15; }
+
+  /* ── OVER-LIMIT ITEM ── */
+  .item-row.over-limit { background: #fef6e0; }
+  .item-row.over-limit .item-check {
+    background: #c8860a;
+    border-color: #c8860a;
+  }
+  .item-row.over-limit .item-check::after {
+    content: '';
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #fff;
+  }
+
+  /* ── SUB LIMIT COUNTER ── */
+  .sub-limit-count {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text3);
+    margin-left: auto;
+    padding: 1px 8px;
+    border-radius: 99px;
+    background: var(--cream2);
+  }
+  .sub-limit-count.over { color: #92400e; background: #fef3c7; }
+
+  /* ── SUMMARY EXTRA BADGE ── */
+  .summary-extra-badge {
+    font-size: 9px;
+    font-weight: 700;
+    padding: 1px 5px;
+    border-radius: 99px;
+    background: #fef3c7;
+    color: #92400e;
+    border: 1px solid #fcd34d;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .summary-warn {
+    font-size: 11px;
+    color: #92400e;
+    background: #fef3c7;
+    border: 1px solid #fcd34d;
+    border-radius: var(--radius);
+    padding: 6px 10px;
+    margin-top: 8px;
+    line-height: 1.4;
+  }
 </style>
 </head>
 <body>
@@ -439,6 +488,7 @@ try { const s = localStorage.getItem('vmm_data'); if (s) data = JSON.parse(s); }
 if (!data.venue)          data.venue = {};
 if (!data.menus)          data.menus = [];
 if (!data.bookingOptions) data.bookingOptions = {};
+if (!data.bookingLimits)  data.bookingLimits  = {};
 
 const v = data.venue;
 if (v.name) {
@@ -449,7 +499,8 @@ if (v.name) {
 
 /* ── state ── */
 let selectedOption = null;
-const selectedItems = new Map(); // itemId → { item, subName }
+const selectedItems = new Map(); // itemId → { item, subName, subId }
+let overLimitIds = new Set();
 
 /* ══════════════════════════════
    PICKER
@@ -526,16 +577,18 @@ function renderItemsPanel() {
     return;
   }
 
+  const limits = data.bookingLimits?.[selectedOption] || {};
+
   const subsHtml = subs.map(({ sub }) => {
     const items = (sub.items || []).filter(i => i.name);
+    const max = limits[sub.id];
     const itemsHtml = items.map(item => {
       const diets = item.dietaries || [];
-      const tagsHtml = diets.length
-        ? `<div class="item-tags">${diets.map(t => `<span class="item-tag">${esc(t)}</span>`).join('')}</div>`
-        : '';
       const sel = selectedItems.has(item.id);
+      const over = overLimitIds.has(item.id);
+      const cls = over ? ' over-limit' : sel ? ' selected' : '';
       return `
-        <div class="item-row${sel ? ' selected' : ''}" id="row-${item.id}"
+        <div class="item-row${cls}" id="row-${item.id}"
              data-item-id="${item.id}" data-sub-id="${sub.id}" data-sub-name="${esc(sub.name)}"
              data-dietaries="${esc(diets.join(','))}"
              onclick="handleRowClick(this)">
@@ -543,7 +596,6 @@ function renderItemsPanel() {
           <div class="item-body">
             <div class="item-name">${esc(item.name)}</div>
             ${item.description ? `<div class="item-desc">${esc(item.description)}</div>` : ''}
-            ${tagsHtml}
           </div>
           ${item.price ? `<div class="item-price">${esc(item.price)}</div>` : ''}
         </div>`;
@@ -553,6 +605,7 @@ function renderItemsPanel() {
       <div class="sub-section-head">
         <span class="sub-section-name">${esc(sub.name)}</span>
         ${sub.priceNote ? `<span class="sub-section-note">${esc(sub.priceNote)}</span>` : ''}
+        ${max ? `<span class="sub-limit-count" id="sub-count-${sub.id}">0 / ${max}</span>` : ''}
       </div>
       ${itemsHtml}
     </div>`;
@@ -572,7 +625,6 @@ function handleRowClick(el) {
   const { itemId, subId, subName } = el.dataset;
   if (selectedItems.has(itemId)) {
     selectedItems.delete(itemId);
-    el.classList.remove('selected');
   } else {
     let found = null;
     for (const m of data.menus) {
@@ -580,15 +632,15 @@ function handleRowClick(el) {
       if (s) { found = s.items?.find(i => i.id === itemId); break; }
     }
     if (!found) return;
-    selectedItems.set(itemId, { item: found, subName });
-    el.classList.add('selected');
+    selectedItems.set(itemId, { item: found, subName, subId });
   }
+  recalcLimitStates();
   renderSummary();
 }
 
 function removeItem(itemId) {
   selectedItems.delete(itemId);
-  document.getElementById('row-' + itemId)?.classList.remove('selected');
+  recalcLimitStates();
   renderSummary();
 }
 
@@ -611,21 +663,64 @@ function renderSummary() {
     groups.get(subName).push({ id, name: item.name });
   }
 
+  const warnCount = overLimitIds.size;
   body.innerHTML = [...groups.entries()].map(([subName, items]) => `
     <div class="summary-group">
       <div class="summary-group-name">${esc(subName)}</div>
       ${items.map(({ id, name }) => `
         <div class="summary-item">
           <span class="summary-item-name">${esc(name)}</span>
+          ${overLimitIds.has(id) ? '<span class="summary-extra-badge">extra</span>' : ''}
           <button class="summary-item-rm" onclick="removeItem('${id}')" title="Remove">✕</button>
         </div>`).join('')}
-    </div>`).join('');
+    </div>`).join('')
+  + (warnCount ? `<div class="summary-warn">${warnCount} item${warnCount > 1 ? 's' : ''} outside your package allowance</div>` : '');
 }
 
 function clearSelection() {
   selectedItems.clear();
-  document.querySelectorAll('.item-row.selected').forEach(r => r.classList.remove('selected'));
+  recalcLimitStates();
   renderSummary();
+}
+
+/* ══════════════════════════════
+   LIMIT STATE
+══════════════════════════════ */
+function recalcLimitStates() {
+  const limits = data.bookingLimits?.[selectedOption] || {};
+  overLimitIds = new Set();
+  const subCounts = new Map();
+
+  for (const [itemId, { subId }] of selectedItems) {
+    const count = (subCounts.get(subId) || 0) + 1;
+    subCounts.set(subId, count);
+    const max = limits[subId];
+    if (max && count > max) overLimitIds.add(itemId);
+
+    const row = document.getElementById('row-' + itemId);
+    if (row) {
+      const over = overLimitIds.has(itemId);
+      row.classList.toggle('selected', !over);
+      row.classList.toggle('over-limit', over);
+    }
+  }
+
+  // Clear classes on deselected rows (handled by renderItemsPanel on full re-render,
+  // but needed here for rows that stay in the DOM after removeItem)
+  document.querySelectorAll('.item-row:not(.selected):not(.over-limit)').forEach(r => {
+    if (!selectedItems.has(r.dataset.itemId)) {
+      r.classList.remove('selected', 'over-limit');
+    }
+  });
+
+  // Update live counters
+  for (const [subId, max] of Object.entries(limits)) {
+    const el = document.getElementById('sub-count-' + subId);
+    if (!el) continue;
+    const count = subCounts.get(subId) || 0;
+    el.textContent = `${count} / ${max}`;
+    el.classList.toggle('over', count > max);
+  }
 }
 
 /* ══════════════════════════════

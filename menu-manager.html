@@ -525,7 +525,8 @@ const BOOKING_OPTIONS = [
 let data = {
   venue: { name: '', tagline: '', intro: '', spaces: [], packages: [], contact: { email: '', phone: '', website: '', address: '' } },
   menus: [],
-  bookingOptions: {}
+  bookingOptions: {},
+  bookingLimits: {}
 };
 let gistCfg = { token: '', gistId: '' };
 let currentMenuId  = null;
@@ -559,6 +560,7 @@ function load() {
   if (!data.venue.contact)     data.venue.contact = {};
   if (!data.menus)             data.menus = [];
   if (!data.bookingOptions)    data.bookingOptions = {};
+  if (!data.bookingLimits)     data.bookingLimits  = {};
 }
 
 /* ════════════════════════════════════
@@ -847,6 +849,7 @@ function renderOptionsTab() {
       </div>`;
     }
     const selected = data.bookingOptions?.[opt.key] || [];
+    const limits   = data.bookingLimits?.[opt.key]  || {};
     if (!allSubs.length) {
       return `<div class="card">
         <div class="card-head">${esc(opt.label)}</div>
@@ -861,7 +864,14 @@ function renderOptionsTab() {
         ${subs.map(s => `
           <label style="display:flex;align-items:center;gap:8px;padding:3px 0;cursor:pointer;font-size:13px;color:var(--text);user-select:none;">
             <input type="checkbox" ${selected.includes(s.id) ? 'checked' : ''} onchange="toggleSubInOption('${opt.key}','${s.id}',this.checked)">
-            <span>${esc(s.name)}${s.priceNote ? ` <em style="color:var(--text3);font-size:12px;font-style:italic;">(${esc(s.priceNote)})</em>` : ''}</span>
+            <span style="flex:1;">${esc(s.name)}${s.priceNote ? ` <em style="color:var(--text3);font-size:12px;font-style:italic;">(${esc(s.priceNote)})</em>` : ''}</span>
+            <span style="display:flex;align-items:center;gap:4px;font-size:12px;color:var(--text3);flex-shrink:0;">
+              Max
+              <input type="number" min="1" step="1" value="${limits[s.id] || ''}" placeholder="—"
+                     style="width:48px;padding:2px 5px;border:1px solid var(--border);border-radius:4px;font-size:12px;text-align:center;"
+                     onclick="event.stopPropagation()"
+                     oninput="updateSubLimit('${opt.key}','${s.id}',this.value)">
+            </span>
           </label>`).join('')}
       </div>`).join('');
     return `<div class="card">
@@ -877,6 +887,17 @@ function toggleSubInOption(optKey, subId, checked) {
     if (!data.bookingOptions[optKey].includes(subId)) data.bookingOptions[optKey].push(subId);
   } else {
     data.bookingOptions[optKey] = data.bookingOptions[optKey].filter(id => id !== subId);
+  }
+  save();
+}
+
+function updateSubLimit(optKey, subId, val) {
+  if (!data.bookingLimits[optKey]) data.bookingLimits[optKey] = {};
+  const n = parseInt(val, 10);
+  if (n > 0) {
+    data.bookingLimits[optKey][subId] = n;
+  } else {
+    delete data.bookingLimits[optKey][subId];
   }
   save();
 }
@@ -1075,6 +1096,7 @@ async function pullFromGist() {
         if (!data.venue.packages)  data.venue.packages  = [];
         if (!data.venue.contact)   data.venue.contact   = {};
         if (!data.bookingOptions)  data.bookingOptions  = {};
+        if (!data.bookingLimits)   data.bookingLimits   = {};
         localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
         renderAll();
         updateSyncStatus('ok'); logSync('Pulled successfully');
