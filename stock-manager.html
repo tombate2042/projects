@@ -125,9 +125,17 @@
   .gp-low  { color: var(--red); }
   .gp-na   { color: var(--text3); }
 
-  /* DEAL BADGE */
+  /* DEAL BADGE (products table cell) */
   .deal-badge { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text2); }
   .deal-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+  /* DEAL PILLS (summary bar) */
+  .sum-deal-pill { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 500; border: 1px solid; white-space: nowrap; }
+  .sum-deal-pill .pill-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+  .sum-deal-pill .pill-sep { opacity: 0.35; margin: 0 1px; }
+  .sum-deal-pill .pill-stat { font-family: var(--mono); font-size: 11px; }
+  .sum-deal-pill .pill-ok  { color: var(--green); }
+  .sum-deal-pill .pill-bad { color: var(--red); }
 
   /* BRAND DEALS TAB */
   .deals-toolbar { padding: 14px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
@@ -249,7 +257,7 @@
     <div class="stat"><div class="stat-val" id="statAvgGP">—</div><div class="stat-lbl">Avg GP%</div></div>
     <div class="stat"><div class="stat-val gp-high" id="statHighGP">—</div><div class="stat-lbl">High GP (&ge;60%)</div></div>
     <div class="stat"><div class="stat-val gp-low" id="statLowGP">—</div><div class="stat-lbl">Low GP (&lt;40%)</div></div>
-    <div class="stat"><div class="stat-val" id="statInDeals">—</div><div class="stat-lbl">In Brand Deals</div></div>
+    <div id="dealPillsWrap" style="display:none;align-items:center;gap:6px;flex-wrap:wrap;margin-left:8px;padding-left:16px;border-left:1px solid var(--border)"></div>
   </div>
   <div id="productsContent"></div>
 </div>
@@ -499,12 +507,36 @@ function updateSummary() {
   const avg = withGP.length ? withGP.reduce((s, m) => s + calcGP(m), 0) / withGP.length : null;
   const high = withGP.filter(m => calcGP(m) >= 0.6).length;
   const low  = withGP.filter(m => calcGP(m) < 0.4).length;
-  const inDeals = visible.filter(m => getDealForItem(m.id)).length;
   document.getElementById('statItems').textContent = visible.length;
   document.getElementById('statAvgGP').textContent = avg !== null ? fmtPct(avg) : '—';
   document.getElementById('statHighGP').textContent = high;
   document.getElementById('statLowGP').textContent = low;
-  document.getElementById('statInDeals').textContent = inDeals;
+
+  // deal pills
+  const deals = state.brandDeals || [];
+  const wrap = document.getElementById('dealPillsWrap');
+  if (!deals.length) {
+    wrap.style.display = 'none';
+  } else {
+    wrap.style.display = 'flex';
+    wrap.innerHTML = deals.map(deal => {
+      const st = dealStats(deal);
+      const lockPart = `<span class="pill-stat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="10" height="10" style="vertical-align:-1px"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> ${st.locked}</span>`;
+      let varPart = '';
+      if (st.required > 0) {
+        const ok = st.variableMet;
+        varPart = `<span class="pill-sep">·</span><span class="pill-stat ${ok ? 'pill-ok' : 'pill-bad'}">${st.variable}/${st.required}</span>`;
+      } else if (st.variable > 0) {
+        varPart = `<span class="pill-sep">·</span><span class="pill-stat">${st.variable} var</span>`;
+      }
+      return `<span class="sum-deal-pill" style="background:${deal.colour}14;border-color:${deal.colour}50;color:var(--text)">
+        <span class="pill-dot" style="background:${deal.colour}"></span>
+        ${esc(deal.name)}
+        <span class="pill-sep">·</span>
+        ${lockPart}${varPart}
+      </span>`;
+    }).join('');
+  }
 
   // deals tab badge
   const totalInDeals = getAllItems().filter(m => getDealForItem(m.id)).length;
