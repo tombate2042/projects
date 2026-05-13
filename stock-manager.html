@@ -21,109 +21,103 @@
     --red: #ff6b6b;
     --red-dim: rgba(255,107,107,0.1);
     --amber: #ffc14a;
-    --amber-dim: rgba(255,193,74,0.1);
     --green: #6adf99;
-    --green-dim: rgba(106,223,153,0.1);
     --mono: 'DM Sans', sans-serif;
     --sans: 'DM Sans', sans-serif;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 14px; min-height: 100vh; }
 
+  /* STICKY TOP */
+  #stickyTop { position: sticky; top: 0; z-index: 100; }
+
   /* HEADER */
   .header {
-    position: sticky; top: 0; z-index: 100;
-    background: rgba(15,15,15,0.97);
-    backdrop-filter: blur(12px);
+    background: rgba(15,15,15,0.97); backdrop-filter: blur(12px);
     border-bottom: 1px solid var(--border);
-    padding: 0 24px;
-    display: flex; align-items: center; gap: 12px;
-    height: 56px;
+    padding: 0 24px; display: flex; align-items: center; gap: 12px; height: 56px;
   }
   .header-title { font-size: 13px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text2); }
   .header-spacer { flex: 1; }
-  .header-gist-status { font-family: var(--mono); font-size: 11px; color: var(--text3); }
+  .sync-status { font-family: var(--mono); font-size: 11px; color: var(--text3); }
 
+  /* NAV TABS */
+  .nav-tabs {
+    background: var(--bg); border-bottom: 1px solid var(--border);
+    padding: 0 24px; display: flex; gap: 0;
+  }
+  .nav-tab {
+    padding: 11px 18px; font-size: 12px; font-weight: 500; color: var(--text3);
+    border-bottom: 2px solid transparent; cursor: pointer; transition: all 0.15s;
+    background: none; border-top: none; border-left: none; border-right: none;
+    font-family: var(--sans); white-space: nowrap;
+  }
+  .nav-tab:hover { color: var(--text2); }
+  .nav-tab.active { color: var(--text); border-bottom-color: var(--accent); }
+
+  /* BUTTONS */
   .btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 5px; border: 1px solid var(--border2); background: var(--surface2); color: var(--text); font-family: var(--sans); font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
-  .btn:hover { border-color: var(--text3); color: var(--text); background: #2a2a2a; }
+  .btn:hover { border-color: var(--text3); background: #2a2a2a; }
   .btn:disabled { opacity: 0.4; cursor: default; pointer-events: none; }
   .btn-primary { background: var(--accent); color: #0f0f0f; border-color: var(--accent); font-weight: 600; }
-  .btn-primary:hover { background: #d6ff7a; border-color: #d6ff7a; color: #0f0f0f; }
+  .btn-primary:hover { background: #d6ff7a; border-color: #d6ff7a; }
   .btn-sm { padding: 4px 10px; font-size: 11px; }
   .btn-danger { color: var(--red); border-color: rgba(255,107,107,0.3); }
   .btn-danger:hover { background: var(--red-dim); border-color: var(--red); }
+  .btn-icon { padding: 5px; border-radius: 4px; }
+
+  /* VIEWS */
+  .view { display: none; }
+  .view.active { display: block; }
 
   /* TOOLBAR */
-  .toolbar {
-    padding: 10px 24px;
-    border-bottom: 1px solid var(--border);
-    display: flex; align-items: center; gap: 10px;
-  }
+  .toolbar { padding: 10px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; background: var(--bg); }
   .search-wrap { position: relative; display: flex; align-items: center; }
-  .search-wrap svg { position: absolute; left: 9px; color: var(--text3); width: 14px; height: 14px; }
+  .search-wrap svg { position: absolute; left: 9px; color: var(--text3); width: 14px; height: 14px; pointer-events: none; }
   .search { background: var(--surface); border: 1px solid var(--border); border-radius: 5px; color: var(--text); font-family: var(--sans); font-size: 13px; padding: 7px 10px 7px 30px; outline: none; }
   .search:focus { border-color: var(--border2); }
-  .filter-chips { display: flex; gap: 6px; align-items: center; }
+  .chips { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
   .chip { padding: 5px 12px; border-radius: 20px; border: 1px solid var(--border); background: transparent; color: var(--text2); font-size: 11px; font-weight: 500; cursor: pointer; transition: all 0.15s; }
   .chip:hover { border-color: var(--border2); color: var(--text); }
   .chip.active { background: var(--accent-dim2); border-color: rgba(200,245,106,0.4); color: var(--accent); }
 
   /* SUMMARY BAR */
-  .summary-bar {
-    padding: 8px 24px;
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
-    display: flex; gap: 28px; align-items: center;
-  }
+  .summary-bar { padding: 8px 24px; background: var(--surface); border-bottom: 1px solid var(--border); display: flex; gap: 28px; align-items: center; }
   .stat { display: flex; flex-direction: column; }
   .stat-val { font-family: var(--mono); font-size: 15px; font-weight: 500; }
   .stat-lbl { font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text3); margin-top: 1px; }
 
-  /* TABLE */
+  /* PRODUCTS TABLE */
   .category-section { border-bottom: 1px solid var(--border); }
-  .category-header {
-    display: flex; align-items: center; gap: 10px;
-    padding: 10px 24px; cursor: pointer;
-    background: rgba(255,255,255,0.02);
-    user-select: none;
-  }
+  .category-header { display: flex; align-items: center; gap: 10px; padding: 10px 24px; cursor: pointer; background: rgba(255,255,255,0.02); user-select: none; }
   .category-header:hover { background: rgba(255,255,255,0.04); }
   .category-name { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text2); }
   .category-count { font-size: 11px; color: var(--text3); }
   .category-toggle { color: var(--text3); transition: transform 0.2s; flex-shrink: 0; margin-left: auto; }
   .category-toggle.collapsed { transform: rotate(-90deg); }
-
   .table-wrap { overflow-x: auto; }
-  table { width: 100%; border-collapse: collapse; min-width: 900px; }
-  thead th {
-    font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em;
-    color: var(--text3); background: var(--surface); border-bottom: 1px solid var(--border);
-    padding: 8px 10px; white-space: nowrap;
-  }
-  thead th:first-child { padding-left: 24px; text-align: left; }
+  table { width: 100%; border-collapse: collapse; min-width: 820px; }
+  thead th { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text3); background: var(--surface); border-bottom: 1px solid var(--border); padding: 8px 10px; white-space: nowrap; text-align: left; }
+  thead th:first-child { padding-left: 24px; }
   thead th.r { text-align: right; }
-  thead th.c { text-align: center; }
-  tbody tr { border-bottom: 1px solid rgba(255,255,255,0.04); }
+  tbody tr { border-bottom: 1px solid rgba(255,255,255,0.04); transition: background 0.1s; }
   tbody tr:hover { background: rgba(255,255,255,0.02); }
   tbody td { padding: 7px 10px; vertical-align: middle; }
-  tbody td:first-child { padding-left: 24px; }
-
-  .item-name { font-size: 13px; font-weight: 500; color: var(--text); }
+  tbody td:first-child { padding-left: 0; }
+  .item-name { font-size: 13px; font-weight: 500; }
   .item-sub { font-size: 11px; color: var(--text3); margin-top: 1px; }
   .mono { font-family: var(--mono); }
 
+  /* DEAL ROW HIGHLIGHT */
+  tbody tr.in-deal td:first-child { border-left: 3px solid var(--deal-colour, #888); }
+  tbody tr.in-deal td:first-child { padding-left: 21px; }
+
   /* INLINE INPUTS */
-  .cell-input {
-    background: transparent; border: 1px solid transparent; border-radius: 4px;
-    color: var(--text); font-family: var(--sans); font-size: 13px;
-    padding: 3px 6px; outline: none; width: 100%;
-    transition: border-color 0.15s, background 0.15s;
-  }
+  .cell-input { background: transparent; border: 1px solid transparent; border-radius: 4px; color: var(--text); font-family: var(--sans); font-size: 13px; padding: 3px 6px; outline: none; transition: border-color 0.15s, background 0.15s; }
   .cell-input:hover { border-color: var(--border2); background: var(--surface); }
   .cell-input:focus { border-color: var(--accent); background: var(--surface2); }
   .cell-input.num { text-align: right; width: 80px; font-family: var(--mono); }
-  .cell-input.wide { width: 160px; }
-  .cell-input.deals { width: 220px; }
+  .cell-input.wide { width: 150px; }
   .cell-input.changed { border-color: rgba(200,245,106,0.4); }
 
   /* GP COLOURS */
@@ -132,112 +126,187 @@
   .gp-low  { color: var(--red); }
   .gp-na   { color: var(--text3); }
 
+  /* DEAL BADGE */
+  .deal-badge { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text2); }
+  .deal-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+  /* BRAND DEALS TAB */
+  .deals-toolbar { padding: 14px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
+  .deals-grid { padding: 24px; display: flex; flex-direction: column; gap: 16px; }
+  .deal-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  .deal-card-header { display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-bottom: 1px solid var(--border); }
+  .deal-colour-swatch { width: 20px; height: 20px; border-radius: 4px; cursor: pointer; flex-shrink: 0; border: 2px solid rgba(255,255,255,0.1); transition: border-color 0.15s; }
+  .deal-colour-swatch:hover { border-color: rgba(255,255,255,0.3); }
+  .deal-name-input { background: transparent; border: none; color: var(--text); font-family: var(--sans); font-size: 14px; font-weight: 600; outline: none; flex: 1; }
+  .deal-name-input:focus { background: var(--surface2); border-radius: 4px; padding: 2px 6px; }
+  .deal-items-table { width: 100%; border-collapse: collapse; }
+  .deal-items-table td { padding: 8px 16px; border-bottom: 1px solid rgba(255,255,255,0.04); font-size: 13px; }
+  .deal-items-table tr:last-child td { border-bottom: none; }
+  .deal-items-table .item-cat { font-size: 11px; color: var(--text3); }
+  .deal-empty { padding: 16px; color: var(--text3); font-size: 12px; }
+  .deal-footer { padding: 10px 16px; border-top: 1px solid var(--border); display: flex; gap: 8px; }
+  .no-deals-msg { padding: 48px 24px; text-align: center; color: var(--text3); font-size: 13px; }
+
+  /* COLOUR PICKER POPOVER */
+  .colour-popover { position: absolute; background: var(--surface2); border: 1px solid var(--border2); border-radius: 8px; padding: 10px; display: flex; gap: 8px; flex-wrap: wrap; width: 168px; z-index: 300; box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
+  .colour-option { width: 28px; height: 28px; border-radius: 5px; cursor: pointer; border: 2px solid transparent; transition: border-color 0.1s, transform 0.1s; }
+  .colour-option:hover { transform: scale(1.12); }
+  .colour-option.selected { border-color: #fff; }
+
   /* MODALS */
   .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 200; align-items: center; justify-content: center; }
   .modal-overlay.open { display: flex; }
-  .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 24px; width: 440px; max-width: 95vw; }
-  .modal h3 { font-size: 15px; font-weight: 600; margin-bottom: 16px; }
-  .modal-actions { display: flex; gap: 8px; margin-top: 20px; justify-content: flex-end; }
+  .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 24px; width: 460px; max-width: 95vw; max-height: 90vh; display: flex; flex-direction: column; }
+  .modal h3 { font-size: 15px; font-weight: 600; margin-bottom: 16px; flex-shrink: 0; }
+  .modal-body { overflow-y: auto; flex: 1; }
+  .modal-actions { display: flex; gap: 8px; margin-top: 20px; justify-content: flex-end; flex-shrink: 0; }
   .form-row { display: flex; flex-direction: column; gap: 4px; margin-bottom: 12px; }
   .form-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text3); }
   .form-input { background: var(--surface2); border: 1px solid var(--border); border-radius: 5px; color: var(--text); font-family: var(--sans); font-size: 13px; padding: 8px 10px; outline: none; width: 100%; }
   .form-input:focus { border-color: var(--accent); }
 
+  /* ITEM PICKER */
+  .item-picker-list { max-height: 320px; overflow-y: auto; border: 1px solid var(--border); border-radius: 6px; }
+  .item-picker-row { display: flex; align-items: center; gap: 10px; padding: 8px 12px; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.04); transition: background 0.1s; }
+  .item-picker-row:last-child { border-bottom: none; }
+  .item-picker-row:hover { background: rgba(255,255,255,0.04); }
+  .item-picker-row input[type="checkbox"] { accent-color: var(--accent); width: 14px; height: 14px; cursor: pointer; flex-shrink: 0; }
+  .item-picker-name { font-size: 13px; }
+  .item-picker-cat { font-size: 11px; color: var(--text3); margin-left: auto; }
+
+  /* GIST MODAL */
   .gist-section { padding: 14px 0; border-bottom: 1px solid var(--border); }
   .gist-section:last-child { border-bottom: none; }
   .gist-section-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text3); margin-bottom: 8px; }
   .gist-actions { display: flex; gap: 8px; align-items: center; margin-top: 8px; }
-  .gist-status { font-size: 11px; font-family: var(--mono); color: var(--text3); }
+  .gist-status-txt { font-size: 11px; font-family: var(--mono); color: var(--text3); }
 
   .hidden-row { display: none; }
-  .no-items-msg { padding: 24px; color: var(--text3); font-size: 13px; }
+  .no-items-msg { padding: 32px 24px; color: var(--text3); font-size: 13px; }
 </style>
 </head>
 <body>
 
-<!-- HEADER -->
-<div class="header">
-  <div class="header-title">Stock Manager</div>
-  <div class="header-spacer"></div>
-  <span class="header-gist-status" id="syncStatus"></span>
-  <button class="btn" onclick="openGistModal()">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
-    Gist Sync
-  </button>
-  <a href="orders.html" class="btn" style="text-decoration:none">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><polyline points="15 18 9 12 15 6"/></svg>
-    Orders
-  </a>
-</div>
+<div id="stickyTop">
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-title">Stock Manager</div>
+    <div class="header-spacer"></div>
+    <span class="sync-status" id="syncStatus"></span>
+    <button class="btn" onclick="openGistModal()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+      Gist Sync
+    </button>
+    <a href="orders.html" class="btn" style="text-decoration:none">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><polyline points="15 18 9 12 15 6"/></svg>
+      Orders
+    </a>
+  </div>
 
-<!-- TOOLBAR -->
-<div class="toolbar">
-  <div class="search-wrap">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-    <input class="search" type="text" placeholder="Search items…" oninput="doSearch(this.value)" style="width:220px">
-  </div>
-  <div class="filter-chips" id="catChips">
-    <button class="chip active" data-cat="all" onclick="setCatFilter('all',this)">All</button>
-  </div>
-  <div style="flex:1"></div>
-  <button class="btn btn-sm" onclick="autoSave()">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-    Save
-  </button>
-</div>
-
-<!-- SUMMARY BAR -->
-<div class="summary-bar" id="summaryBar">
-  <div class="stat">
-    <div class="stat-val" id="statItems">—</div>
-    <div class="stat-lbl">Items</div>
-  </div>
-  <div class="stat">
-    <div class="stat-val" id="statAvgGP">—</div>
-    <div class="stat-lbl">Avg GP%</div>
-  </div>
-  <div class="stat">
-    <div class="stat-val gp-high" id="statHighGP">—</div>
-    <div class="stat-lbl">High GP (&ge;60%)</div>
-  </div>
-  <div class="stat">
-    <div class="stat-val gp-low" id="statLowGP">—</div>
-    <div class="stat-lbl">Low GP (&lt;40%)</div>
-  </div>
-  <div class="stat">
-    <div class="stat-val" id="statWithDeals">—</div>
-    <div class="stat-lbl">With Deals</div>
+  <!-- NAV TABS -->
+  <div class="nav-tabs">
+    <button class="nav-tab active" id="tab-products" onclick="switchTab('products')">Products</button>
+    <button class="nav-tab" id="tab-deals" onclick="switchTab('deals')">Brand Deals <span id="dealsBadge" style="display:none;font-size:10px;background:var(--accent-dim2);color:var(--accent);border-radius:10px;padding:1px 6px;margin-left:4px"></span></button>
   </div>
 </div>
 
-<!-- CONTENT -->
-<div id="content"></div>
+<!-- ═══ PRODUCTS VIEW ═══ -->
+<div class="view active" id="view-products">
+  <div class="toolbar">
+    <div class="search-wrap">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input class="search" type="text" placeholder="Search items…" oninput="doSearch(this.value)" style="width:210px">
+    </div>
+    <div class="chips" id="catChips">
+      <button class="chip active" data-cat="all" onclick="setCatFilter('all',this)">All</button>
+    </div>
+    <div style="flex:1"></div>
+    <button class="btn btn-sm" onclick="autoSave()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+      Save
+    </button>
+  </div>
+  <div class="summary-bar">
+    <div class="stat"><div class="stat-val" id="statItems">—</div><div class="stat-lbl">Items</div></div>
+    <div class="stat"><div class="stat-val" id="statAvgGP">—</div><div class="stat-lbl">Avg GP%</div></div>
+    <div class="stat"><div class="stat-val gp-high" id="statHighGP">—</div><div class="stat-lbl">High GP (&ge;60%)</div></div>
+    <div class="stat"><div class="stat-val gp-low" id="statLowGP">—</div><div class="stat-lbl">Low GP (&lt;40%)</div></div>
+    <div class="stat"><div class="stat-val" id="statInDeals">—</div><div class="stat-lbl">In Brand Deals</div></div>
+  </div>
+  <div id="productsContent"></div>
+</div>
 
-<!-- GIST MODAL -->
+<!-- ═══ BRAND DEALS VIEW ═══ -->
+<div class="view" id="view-deals">
+  <div class="deals-toolbar">
+    <button class="btn btn-primary" onclick="openNewDealModal()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      New Deal
+    </button>
+  </div>
+  <div id="dealsContent"></div>
+</div>
+
+<!-- ═══ GIST MODAL ═══ -->
 <div class="modal-overlay" id="gistModal">
   <div class="modal">
     <h3>Gist Sync</h3>
-    <div style="margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border)">
-      <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.07em;color:var(--text3);margin-bottom:8px">Active Gist</div>
-      <div style="display:flex;gap:16px">
-        <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text);cursor:pointer">
-          <input type="radio" name="activeGist" value="lo" style="accent-color:var(--accent)" onchange="updateGistButtons()"> L&amp;O
-        </label>
-        <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text);cursor:pointer">
-          <input type="radio" name="activeGist" value="republic" style="accent-color:var(--accent)" onchange="updateGistButtons()"> Republic
-        </label>
-        <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text2);cursor:pointer">
-          <input type="radio" name="activeGist" value="" style="accent-color:var(--accent)" onchange="updateGistButtons()"> None
-        </label>
+    <div class="modal-body">
+      <div style="margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border)">
+        <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.07em;color:var(--text3);margin-bottom:8px">Active Gist</div>
+        <div style="display:flex;gap:16px">
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="radio" name="activeGist" value="lo" style="accent-color:var(--accent)" onchange="updateGistButtons()"> L&amp;O</label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="radio" name="activeGist" value="republic" style="accent-color:var(--accent)" onchange="updateGistButtons()"> Republic</label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text2);cursor:pointer"><input type="radio" name="activeGist" value="" style="accent-color:var(--accent)" onchange="updateGistButtons()"> None</label>
+        </div>
       </div>
+      <div id="gistDefList"></div>
     </div>
-    <div id="gistDefList"></div>
     <div class="modal-actions">
-      <button class="btn" onclick="closeGistModal()">Close</button>
-      <button class="btn btn-primary" onclick="saveGistConfig2()">Save Settings</button>
+      <button class="btn" onclick="closeModal('gistModal')">Close</button>
+      <button class="btn btn-primary" onclick="saveGistSettings()">Save Settings</button>
     </div>
   </div>
 </div>
+
+<!-- ═══ NEW DEAL MODAL ═══ -->
+<div class="modal-overlay" id="newDealModal">
+  <div class="modal" style="max-height:unset">
+    <h3>New Brand Deal</h3>
+    <div class="form-row">
+      <div class="form-label">Deal Name</div>
+      <input class="form-input" id="newDealName" type="text" placeholder="e.g. Diageo Partnership">
+    </div>
+    <div class="form-row">
+      <div class="form-label">Colour</div>
+      <div id="newDealColours" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('newDealModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="createDeal()">Create Deal</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ ADD ITEMS MODAL ═══ -->
+<div class="modal-overlay" id="addItemsModal">
+  <div class="modal">
+    <h3 id="addItemsTitle">Add Items to Deal</h3>
+    <div class="form-row" style="flex-shrink:0">
+      <input class="form-input" id="itemPickerSearch" type="text" placeholder="Search items…" oninput="filterItemPicker(this.value)">
+    </div>
+    <div class="modal-body">
+      <div class="item-picker-list" id="itemPickerList"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('addItemsModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="confirmAddItems()">Add Selected</button>
+    </div>
+  </div>
+</div>
+
+<!-- colour popover (appended to body, positioned by JS) -->
+<div id="colourPopover" class="colour-popover" style="display:none"></div>
 
 <script>
 // ─── CONSTANTS ────────────────────────────────────────────────────────────────
@@ -252,24 +321,36 @@ const CATEGORIES = [
   'Post-Mix Syrups','Fruit & Juice','Consumables','Chemicals'
 ];
 
+const SPIRIT_CATS = new Set(['Vodka','Gin','Tequila & Mezcal','Rum','Scotch','Bourbon & Whiskey','Liqueurs']);
+
+const DEAL_COLOURS = [
+  '#6ab4ff','#6adf99','#ffc14a','#ff6b6b','#c8f56a',
+  '#b06aff','#ff6ab4','#6affdf','#ff9f6a','#a0c4ff'
+];
+
 // ─── STATE ────────────────────────────────────────────────────────────────────
 let state = loadState();
 let searchQ = '';
 let activeCat = 'all';
+let activeTab = 'products';
+
+// deal modal working state
+let _addItemsDealId = null;
 
 function loadState() {
   try {
     const s = localStorage.getItem('stockorder_v2');
     if (s) return normalise(JSON.parse(s));
   } catch(e) {}
-  return { weekNum:1, weekStart:'', items:{}, catalog:[], venues:[] };
+  return { weekNum:1, weekStart:'', items:{}, catalog:[], venues:[], productOverrides:{}, brandDeals:[] };
 }
 
 function normalise(s) {
-  if (!s || typeof s !== 'object' || Array.isArray(s)) return { weekNum:1, weekStart:'', items:{}, catalog:[], venues:[] };
+  if (!s || typeof s !== 'object' || Array.isArray(s)) s = {};
   if (!s.items || Array.isArray(s.items)) s.items = {};
   if (!s.catalog || !Array.isArray(s.catalog)) s.catalog = [];
   if (!s.productOverrides) s.productOverrides = {};
+  if (!s.brandDeals || !Array.isArray(s.brandDeals)) s.brandDeals = [];
   return s;
 }
 
@@ -282,29 +363,14 @@ function autoSave() {
   setSyncStatus('Saved ✓', 1800);
 }
 
-// ─── GIST CONFIG ──────────────────────────────────────────────────────────────
-function loadGistConfig() {
-  try { return JSON.parse(localStorage.getItem('stockorder_gist_config') || '{}'); } catch(e) { return {}; }
-}
-function saveGistConfigRaw(cfg) {
-  localStorage.setItem('stockorder_gist_config', JSON.stringify(cfg));
-}
-
 // ─── ITEMS ────────────────────────────────────────────────────────────────────
 function getAllItems() {
   const deleted = new Set(state.deletedIds || []);
   const overrides = state.productOverrides || {};
-  const catalog = state.catalog || [];
-  return catalog.filter(m => !deleted.has(m.id)).map(m => {
+  return (state.catalog || []).filter(m => !deleted.has(m.id)).map(m => {
     const ov = overrides[m.id] || {};
     return { ...m, ...ov };
   });
-}
-
-function getField(id, field) {
-  const ov = (state.productOverrides || {})[id] || {};
-  const cat = (state.catalog || []).find(x => x.id === id) || {};
-  return ov[field] !== undefined ? ov[field] : cat[field];
 }
 
 function setField(id, field, value) {
@@ -318,43 +384,30 @@ function setField(id, field, value) {
   saveState();
 }
 
-// ─── CALCULATIONS ─────────────────────────────────────────────────────────────
-const SPIRIT_CATS = new Set(['Vodka','Gin','Tequila & Mezcal','Rum','Scotch','Bourbon & Whiskey','Liqueurs']);
+// ─── DEAL LOOKUPS ─────────────────────────────────────────────────────────────
+function getDealForItem(itemId) {
+  return (state.brandDeals || []).find(d => d.itemIds && d.itemIds.includes(itemId)) || null;
+}
 
+// ─── CALCULATIONS ─────────────────────────────────────────────────────────────
 function parseSizeMl(sizeStr) {
   if (!sizeStr) return null;
   const s = String(sizeStr).toLowerCase().trim();
-  const lm = s.match(/^([\d.]+)\s*l$/);   if (lm) return parseFloat(lm[1]) * 1000;
-  const mm = s.match(/^([\d.]+)\s*ml$/);  if (mm) return parseFloat(mm[1]);
+  const lm = s.match(/^([\d.]+)\s*l$/);  if (lm) return parseFloat(lm[1]) * 1000;
+  const mm = s.match(/^([\d.]+)\s*ml$/); if (mm) return parseFloat(mm[1]);
   const n = parseFloat(s);
   return isNaN(n) ? null : n;
 }
 
-// Returns GP as a fraction (0–1) or null if data is missing.
-// Spirits (Vodka–Liqueurs): formula is per 30ml serve — (sell - cost/size*30) / sell
-// Everything else: standard (sell - cost) / sell
 function calcGP(m) {
   const sell = parseFloat(m.sell), cost = parseFloat(m.cost);
   if (!sell || !cost || sell <= 0 || cost <= 0) return null;
   if (SPIRIT_CATS.has(m.category)) {
     const ml = parseSizeMl(m.size);
     if (!ml) return null;
-    const costPerServe = cost / ml * 30;
-    return (sell - costPerServe) / sell;
+    return (sell - (cost / ml * 30)) / sell;
   }
   return (sell - cost) / sell;
-}
-
-// Returns the dollar GP (per serve for spirits, per unit otherwise).
-function calcGPDollar(m) {
-  const sell = parseFloat(m.sell), cost = parseFloat(m.cost);
-  if (!sell || !cost || sell <= 0 || cost <= 0) return null;
-  if (SPIRIT_CATS.has(m.category)) {
-    const ml = parseSizeMl(m.size);
-    if (!ml) return null;
-    return sell - cost / ml * 30;
-  }
-  return sell - cost;
 }
 
 function gpClass(gp) {
@@ -369,21 +422,24 @@ function fmtPct(n) {
   return (n * 100).toFixed(1) + '%';
 }
 
-function fmtMoney(n) {
-  const v = parseFloat(n);
-  if (!v && v !== 0) return '—';
-  return '$' + v.toFixed(2);
-}
-
 function esc(s) {
   return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-// ─── SEARCH & FILTER ──────────────────────────────────────────────────────────
-function doSearch(q) {
-  searchQ = q.toLowerCase();
-  applyFilters();
+function catKey(cat) { return cat.replace(/\s+/g,'-').replace(/[&]/g,'n'); }
+
+// ─── TABS ─────────────────────────────────────────────────────────────────────
+function switchTab(tab) {
+  activeTab = tab;
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('view-' + tab).classList.add('active');
+  document.getElementById('tab-' + tab).classList.add('active');
+  if (tab === 'deals') renderDeals();
 }
+
+// ─── SEARCH & FILTER ──────────────────────────────────────────────────────────
+function doSearch(q) { searchQ = q.toLowerCase(); applyFilters(); }
 
 function setCatFilter(cat, el) {
   activeCat = cat;
@@ -418,8 +474,6 @@ function updateCatCounts() {
   });
 }
 
-function catKey(cat) { return cat.replace(/\s+/g, '-').replace(/[&]/g,'n'); }
-
 // ─── SUMMARY ──────────────────────────────────────────────────────────────────
 function updateSummary() {
   const visible = getAllItems().filter(m => !document.getElementById('smrow-' + m.id)?.classList.contains('hidden-row'));
@@ -427,30 +481,34 @@ function updateSummary() {
   const avg = withGP.length ? withGP.reduce((s, m) => s + calcGP(m), 0) / withGP.length : null;
   const high = withGP.filter(m => calcGP(m) >= 0.6).length;
   const low  = withGP.filter(m => calcGP(m) < 0.4).length;
-  const deals = visible.filter(m => m.brand_deals && String(m.brand_deals).trim()).length;
+  const inDeals = visible.filter(m => getDealForItem(m.id)).length;
   document.getElementById('statItems').textContent = visible.length;
   document.getElementById('statAvgGP').textContent = avg !== null ? fmtPct(avg) : '—';
   document.getElementById('statHighGP').textContent = high;
   document.getElementById('statLowGP').textContent = low;
-  document.getElementById('statWithDeals').textContent = deals;
+  document.getElementById('statInDeals').textContent = inDeals;
+
+  // deals tab badge
+  const totalInDeals = getAllItems().filter(m => getDealForItem(m.id)).length;
+  const badge = document.getElementById('dealsBadge');
+  badge.textContent = totalInDeals;
+  badge.style.display = totalInDeals > 0 ? '' : 'none';
 }
 
-// ─── RENDER ───────────────────────────────────────────────────────────────────
-function render() {
+// ─── PRODUCTS RENDER ──────────────────────────────────────────────────────────
+function renderProducts() {
   const allItems = getAllItems();
   const cats = [...new Set(allItems.map(m => m.category))].sort((a, b) => {
-    const ai = CATEGORIES.indexOf(a), bi = CATEGORIES.indexOf(b);
-    return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
+    return (CATEGORIES.indexOf(a) + 1 || 999) - (CATEGORIES.indexOf(b) + 1 || 999);
   });
 
-  // rebuild category chips
   const chipsEl = document.getElementById('catChips');
   chipsEl.innerHTML = '<button class="chip active" data-cat="all" onclick="setCatFilter(\'all\',this)">All</button>';
   cats.forEach(cat => {
     chipsEl.innerHTML += `<button class="chip" data-cat="${esc(cat)}" onclick="setCatFilter('${cat.replace(/'/g,"\\'")}',this)">${cat}</button>`;
   });
 
-  const content = document.getElementById('content');
+  const content = document.getElementById('productsContent');
   content.innerHTML = '';
 
   if (!allItems.length) {
@@ -460,9 +518,8 @@ function render() {
   }
 
   cats.forEach(cat => {
-    const items = allItems.filter(m => m.category === cat).sort((a, b) => (a.position || 99) - (b.position || 99) || a.item.localeCompare(b.item));
+    const items = allItems.filter(m => m.category === cat).sort((a, b) => (a.position||99) - (b.position||99) || a.item.localeCompare(b.item));
     const key = catKey(cat);
-
     const section = document.createElement('div');
     section.className = 'category-section';
     section.innerHTML = `
@@ -473,18 +530,16 @@ function render() {
       </div>
       <div class="table-wrap" id="smbody-${key}">
         <table>
-          <thead>
-            <tr>
-              <th style="width:220px">Item</th>
-              <th style="width:90px">Size</th>
-              <th style="width:100px">Supplier</th>
-              <th class="r" style="width:90px">Cost</th>
-              <th class="r" style="width:90px">Sell</th>
-              <th class="r" style="width:75px" title="Per serve for spirits (30ml), per unit otherwise">GP%</th>
-              <th style="width:150px">Brand Owner</th>
-              <th style="width:240px">Brand Deals</th>
-            </tr>
-          </thead>
+          <thead><tr>
+            <th style="width:220px">Item</th>
+            <th style="width:80px">Size</th>
+            <th style="width:110px">Supplier</th>
+            <th class="r" style="width:88px">Cost</th>
+            <th class="r" style="width:88px">Sell</th>
+            <th class="r" style="width:72px" title="Spirits: per 30ml serve. Others: per unit.">GP%</th>
+            <th style="width:150px">Brand Owner</th>
+            <th style="width:160px">Brand Deal</th>
+          </tr></thead>
           <tbody id="smtbody-${key}"></tbody>
         </table>
       </div>`;
@@ -494,8 +549,14 @@ function render() {
     items.forEach(m => {
       const gp = calcGP(m);
       const cls = gpClass(gp);
+      const deal = getDealForItem(m.id);
       const tr = document.createElement('tr');
       tr.id = 'smrow-' + m.id;
+      if (deal) {
+        tr.classList.add('in-deal');
+        tr.style.setProperty('--deal-colour', deal.colour);
+        tr.style.background = deal.colour + '12';
+      }
       tr.innerHTML = `
         <td>
           <div class="item-name">${esc(m.item)}</div>
@@ -505,34 +566,27 @@ function render() {
         <td style="color:var(--text2);font-size:12px">${esc(m.supplier||'')}</td>
         <td style="text-align:right">
           <input class="cell-input num" type="number" step="0.01" min="0"
-            value="${m.cost ? Number(m.cost).toFixed(2) : ''}"
-            placeholder="—"
+            value="${m.cost ? Number(m.cost).toFixed(2) : ''}" placeholder="—"
             onchange="fieldChanged('${m.id}','cost',this)"
             oninput="this.classList.add('changed')">
         </td>
         <td style="text-align:right">
           <input class="cell-input num" type="number" step="0.01" min="0"
-            value="${m.sell ? Number(m.sell).toFixed(2) : ''}"
-            placeholder="—"
+            value="${m.sell ? Number(m.sell).toFixed(2) : ''}" placeholder="—"
             onchange="fieldChanged('${m.id}','sell',this)"
             oninput="this.classList.add('changed')">
         </td>
-        <td class="mono ${cls}" style="text-align:right;font-size:13px;font-weight:500" id="gpp-${m.id}">
-          ${fmtPct(gp)}
-        </td>
+        <td class="mono ${cls}" style="text-align:right;font-size:13px;font-weight:500" id="gpp-${m.id}">${fmtPct(gp)}</td>
         <td>
           <input class="cell-input wide" type="text"
-            value="${esc(m.brand_owner||'')}"
-            placeholder="—"
+            value="${esc(m.brand_owner||'')}" placeholder="—"
             onchange="fieldChanged('${m.id}','brand_owner',this)"
             oninput="this.classList.add('changed')">
         </td>
         <td>
-          <input class="cell-input deals" type="text"
-            value="${esc(m.brand_deals||'')}"
-            placeholder="e.g. 10% volume rebate, marketing support…"
-            onchange="fieldChanged('${m.id}','brand_deals',this)"
-            oninput="this.classList.add('changed')">
+          ${deal
+            ? `<span class="deal-badge"><span class="deal-dot" style="background:${deal.colour}"></span>${esc(deal.name)}</span>`
+            : `<span style="color:var(--text3);font-size:12px">—</span>`}
         </td>`;
       tbody.appendChild(tr);
     });
@@ -549,36 +603,252 @@ function toggleCat(key) {
   tog.classList.toggle('collapsed', !hidden);
 }
 
-// ─── FIELD CHANGE ─────────────────────────────────────────────────────────────
 function fieldChanged(id, field, input) {
   input.classList.remove('changed');
   const raw = input.value.trim();
   const isNum = field === 'cost' || field === 'sell';
-  const val = isNum ? (raw === '' ? '' : parseFloat(raw) || 0) : raw;
-  setField(id, field, val);
-
-  // live-update GP cells
-  if (field === 'cost' || field === 'sell') {
+  setField(id, field, isNum ? (raw === '' ? '' : parseFloat(raw) || 0) : raw);
+  if (isNum) {
     const m = getAllItems().find(x => x.id === id);
     if (m) {
       const gp = calcGP(m);
-      const cls = gpClass(gp);
-      const gppEl = document.getElementById('gpp-' + id);
-      if (gppEl) { gppEl.textContent = fmtPct(gp); gppEl.className = `mono ${cls}`; gppEl.style.textAlign = 'right'; gppEl.style.fontSize = '13px'; gppEl.style.fontWeight = '500'; }
+      const el = document.getElementById('gpp-' + id);
+      if (el) { el.textContent = fmtPct(gp); el.className = `mono ${gpClass(gp)}`; el.style.textAlign = 'right'; el.style.fontSize = '13px'; el.style.fontWeight = '500'; }
       updateSummary();
     }
   }
 }
 
-// ─── SYNC STATUS ──────────────────────────────────────────────────────────────
-let _statusTimer = null;
-function setSyncStatus(msg, clearAfterMs) {
-  document.getElementById('syncStatus').textContent = msg;
-  if (_statusTimer) clearTimeout(_statusTimer);
-  if (clearAfterMs) _statusTimer = setTimeout(() => { document.getElementById('syncStatus').textContent = ''; }, clearAfterMs);
+// ─── BRAND DEALS RENDER ───────────────────────────────────────────────────────
+function renderDeals() {
+  const content = document.getElementById('dealsContent');
+  const deals = state.brandDeals || [];
+
+  if (!deals.length) {
+    content.innerHTML = '<div class="no-deals-msg">No brand deals yet. Click <strong>New Deal</strong> to create one.</div>';
+    return;
+  }
+
+  const allItems = getAllItems();
+  content.innerHTML = '';
+  const grid = document.createElement('div');
+  grid.className = 'deals-grid';
+
+  deals.forEach(deal => {
+    const dealItems = allItems.filter(m => (deal.itemIds || []).includes(m.id));
+    const card = document.createElement('div');
+    card.className = 'deal-card';
+    card.style.borderLeft = `3px solid ${deal.colour}`;
+
+    const itemRows = dealItems.length
+      ? dealItems.map(m => `
+        <tr>
+          <td style="padding-left:16px">
+            <div style="font-size:13px;font-weight:500">${esc(m.item)}</div>
+            <div class="item-cat">${esc(m.category)}${m.supplier ? ' · ' + esc(m.supplier) : ''}</div>
+          </td>
+          <td style="text-align:right;padding-right:8px">
+            <button class="btn btn-sm btn-danger" onclick="removeItemFromDeal('${deal.id}','${m.id}')">Remove</button>
+          </td>
+        </tr>`).join('')
+      : `<tr><td colspan="2" class="deal-empty">No items in this deal yet.</td></tr>`;
+
+    card.innerHTML = `
+      <div class="deal-card-header">
+        <div class="deal-colour-swatch" id="swatch-${deal.id}" style="background:${deal.colour}" onclick="openColourPicker('${deal.id}',this)" title="Change colour"></div>
+        <input class="deal-name-input" type="text" value="${esc(deal.name)}" placeholder="Deal name"
+          onchange="renameDeal('${deal.id}',this.value)">
+        <button class="btn btn-sm btn-danger" onclick="deleteDeal('${deal.id}')">Delete Deal</button>
+      </div>
+      <table class="deal-items-table">${itemRows}</table>
+      <div class="deal-footer">
+        <button class="btn btn-sm" onclick="openAddItemsModal('${deal.id}')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="11" height="11"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add Items
+        </button>
+        <span style="font-size:11px;color:var(--text3);margin-left:4px">${dealItems.length} item${dealItems.length !== 1 ? 's' : ''}</span>
+      </div>`;
+    grid.appendChild(card);
+  });
+
+  content.appendChild(grid);
 }
 
-// ─── GIST MODAL ───────────────────────────────────────────────────────────────
+// ─── DEAL MANAGEMENT ──────────────────────────────────────────────────────────
+let _newDealColour = DEAL_COLOURS[0];
+
+function openNewDealModal() {
+  _newDealColour = DEAL_COLOURS[0];
+  document.getElementById('newDealName').value = '';
+  const wrap = document.getElementById('newDealColours');
+  wrap.innerHTML = DEAL_COLOURS.map(c => `
+    <div class="colour-option${c === _newDealColour ? ' selected' : ''}"
+      style="background:${c}" title="${c}"
+      onclick="selectNewDealColour('${c}',this)"></div>`).join('');
+  document.getElementById('newDealModal').classList.add('open');
+  setTimeout(() => document.getElementById('newDealName').focus(), 50);
+}
+
+function selectNewDealColour(colour, el) {
+  _newDealColour = colour;
+  document.querySelectorAll('#newDealColours .colour-option').forEach(e => e.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+function createDeal() {
+  const name = document.getElementById('newDealName').value.trim();
+  if (!name) { document.getElementById('newDealName').focus(); return; }
+  if (!state.brandDeals) state.brandDeals = [];
+  state.brandDeals.push({ id: crypto.randomUUID(), name, colour: _newDealColour, itemIds: [] });
+  saveState();
+  closeModal('newDealModal');
+  renderDeals();
+  updateSummary();
+}
+
+function renameDeal(dealId, name) {
+  const deal = (state.brandDeals || []).find(d => d.id === dealId);
+  if (deal) { deal.name = name.trim() || deal.name; saveState(); }
+  // refresh products view deal badge without full re-render
+  refreshDealBadgesInProducts();
+  updateSummary();
+}
+
+function deleteDeal(dealId) {
+  if (!confirm('Delete this deal? Items will no longer be highlighted.')) return;
+  state.brandDeals = (state.brandDeals || []).filter(d => d.id !== dealId);
+  saveState();
+  renderDeals();
+  renderProducts();
+}
+
+function removeItemFromDeal(dealId, itemId) {
+  const deal = (state.brandDeals || []).find(d => d.id === dealId);
+  if (!deal) return;
+  deal.itemIds = (deal.itemIds || []).filter(id => id !== itemId);
+  saveState();
+  renderDeals();
+  renderProducts();
+}
+
+function refreshDealBadgesInProducts() {
+  getAllItems().forEach(m => {
+    const row = document.getElementById('smrow-' + m.id);
+    if (!row) return;
+    const deal = getDealForItem(m.id);
+    // update last cell (Brand Deal column)
+    const cells = row.querySelectorAll('td');
+    const lastCell = cells[cells.length - 1];
+    if (!lastCell) return;
+    lastCell.innerHTML = deal
+      ? `<span class="deal-badge"><span class="deal-dot" style="background:${deal.colour}"></span>${esc(deal.name)}</span>`
+      : `<span style="color:var(--text3);font-size:12px">—</span>`;
+    if (deal) {
+      row.classList.add('in-deal');
+      row.style.setProperty('--deal-colour', deal.colour);
+      row.style.background = deal.colour + '12';
+    } else {
+      row.classList.remove('in-deal');
+      row.style.removeProperty('--deal-colour');
+      row.style.background = '';
+    }
+  });
+}
+
+// ─── COLOUR PICKER ────────────────────────────────────────────────────────────
+let _colourPickerDealId = null;
+
+function openColourPicker(dealId, swatchEl) {
+  _colourPickerDealId = dealId;
+  const deal = (state.brandDeals || []).find(d => d.id === dealId);
+  const pop = document.getElementById('colourPopover');
+  pop.innerHTML = DEAL_COLOURS.map(c => `
+    <div class="colour-option${deal && deal.colour === c ? ' selected' : ''}"
+      style="background:${c}" onclick="pickColour('${c}')"></div>`).join('');
+  const rect = swatchEl.getBoundingClientRect();
+  pop.style.top = (rect.bottom + window.scrollY + 6) + 'px';
+  pop.style.left = rect.left + 'px';
+  pop.style.display = 'flex';
+}
+
+function pickColour(colour) {
+  const deal = (state.brandDeals || []).find(d => d.id === _colourPickerDealId);
+  if (!deal) return;
+  deal.colour = colour;
+  saveState();
+  document.getElementById('colourPopover').style.display = 'none';
+  renderDeals();
+  renderProducts();
+}
+
+document.addEventListener('click', e => {
+  const pop = document.getElementById('colourPopover');
+  if (pop.style.display !== 'none' && !pop.contains(e.target) && !e.target.classList.contains('deal-colour-swatch')) {
+    pop.style.display = 'none';
+  }
+});
+
+// ─── ADD ITEMS MODAL ──────────────────────────────────────────────────────────
+function openAddItemsModal(dealId) {
+  _addItemsDealId = dealId;
+  const deal = (state.brandDeals || []).find(d => d.id === dealId);
+  document.getElementById('addItemsTitle').textContent = `Add Items — ${deal ? deal.name : ''}`;
+  document.getElementById('itemPickerSearch').value = '';
+  buildItemPickerList('');
+  document.getElementById('addItemsModal').classList.add('open');
+}
+
+function buildItemPickerList(q) {
+  const deal = (state.brandDeals || []).find(d => d.id === _addItemsDealId);
+  const alreadyIn = new Set(deal ? deal.itemIds : []);
+  const items = getAllItems()
+    .filter(m => !alreadyIn.has(m.id))
+    .filter(m => !q || m.item.toLowerCase().includes(q) || (m.category||'').toLowerCase().includes(q) || (m.supplier||'').toLowerCase().includes(q))
+    .sort((a, b) => {
+      const ai = CATEGORIES.indexOf(a.category), bi = CATEGORIES.indexOf(b.category);
+      return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi) || a.item.localeCompare(b.item);
+    });
+
+  const list = document.getElementById('itemPickerList');
+  if (!items.length) {
+    list.innerHTML = '<div style="padding:16px;color:var(--text3);font-size:12px">No items to add.</div>';
+    return;
+  }
+  list.innerHTML = items.map(m => `
+    <label class="item-picker-row">
+      <input type="checkbox" value="${m.id}">
+      <span class="item-picker-name">${esc(m.item)}</span>
+      <span class="item-picker-cat">${esc(m.category)}</span>
+    </label>`).join('');
+}
+
+function filterItemPicker(q) {
+  buildItemPickerList(q.toLowerCase());
+}
+
+function confirmAddItems() {
+  const deal = (state.brandDeals || []).find(d => d.id === _addItemsDealId);
+  if (!deal) return;
+  const checked = [...document.querySelectorAll('#itemPickerList input[type="checkbox"]:checked')];
+  if (!checked.length) { closeModal('addItemsModal'); return; }
+  if (!deal.itemIds) deal.itemIds = [];
+  checked.forEach(cb => {
+    if (!deal.itemIds.includes(cb.value)) deal.itemIds.push(cb.value);
+  });
+  saveState();
+  closeModal('addItemsModal');
+  renderDeals();
+  renderProducts();
+}
+
+// ─── GIST SYNC ────────────────────────────────────────────────────────────────
+function loadGistConfig() {
+  try { return JSON.parse(localStorage.getItem('stockorder_gist_config') || '{}'); } catch(e) { return {}; }
+}
+function saveGistConfigRaw(cfg) {
+  localStorage.setItem('stockorder_gist_config', JSON.stringify(cfg));
+}
+
 function openGistModal() {
   const cfg = loadGistConfig();
   const active = cfg.activeGist || '';
@@ -589,47 +859,38 @@ function openGistModal() {
     return `
     <div class="gist-section">
       <div class="gist-section-title">${def.label} <span style="font-family:var(--mono);font-size:10px;color:var(--text3)">${def.filename}</span></div>
-      <div class="form-row">
-        <div class="form-label">Gist ID</div>
+      <div class="form-row"><div class="form-label">Gist ID</div>
         <input class="form-input" id="gid-${def.id}" type="text" placeholder="Gist ID" value="${esc(c.gistId||'')}" style="font-family:var(--mono);font-size:12px">
       </div>
-      <div class="form-row">
-        <div class="form-label">Token</div>
+      <div class="form-row"><div class="form-label">Token</div>
         <input class="form-input" id="gtoken-${def.id}" type="password" placeholder="GitHub Personal Access Token" value="${esc(c.token||'')}" style="font-family:var(--mono);font-size:12px">
       </div>
       <div class="gist-actions">
         <button id="gbtn-pull-${def.id}" class="btn btn-sm" ${disabled?'disabled':''} onclick="pullFromGist('${def.id}')">Pull</button>
         <button id="gbtn-push-${def.id}" class="btn btn-sm" ${disabled?'disabled':''} onclick="pushToGist('${def.id}')">Push</button>
-        <span id="gstatus-${def.id}" class="gist-status"></span>
+        <span id="gstatus-${def.id}" class="gist-status-txt"></span>
       </div>
     </div>`;
   }).join('');
   document.getElementById('gistModal').classList.add('open');
 }
 
-function closeGistModal() {
-  document.getElementById('gistModal').classList.remove('open');
-}
-
 function updateGistButtons() {
   const active = (document.querySelector('input[name="activeGist"]:checked') || {}).value || '';
-  const cfg = loadGistConfig();
   GIST_DEFS.forEach(def => {
-    const c = cfg[def.id] || {};
-    const gid = (document.getElementById('gid-' + def.id)||{}).value?.trim() || c.gistId;
-    const tok = (document.getElementById('gtoken-' + def.id)||{}).value?.trim() || c.token;
+    const gid = (document.getElementById('gid-' + def.id)||{}).value?.trim();
+    const tok = (document.getElementById('gtoken-' + def.id)||{}).value?.trim();
     const disabled = !gid || !tok || active !== def.id;
     ['pull','push'].forEach(a => {
       const btn = document.getElementById(`gbtn-${a}-${def.id}`);
-      if (btn) { btn.disabled = disabled; }
+      if (btn) btn.disabled = disabled;
     });
   });
 }
 
-function saveGistConfig2() {
+function saveGistSettings() {
   const cfg = loadGistConfig();
-  const activeRadio = document.querySelector('input[name="activeGist"]:checked');
-  cfg.activeGist = activeRadio ? activeRadio.value : '';
+  cfg.activeGist = (document.querySelector('input[name="activeGist"]:checked') || {}).value || '';
   GIST_DEFS.forEach(def => {
     cfg[def.id] = {
       gistId: (document.getElementById('gid-' + def.id)||{}).value?.trim() || '',
@@ -637,7 +898,7 @@ function saveGistConfig2() {
     };
   });
   saveGistConfigRaw(cfg);
-  closeGistModal();
+  closeModal('gistModal');
   setSyncStatus('Settings saved', 2000);
 }
 
@@ -651,9 +912,7 @@ async function pullFromGist(defId) {
   const statusEl = document.getElementById('gstatus-' + defId);
   statusEl.textContent = 'Pulling…';
   try {
-    const res = await fetch(`https://api.github.com/gists/${gistId}`, {
-      headers: { 'Authorization': `Bearer ${token}` }
-    });
+    const res = await fetch(`https://api.github.com/gists/${gistId}`, { headers: { 'Authorization': `Bearer ${token}` } });
     if (!res.ok) throw new Error(`GitHub API ${res.status}`);
     const data = await res.json();
     const file = data.files[def.filename];
@@ -662,11 +921,10 @@ async function pullFromGist(defId) {
     localStorage.setItem('stockorder_v2', JSON.stringify(pulled));
     state = pulled;
     statusEl.textContent = `Pulled ✓ (${(state.catalog||[]).length} items)`;
-    closeGistModal();
-    render();
+    closeModal('gistModal');
+    renderProducts();
     setSyncStatus(`Pulled from ${def.label} ✓`, 3000);
   } catch(err) {
-    console.error('Pull failed:', err);
     statusEl.textContent = 'Pull failed: ' + err.message;
   }
 }
@@ -680,26 +938,31 @@ async function pushToGist(defId) {
   const statusEl = document.getElementById('gstatus-' + defId);
   statusEl.textContent = 'Pushing…';
   try {
-    const body = JSON.stringify({
-      files: { [def.filename]: { content: JSON.stringify(state, null, 2) } }
-    });
     const res = await fetch(`https://api.github.com/gists/${gistId}`, {
       method: 'PATCH',
       headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-      body
+      body: JSON.stringify({ files: { [def.filename]: { content: JSON.stringify(state, null, 2) } } })
     });
     if (!res.ok) throw new Error(`GitHub API ${res.status}`);
-    const count = (state.catalog||[]).length;
-    statusEl.textContent = `Pushed ✓ (${count} items)`;
+    statusEl.textContent = `Pushed ✓ (${(state.catalog||[]).length} items)`;
     setSyncStatus(`Pushed to ${def.label} ✓`, 3000);
   } catch(err) {
-    console.error('Push failed:', err);
     statusEl.textContent = 'Push failed: ' + err.message;
   }
 }
 
+// ─── UTILITIES ────────────────────────────────────────────────────────────────
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+let _statusTimer = null;
+function setSyncStatus(msg, clearMs) {
+  document.getElementById('syncStatus').textContent = msg;
+  if (_statusTimer) clearTimeout(_statusTimer);
+  if (clearMs) _statusTimer = setTimeout(() => { document.getElementById('syncStatus').textContent = ''; }, clearMs);
+}
+
 // ─── INIT ─────────────────────────────────────────────────────────────────────
-render();
+renderProducts();
 </script>
 </body>
 </html>
