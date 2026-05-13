@@ -301,6 +301,65 @@
     transition: 0.12s;
   }
   .btn-clear:hover { color: #8b2e2e; border-color: #c0404040; }
+
+  /* ── DIETARY FILTER BAR ── */
+  .diet-bar {
+    position: fixed;
+    bottom: 24px;
+    left: 0;
+    right: 0;
+    z-index: 99;
+    pointer-events: none;
+    transform: translateY(calc(100% + 24px));
+    transition: transform 0.3s cubic-bezier(0.34, 1.1, 0.64, 1);
+  }
+  .diet-bar.visible { transform: translateY(0); }
+  .diet-bar-inner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    padding: 0 2rem;
+    pointer-events: none;
+  }
+  .diet-btns { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; pointer-events: auto; }
+  .diet-btn {
+    padding: 7px 16px;
+    border: none;
+    border-radius: 99px;
+    font-family: var(--sans);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    background: var(--green);
+    color: rgba(255,255,255,0.75);
+    box-shadow: 0 2px 10px rgba(0,0,0,0.25);
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .diet-btn:hover { color: #fff; box-shadow: 0 4px 16px rgba(0,0,0,0.3); transform: translateY(-1px); }
+  .diet-btn.on    { background: #fff; color: var(--green); box-shadow: 0 4px 16px rgba(0,0,0,0.22); }
+  .diet-clear {
+    font-size: 12px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.75);
+    background: rgba(0,0,0,0.35);
+    border: none;
+    cursor: pointer;
+    padding: 7px 14px;
+    border-radius: 99px;
+    flex-shrink: 0;
+    display: none;
+    pointer-events: auto;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    transition: all 0.15s;
+  }
+  .diet-clear:hover { color: #fff; }
+
+  /* ── FADED ITEM ── */
+  .item-row { transition: background 0.12s, opacity 0.2s; }
+  .item-row.faded { opacity: 0.15; }
 </style>
 </head>
 <body>
@@ -314,6 +373,19 @@
     </div>
   </div>
 </nav>
+
+<div class="diet-bar" id="diet-bar">
+  <div class="diet-bar-inner">
+    <div class="diet-btns">
+      <button class="diet-btn" onclick="toggleFilter('V',this)">Vegetarian</button>
+      <button class="diet-btn" onclick="toggleFilter('VG',this)">Vegan</button>
+      <button class="diet-btn" onclick="toggleFilter('GF',this)">Gluten Free</button>
+      <button class="diet-btn" onclick="toggleFilter('DF',this)">Dairy Free</button>
+      <button class="diet-btn" onclick="toggleFilter('NF',this)">Nut Free</button>
+    </div>
+    <button class="diet-clear" id="diet-clear" onclick="clearFilters()">✕ Clear</button>
+  </div>
+</div>
 
 <!-- Step 1: Package Picker -->
 <div id="step-picker">
@@ -394,7 +466,7 @@ function renderPicker() {
    NAVIGATE
 ══════════════════════════════ */
 function selectOption(key) {
-  if (selectedOption && selectedOption !== key) selectedItems.clear();
+  if (selectedOption && selectedOption !== key) { selectedItems.clear(); clearFilters(); }
   selectedOption = key;
   const opt = BOOKING_OPTIONS.find(o => o.key === key);
   document.getElementById('step-picker').classList.add('hidden');
@@ -408,6 +480,8 @@ function selectOption(key) {
 function goBack() {
   selectedItems.clear();
   selectedOption = null;
+  clearFilters();
+  document.getElementById('diet-bar').classList.remove('visible');
   document.getElementById('step-select').classList.add('hidden');
   document.getElementById('step-picker').classList.remove('hidden');
   document.getElementById('nav-right').classList.add('hidden');
@@ -463,6 +537,7 @@ function renderItemsPanel() {
       return `
         <div class="item-row${sel ? ' selected' : ''}" id="row-${item.id}"
              data-item-id="${item.id}" data-sub-id="${sub.id}" data-sub-name="${esc(sub.name)}"
+             data-dietaries="${esc(diets.join(','))}"
              onclick="handleRowClick(this)">
           <div class="item-check"></div>
           <div class="item-body">
@@ -484,6 +559,10 @@ function renderItemsPanel() {
   }).join('');
 
   el.innerHTML = header + subsHtml;
+
+  const hasTagged = [...document.querySelectorAll('.item-row[data-dietaries]')]
+    .some(r => r.dataset.dietaries);
+  document.getElementById('diet-bar').classList.toggle('visible', hasTagged);
 }
 
 /* ══════════════════════════════
@@ -547,6 +626,33 @@ function clearSelection() {
   selectedItems.clear();
   document.querySelectorAll('.item-row.selected').forEach(r => r.classList.remove('selected'));
   renderSummary();
+}
+
+/* ══════════════════════════════
+   DIETARY FILTERS
+══════════════════════════════ */
+const activeFilters = new Set();
+
+function toggleFilter(tag, btn) {
+  if (activeFilters.has(tag)) { activeFilters.delete(tag); btn.classList.remove('on'); }
+  else                        { activeFilters.add(tag);    btn.classList.add('on'); }
+  document.getElementById('diet-clear').style.display = activeFilters.size ? 'inline' : 'none';
+  applyFilters();
+}
+
+function clearFilters() {
+  activeFilters.clear();
+  document.querySelectorAll('.diet-btn').forEach(b => b.classList.remove('on'));
+  document.getElementById('diet-clear').style.display = 'none';
+  applyFilters();
+}
+
+function applyFilters() {
+  document.querySelectorAll('.item-row').forEach(row => {
+    if (!activeFilters.size) { row.classList.remove('faded'); return; }
+    const tags = new Set((row.dataset.dietaries || '').split(',').filter(Boolean));
+    row.classList.toggle('faded', ![...activeFilters].every(f => tags.has(f)));
+  });
 }
 
 renderPicker();
