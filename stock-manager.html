@@ -244,6 +244,9 @@
     .pr-table td { padding: 5px 6px; border-bottom: 1px solid #eee; vertical-align: middle; }
     .pr-table td.r { text-align: right; font-variant-numeric: tabular-nums; }
     .pr-cat-row td { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #333; border-top: 2px solid #333; border-bottom: 1px solid #aaa; padding: 7px 6px 4px; }
+    .pr-s-remove td { color: #cc2200; }
+    .pr-s-new td { color: #007a3d; }
+    .pr-s-order-issue td { color: #c26000; }
   }
 </style>
 </head>
@@ -1320,7 +1323,8 @@ function doPrint() {
     tableBody += `<tr class="pr-cat-row"><td colspan="8">${esc(cat)}</td></tr>`;
     items.forEach(m => {
       const gp = calcGP(m);
-      tableBody += `<tr>
+      const statusClass = { Remove: 'pr-s-remove', New: 'pr-s-new', 'Order Issue': 'pr-s-order-issue' }[m.itemStatus || ''] || '';
+      tableBody += `<tr${statusClass ? ` class="${statusClass}"` : ''}>
         <td>${esc(m.item)}</td>
         <td>${esc(m.size || '')}</td>
         <td>${esc(m.supplier || '')}</td>
