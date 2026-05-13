@@ -243,23 +243,30 @@
 
 <!-- ═══ PRODUCTS VIEW ═══ -->
 <div class="view active" id="view-products">
-  <div class="toolbar">
-    <div class="search-wrap">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      <input class="search" type="text" placeholder="Search items…" oninput="doSearch(this.value)" style="width:210px">
+  <div class="toolbar" style="flex-direction:column;align-items:stretch;gap:7px;padding-top:12px;padding-bottom:12px">
+    <div style="display:flex;align-items:center;gap:10px">
+      <div class="search-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input class="search" type="text" placeholder="Search items…" oninput="doSearch(this.value)" style="width:210px">
+      </div>
+      <div style="flex:1"></div>
+      <button class="btn btn-sm btn-primary" onclick="openAddItemModal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Add Item
+      </button>
+      <button class="btn btn-sm" onclick="autoSave()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+        Save
+      </button>
     </div>
-    <div class="chips" id="catChips">
-      <button class="chip active" data-cat="all" onclick="setCatFilter('all',this)">All</button>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span style="font-size:10px;font-weight:600;letter-spacing:0.07em;text-transform:uppercase;color:var(--text3);white-space:nowrap;min-width:84px">Brand Owner</span>
+      <div class="chips" id="brandOwnerChips"></div>
     </div>
-    <div style="flex:1"></div>
-    <button class="btn btn-sm btn-primary" onclick="openAddItemModal()">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-      Add Item
-    </button>
-    <button class="btn btn-sm" onclick="autoSave()">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-      Save
-    </button>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span style="font-size:10px;font-weight:600;letter-spacing:0.07em;text-transform:uppercase;color:var(--text3);white-space:nowrap;min-width:84px">Status</span>
+      <div class="chips" id="statusChips"></div>
+    </div>
   </div>
   <div class="summary-bar">
     <div class="stat"><div class="stat-val" id="statItems">—</div><div class="stat-lbl">Items</div></div>
@@ -414,7 +421,8 @@ const DEAL_COLOURS = [
 // ─── STATE ────────────────────────────────────────────────────────────────────
 let state = loadState();
 let searchQ = '';
-let activeCat = 'all';
+let activeBrandOwner = 'all';
+let activeStatus = 'all';
 let activeTab = 'products';
 
 // deal modal working state
@@ -524,9 +532,16 @@ function switchTab(tab) {
 // ─── SEARCH & FILTER ──────────────────────────────────────────────────────────
 function doSearch(q) { searchQ = q.toLowerCase(); applyFilters(); }
 
-function setCatFilter(cat, el) {
-  activeCat = cat;
-  document.querySelectorAll('.chip[data-cat]').forEach(c => c.classList.remove('active'));
+function setBrandOwnerFilter(val, el) {
+  activeBrandOwner = val;
+  document.querySelectorAll('.chip[data-brand-owner]').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  applyFilters();
+}
+
+function setStatusFilter(val, el) {
+  activeStatus = val;
+  document.querySelectorAll('.chip[data-status-filter]').forEach(c => c.classList.remove('active'));
   el.classList.add('active');
   applyFilters();
 }
@@ -537,7 +552,8 @@ function applyFilters() {
     if (!row) return;
     let show = true;
     if (searchQ) show = m.item.toLowerCase().includes(searchQ) || (m.supplier||'').toLowerCase().includes(searchQ) || (m.brand_owner||'').toLowerCase().includes(searchQ);
-    if (show && activeCat !== 'all') show = m.category === activeCat;
+    if (show && activeBrandOwner !== 'all') show = (m.brand_owner||'') === activeBrandOwner;
+    if (show && activeStatus !== 'all') show = (m.itemStatus||'') === activeStatus;
     row.classList.toggle('hidden-row', !show);
   });
   updateCatCounts();
@@ -609,10 +625,18 @@ function renderProducts() {
     return (CATEGORIES.indexOf(a) + 1 || 999) - (CATEGORIES.indexOf(b) + 1 || 999);
   });
 
-  const chipsEl = document.getElementById('catChips');
-  chipsEl.innerHTML = '<button class="chip active" data-cat="all" onclick="setCatFilter(\'all\',this)">All</button>';
-  cats.forEach(cat => {
-    chipsEl.innerHTML += `<button class="chip" data-cat="${esc(cat)}" onclick="setCatFilter('${cat.replace(/'/g,"\\'")}',this)">${cat}</button>`;
+  const brandOwners = [...new Set(allItems.map(m => m.brand_owner||'').filter(Boolean))].sort();
+  const boChips = document.getElementById('brandOwnerChips');
+  boChips.innerHTML = `<button class="chip${activeBrandOwner === 'all' ? ' active' : ''}" data-brand-owner="all" onclick="setBrandOwnerFilter('all',this)">All</button>`;
+  brandOwners.forEach(bo => {
+    boChips.innerHTML += `<button class="chip${activeBrandOwner === bo ? ' active' : ''}" data-brand-owner="${esc(bo)}" onclick="setBrandOwnerFilter('${bo.replace(/'/g,"\\'")}',this)">${esc(bo)}</button>`;
+  });
+
+  const STATUS_VALUES = ['Locked','New','Remove','Slow Moving','Order Issue'];
+  const stChips = document.getElementById('statusChips');
+  stChips.innerHTML = `<button class="chip${activeStatus === 'all' ? ' active' : ''}" data-status-filter="all" onclick="setStatusFilter('all',this)">All</button>`;
+  STATUS_VALUES.forEach(s => {
+    stChips.innerHTML += `<button class="chip${activeStatus === s ? ' active' : ''}" data-status-filter="${esc(s)}" onclick="setStatusFilter('${s.replace(/'/g,"\\'")}',this)">${esc(s)}</button>`;
   });
 
   const content = document.getElementById('productsContent');
