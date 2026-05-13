@@ -243,6 +243,7 @@
     .pr-table th.r { text-align: right; }
     .pr-table td { padding: 5px 6px; border-bottom: 1px solid #eee; vertical-align: middle; }
     .pr-table td.r { text-align: right; font-variant-numeric: tabular-nums; }
+    .pr-cat-row td { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #333; border-top: 2px solid #333; border-bottom: 1px solid #aaa; padding: 7px 6px 4px; }
   }
 </style>
 </head>
@@ -1310,36 +1311,39 @@ function doPrint() {
     html += `</div></div>`;
   }
 
-  // Category tables
+  // Category tables — single table so columns align across all categories
+  let tableBody = '';
   selectedCats.forEach(cat => {
     const items = allItems.filter(m => m.category === cat)
       .sort((a, b) => (a.position || 99) - (b.position || 99) || a.item.localeCompare(b.item));
     if (!items.length) return;
-    const rows = items.map(m => {
+    tableBody += `<tr class="pr-cat-row"><td colspan="8">${esc(cat)}</td></tr>`;
+    items.forEach(m => {
       const gp = calcGP(m);
-      return `<tr>
+      tableBody += `<tr>
         <td>${esc(m.item)}</td>
         <td>${esc(m.size || '')}</td>
         <td>${esc(m.supplier || '')}</td>
-        <td class="r">${m.cost ? '£' + Number(m.cost).toFixed(2) : '—'}</td>
-        <td class="r">${m.sell ? '£' + Number(m.sell).toFixed(2) : '—'}</td>
+        <td class="r">${m.cost ? '$' + Number(m.cost).toFixed(2) : '—'}</td>
+        <td class="r">${m.sell ? '$' + Number(m.sell).toFixed(2) : '—'}</td>
         <td class="r">${fmtPct(gp)}</td>
         <td>${esc(m.brand_owner || '')}</td>
         <td>${esc(m.itemStatus || '')}</td>
       </tr>`;
-    }).join('');
+    });
+  });
+  if (tableBody) {
     html += `<div class="pr-section">
-      <div class="pr-section-title">${esc(cat)}</div>
       <table class="pr-table">
         <thead><tr>
           <th>Item</th><th>Size</th><th>Supplier</th>
           <th class="r">Cost</th><th class="r">Sell</th><th class="r">GP%</th>
           <th>Brand Owner</th><th>Status</th>
         </tr></thead>
-        <tbody>${rows}</tbody>
+        <tbody>${tableBody}</tbody>
       </table>
     </div>`;
-  });
+  }
 
   document.getElementById('printArea').innerHTML = html;
   closeModal('printModal');
