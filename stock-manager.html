@@ -125,9 +125,14 @@
   .gp-low  { color: var(--red); }
   .gp-na   { color: var(--text3); }
 
-  /* DEAL BADGE (products table cell) */
-  .deal-badge { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text2); }
-  .deal-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  /* STATUS SELECT (products table cell) */
+  .status-select { background: transparent; border: 1px solid transparent; border-radius: 4px; color: var(--text3); font-family: var(--sans); font-size: 12px; padding: 3px 6px; outline: none; cursor: pointer; transition: border-color 0.15s, background 0.15s; appearance: none; -webkit-appearance: none; }
+  .status-select:hover { border-color: var(--border2); background: var(--surface); }
+  .status-select[data-status="Locked"]      { color: var(--accent); }
+  .status-select[data-status="New"]         { color: #6ab4ff; }
+  .status-select[data-status="Remove"]      { color: var(--red); }
+  .status-select[data-status="Slow Moving"] { color: var(--amber); }
+  .status-select[data-status="Order Issue"] { color: #ff9f6a; }
 
   /* DEAL PILLS (summary bar) */
   .sum-deal-pill { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 500; border: 1px solid; white-space: nowrap; }
@@ -640,7 +645,7 @@ function renderProducts() {
             <th class="r" style="width:88px">Sell</th>
             <th class="r" style="width:72px" title="Spirits: per 30ml serve. Others: per unit.">GP%</th>
             <th style="width:150px">Brand Owner</th>
-            <th style="width:160px">Brand Deal</th>
+            <th style="width:140px">Status</th>
           </tr></thead>
           <tbody id="smtbody-${key}"></tbody>
         </table>
@@ -686,9 +691,15 @@ function renderProducts() {
             oninput="this.classList.add('changed')">
         </td>
         <td>
-          ${deal
-            ? `<span class="deal-badge"><span class="deal-dot" style="background:${deal.colour}"></span>${esc(deal.name)}</span>`
-            : `<span style="color:var(--text3);font-size:12px">—</span>`}
+          <select class="status-select" data-status="${esc(m.itemStatus||'')}"
+            onchange="setItemStatus('${m.id}',this.value,this)">
+            <option value="">-</option>
+            <option value="Locked"${m.itemStatus==='Locked'?' selected':''}>Locked</option>
+            <option value="New"${m.itemStatus==='New'?' selected':''}>New</option>
+            <option value="Remove"${m.itemStatus==='Remove'?' selected':''}>Remove</option>
+            <option value="Slow Moving"${m.itemStatus==='Slow Moving'?' selected':''}>Slow Moving</option>
+            <option value="Order Issue"${m.itemStatus==='Order Issue'?' selected':''}>Order Issue</option>
+          </select>
         </td>`;
       tbody.appendChild(tr);
     });
@@ -703,6 +714,11 @@ function toggleCat(key) {
   const hidden = body.style.display === 'none';
   body.style.display = hidden ? '' : 'none';
   tog.classList.toggle('collapsed', !hidden);
+}
+
+function setItemStatus(id, value, selectEl) {
+  setField(id, 'itemStatus', value);
+  selectEl.setAttribute('data-status', value);
 }
 
 function fieldChanged(id, field, input) {
@@ -916,13 +932,6 @@ function refreshDealBadgesInProducts() {
     const row = document.getElementById('smrow-' + m.id);
     if (!row) return;
     const deal = getDealForItem(m.id);
-    // update last cell (Brand Deal column)
-    const cells = row.querySelectorAll('td');
-    const lastCell = cells[cells.length - 1];
-    if (!lastCell) return;
-    lastCell.innerHTML = deal
-      ? `<span class="deal-badge"><span class="deal-dot" style="background:${deal.colour}"></span>${esc(deal.name)}</span>`
-      : `<span style="color:var(--text3);font-size:12px">—</span>`;
     if (deal) {
       row.classList.add('in-deal');
       row.style.setProperty('--deal-colour', deal.colour);
