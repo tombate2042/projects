@@ -221,9 +221,10 @@
   /* PRINT */
   #printArea { display: none; }
   @media print {
-    * { visibility: hidden; }
+    html, body { background: white !important; }
+    * { visibility: hidden; background: transparent !important; }
     #printArea, #printArea * { visibility: visible; }
-    #printArea { display: block !important; position: absolute; top: 0; left: 0; width: 100%; padding: 24px 32px; font-family: sans-serif; color: #000; background: #fff; font-size: 12px; }
+    #printArea { display: block !important; position: absolute; top: 0; left: 0; width: 100%; padding: 24px 32px; font-family: sans-serif; color: #000; background: #fff !important; font-size: 12px; }
     .pr-title { font-size: 20px; font-weight: 700; margin-bottom: 2px; }
     .pr-date { font-size: 11px; color: #666; margin-bottom: 24px; }
     .pr-section { margin-bottom: 28px; }
