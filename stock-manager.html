@@ -319,10 +319,42 @@ function setField(id, field, value) {
 }
 
 // ─── CALCULATIONS ─────────────────────────────────────────────────────────────
-function calcGP(cost, sell) {
-  const c = parseFloat(cost), s = parseFloat(sell);
-  if (!s || !c || s <= 0) return null;
-  return (s - c) / s;
+const SPIRIT_CATS = new Set(['Vodka','Gin','Tequila & Mezcal','Rum','Scotch','Bourbon & Whiskey','Liqueurs']);
+
+function parseSizeMl(sizeStr) {
+  if (!sizeStr) return null;
+  const s = String(sizeStr).toLowerCase().trim();
+  const lm = s.match(/^([\d.]+)\s*l$/);   if (lm) return parseFloat(lm[1]) * 1000;
+  const mm = s.match(/^([\d.]+)\s*ml$/);  if (mm) return parseFloat(mm[1]);
+  const n = parseFloat(s);
+  return isNaN(n) ? null : n;
+}
+
+// Returns GP as a fraction (0–1) or null if data is missing.
+// Spirits (Vodka–Liqueurs): formula is per 30ml serve — (sell - cost/size*30) / sell
+// Everything else: standard (sell - cost) / sell
+function calcGP(m) {
+  const sell = parseFloat(m.sell), cost = parseFloat(m.cost);
+  if (!sell || !cost || sell <= 0 || cost <= 0) return null;
+  if (SPIRIT_CATS.has(m.category)) {
+    const ml = parseSizeMl(m.size);
+    if (!ml) return null;
+    const costPerServe = cost / ml * 30;
+    return (sell - costPerServe) / sell;
+  }
+  return (sell - cost) / sell;
+}
+
+// Returns the dollar GP (per serve for spirits, per unit otherwise).
+function calcGPDollar(m) {
+  const sell = parseFloat(m.sell), cost = parseFloat(m.cost);
+  if (!sell || !cost || sell <= 0 || cost <= 0) return null;
+  if (SPIRIT_CATS.has(m.category)) {
+    const ml = parseSizeMl(m.size);
+    if (!ml) return null;
+    return sell - cost / ml * 30;
+  }
+  return sell - cost;
 }
 
 function gpClass(gp) {
@@ -391,10 +423,10 @@ function catKey(cat) { return cat.replace(/\s+/g, '-').replace(/[&]/g,'n'); }
 // ─── SUMMARY ──────────────────────────────────────────────────────────────────
 function updateSummary() {
   const visible = getAllItems().filter(m => !document.getElementById('smrow-' + m.id)?.classList.contains('hidden-row'));
-  const withGP = visible.filter(m => calcGP(m.cost, m.sell) !== null);
-  const avg = withGP.length ? withGP.reduce((s, m) => s + calcGP(m.cost, m.sell), 0) / withGP.length : null;
-  const high = withGP.filter(m => calcGP(m.cost, m.sell) >= 0.6).length;
-  const low  = withGP.filter(m => calcGP(m.cost, m.sell) < 0.4).length;
+  const withGP = visible.filter(m => calcGP(m) !== null);
+  const avg = withGP.length ? withGP.reduce((s, m) => s + calcGP(m), 0) / withGP.length : null;
+  const high = withGP.filter(m => calcGP(m) >= 0.6).length;
+  const low  = withGP.filter(m => calcGP(m) < 0.4).length;
   const deals = visible.filter(m => m.brand_deals && String(m.brand_deals).trim()).length;
   document.getElementById('statItems').textContent = visible.length;
   document.getElementById('statAvgGP').textContent = avg !== null ? fmtPct(avg) : '—';
@@ -448,8 +480,7 @@ function render() {
               <th style="width:100px">Supplier</th>
               <th class="r" style="width:90px">Cost</th>
               <th class="r" style="width:90px">Sell</th>
-              <th class="r" style="width:75px">GP$</th>
-              <th class="r" style="width:75px">GP%</th>
+              <th class="r" style="width:75px" title="Per serve for spirits (30ml), per unit otherwise">GP%</th>
               <th style="width:150px">Brand Owner</th>
               <th style="width:240px">Brand Deals</th>
             </tr>
@@ -461,8 +492,7 @@ function render() {
 
     const tbody = document.getElementById('smtbody-' + key);
     items.forEach(m => {
-      const gp = calcGP(m.cost, m.sell);
-      const gpDollar = (m.sell && m.cost) ? (parseFloat(m.sell) - parseFloat(m.cost)) : null;
+      const gp = calcGP(m);
       const cls = gpClass(gp);
       const tr = document.createElement('tr');
       tr.id = 'smrow-' + m.id;
@@ -486,9 +516,6 @@ function render() {
             placeholder="—"
             onchange="fieldChanged('${m.id}','sell',this)"
             oninput="this.classList.add('changed')">
-        </td>
-        <td class="mono ${cls}" style="text-align:right;font-size:13px" id="gpd-${m.id}">
-          ${gpDollar !== null ? fmtMoney(gpDollar) : '—'}
         </td>
         <td class="mono ${cls}" style="text-align:right;font-size:13px;font-weight:500" id="gpp-${m.id}">
           ${fmtPct(gp)}
@@ -534,12 +561,9 @@ function fieldChanged(id, field, input) {
   if (field === 'cost' || field === 'sell') {
     const m = getAllItems().find(x => x.id === id);
     if (m) {
-      const gp = calcGP(m.cost, m.sell);
-      const gpDollar = (m.sell && m.cost) ? (parseFloat(m.sell) - parseFloat(m.cost)) : null;
+      const gp = calcGP(m);
       const cls = gpClass(gp);
-      const gpdEl = document.getElementById('gpd-' + id);
       const gppEl = document.getElementById('gpp-' + id);
-      if (gpdEl) { gpdEl.textContent = gpDollar !== null ? fmtMoney(gpDollar) : '—'; gpdEl.className = `mono ${cls}`; gpdEl.style.textAlign = 'right'; gpdEl.style.fontSize = '13px'; }
       if (gppEl) { gppEl.textContent = fmtPct(gp); gppEl.className = `mono ${cls}`; gppEl.style.textAlign = 'right'; gppEl.style.fontSize = '13px'; gppEl.style.fontWeight = '500'; }
       updateSummary();
     }
