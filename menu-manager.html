@@ -1071,9 +1071,10 @@ async function pullFromGist() {
       const content = json.files?.['vmm_data.json']?.content;
       if (content) {
         data = JSON.parse(content);
-        if (!data.venue.spaces)   data.venue.spaces   = [];
-        if (!data.venue.packages) data.venue.packages = [];
-        if (!data.venue.contact)  data.venue.contact  = {};
+        if (!data.venue.spaces)    data.venue.spaces    = [];
+        if (!data.venue.packages)  data.venue.packages  = [];
+        if (!data.venue.contact)   data.venue.contact   = {};
+        if (!data.bookingOptions)  data.bookingOptions  = {};
         localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
         renderAll();
         updateSyncStatus('ok'); logSync('Pulled successfully');
