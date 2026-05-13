@@ -247,6 +247,10 @@
       <button class="chip active" data-cat="all" onclick="setCatFilter('all',this)">All</button>
     </div>
     <div style="flex:1"></div>
+    <button class="btn btn-sm btn-primary" onclick="openAddItemModal()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Add Item
+    </button>
     <button class="btn btn-sm" onclick="autoSave()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
       Save
@@ -327,6 +331,54 @@
     <div class="modal-actions">
       <button class="btn" onclick="closeModal('addItemsModal')">Cancel</button>
       <button class="btn btn-primary" onclick="confirmAddItems()">Add Selected</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ ADD ITEM MODAL ═══ -->
+<div class="modal-overlay" id="addItemModal">
+  <div class="modal" style="max-height:unset">
+    <h3>Add Item</h3>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 16px">
+      <div class="form-row" style="grid-column:1/-1">
+        <div class="form-label">Item Name</div>
+        <input class="form-input" id="ai-name" type="text" placeholder="e.g. Grey Goose">
+      </div>
+      <div class="form-row">
+        <div class="form-label">Category</div>
+        <select class="form-input" id="ai-category"></select>
+      </div>
+      <div class="form-row">
+        <div class="form-label">Size</div>
+        <input class="form-input" id="ai-size" type="text" placeholder="e.g. 700ml">
+      </div>
+      <div class="form-row">
+        <div class="form-label">Supplier</div>
+        <input class="form-input" id="ai-supplier" type="text" placeholder="e.g. ILG">
+      </div>
+      <div class="form-row">
+        <div class="form-label">Brand Owner</div>
+        <input class="form-input" id="ai-brand-owner" type="text" placeholder="e.g. Diageo">
+      </div>
+      <div class="form-row">
+        <div class="form-label">Cost</div>
+        <input class="form-input" id="ai-cost" type="number" step="0.01" min="0" placeholder="0.00">
+      </div>
+      <div class="form-row">
+        <div class="form-label">Sell</div>
+        <input class="form-input" id="ai-sell" type="number" step="0.01" min="0" placeholder="0.00">
+      </div>
+    </div>
+    <div style="margin-top:4px;padding:10px 12px;background:var(--surface2);border-radius:6px;border:1px solid var(--border)">
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px">
+        <input type="checkbox" id="ai-include-orders" style="accent-color:var(--accent);width:14px;height:14px">
+        Include in orders
+      </label>
+      <div style="font-size:11px;color:var(--text3);margin-top:4px;margin-left:22px">Off by default — turn on to show this item in orders.html</div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('addItemModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveNewItem()">Add Item</button>
     </div>
   </div>
 </div>
@@ -1077,6 +1129,49 @@ async function pushToGist(defId) {
   } catch(err) {
     statusEl.textContent = 'Push failed: ' + err.message;
   }
+}
+
+// ─── ADD ITEM ─────────────────────────────────────────────────────────────────
+function openAddItemModal() {
+  document.getElementById('ai-name').value = '';
+  document.getElementById('ai-size').value = '';
+  document.getElementById('ai-supplier').value = '';
+  document.getElementById('ai-brand-owner').value = '';
+  document.getElementById('ai-cost').value = '';
+  document.getElementById('ai-sell').value = '';
+  document.getElementById('ai-include-orders').checked = false;
+  const sel = document.getElementById('ai-category');
+  sel.innerHTML = CATEGORIES.map(c => `<option value="${esc(c)}">${c}</option>`).join('');
+  document.getElementById('addItemModal').classList.add('open');
+  setTimeout(() => document.getElementById('ai-name').focus(), 50);
+}
+
+function saveNewItem() {
+  const name = document.getElementById('ai-name').value.trim();
+  if (!name) { document.getElementById('ai-name').focus(); return; }
+  const id = crypto.randomUUID();
+  const item = {
+    id,
+    item:             name,
+    category:         document.getElementById('ai-category').value,
+    size:             document.getElementById('ai-size').value.trim(),
+    supplier:         document.getElementById('ai-supplier').value.trim(),
+    brand_owner:      document.getElementById('ai-brand-owner').value.trim(),
+    cost:             parseFloat(document.getElementById('ai-cost').value) || 0,
+    sell:             parseFloat(document.getElementById('ai-sell').value) || 0,
+    excludeFromOrders: !document.getElementById('ai-include-orders').checked,
+    case:     1,
+    baseline: 0,
+    position: 99,
+    risk_tier: 'normal',
+  };
+  if (!state.catalog) state.catalog = [];
+  if (!state.items) state.items = {};
+  state.catalog.push(item);
+  state.items[id] = { count:0, ordered:0, count_prev:0, used_0:0, used_1:0, used_2:0, used_3:0, received:0 };
+  saveState();
+  closeModal('addItemModal');
+  renderProducts();
 }
 
 // ─── UTILITIES ────────────────────────────────────────────────────────────────

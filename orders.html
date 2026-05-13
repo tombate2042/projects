@@ -683,7 +683,7 @@ function searchItems(q) {
 }
 
 function applyFilters() {
-  getAllItems().forEach(m => {
+  getOrderItems().forEach(m => {
     const item = getItem(m.id);
     const row = document.getElementById('row-' + m.id);
     if (!row) return;
@@ -699,7 +699,7 @@ function applyFilters() {
 }
 
 function updateCategoryCounts() {
-  const allItems = getAllItems();
+  const allItems = getOrderItems();
   const cats = [...new Set(allItems.map(m => m.category))];
   cats.forEach(cat => {
     const key = cat.replace(/\s+/g, '-');
@@ -754,7 +754,7 @@ const SUPPLIER_DELIVERY = {
 };
 
 function renderSupplierFilters() {
-  const existing = new Set(getAllItems().map(m => m.supplier).filter(Boolean));
+  const existing = new Set(getOrderItems().map(m => m.supplier).filter(Boolean));
   const suppliers = [...existing].sort((a, b) => {
     const ai = SUPPLIER_ORDER.indexOf(a); const bi = SUPPLIER_ORDER.indexOf(b);
     return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
@@ -765,7 +765,7 @@ function renderSupplierFilters() {
 }
 
 function renderCategories() {
-  const allItems = getAllItems();
+  const allItems = getOrderItems();
   const cats = [...new Set(allItems.map(m => m.category))].sort((a, b) => {
     const ai = CATEGORIES.indexOf(a); const bi = CATEGORIES.indexOf(b);
     return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
@@ -896,7 +896,7 @@ function updateField(id, field, value, input) {
 
 function updateStats() {
   let items = 0, cost = 0;
-  getAllItems().forEach(m => {
+  getOrderItems().forEach(m => {
     const item = getItem(m.id);
     const qty = Number(item.ordered) || 0;
     if (qty > 0) { items++; cost += qty * m.cost; }
@@ -908,7 +908,7 @@ function updateStats() {
 // ─── WEEK ADVANCE ─────────────────────────────────────────────────────────────
 function showAdvanceModal() {
   let orderedCount = 0, totalCost = 0;
-  getAllItems().forEach(m => {
+  getOrderItems().forEach(m => {
     const item = getItem(m.id);
     const qty = Number(item.ordered) || 0;
     if (qty > 0) { orderedCount++; totalCost += qty * m.cost; }
@@ -929,7 +929,7 @@ function closeModal(id) {
 
 async function advanceWeek() {
   // Shift week: ordered→received, used_0→used_1→used_2→used_3, count stays
-  getAllItems().forEach(m => {
+  getOrderItems().forEach(m => {
     const item = state.items[m.id];
     const prevCount = Number(item.count_prev) || 0;
     const received = Number(item.ordered) || 0;
@@ -1186,7 +1186,7 @@ async function syncToGist(def, token, data) {
 // ─── PDF EXPORT ──────────────────────────────────────────────────────────────
 function exportPDF() {
   // Build a clean print view
-  const orderedItems = getAllItems().filter(m => (Number(state.items[m.id]?.ordered) || 0) > 0)
+  const orderedItems = getOrderItems().filter(m => (Number(state.items[m.id]?.ordered) || 0) > 0)
     .sort((a, b) => {
       const ai = CATEGORIES.indexOf(a.category); const bi = CATEGORIES.indexOf(b.category);
       return ((ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi)) || a.position - b.position;
@@ -1274,7 +1274,7 @@ function exportPDF() {
 }
 
 function generateSupplierChecklist() {
-  const existing = new Set(getAllItems().map(m => m.supplier).filter(Boolean));
+  const existing = new Set(getOrderItems().map(m => m.supplier).filter(Boolean));
   const suppliers = [...existing].sort((a, b) => {
     const ai = SUPPLIER_ORDER.indexOf(a); const bi = SUPPLIER_ORDER.indexOf(b);
     return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
@@ -1289,7 +1289,7 @@ function generateSupplierChecklist() {
   weekEnd.setDate(weekEnd.getDate() + 6);
   const dateStr = weekEnd.toLocaleDateString('en-AU', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
-  const allItems = getAllItems();
+  const allItems = getOrderItems();
   const rows = suppliers.map(s => {
     const hasOrder = allItems.some(m => m.supplier === s && Number(state.items[m.id]?.ordered) > 0);
     const delivery = SUPPLIER_DELIVERY[s] || '';
@@ -1364,6 +1364,10 @@ function getAllItems() {
   return [...base, ...added];
 }
 
+function getOrderItems() {
+  return getAllItems().filter(m => !m.excludeFromOrders);
+}
+
 // ─── TOP BAR ─────────────────────────────────────────────────────────────────
 function toggleTopBar() {
   document.getElementById('topBar').classList.toggle('minimised');
@@ -1392,7 +1396,7 @@ function switchView(view, tab) {
 // state.venues is now state.venues (editable per venue)
 
 function renderCount() {
-  const allItems = getAllItems().sort((a, b) => {
+  const allItems = getOrderItems().sort((a, b) => {
     const ai = CATEGORIES.indexOf(a.category); const bi = CATEGORIES.indexOf(b.category);
     return ((ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi)) || a.position - b.position || a.item.localeCompare(b.item);
   });
@@ -1446,7 +1450,7 @@ function renderCount() {
 }
 
 function printCountSheet() {
-  const allItems = getAllItems().sort((a, b) => {
+  const allItems = getOrderItems().sort((a, b) => {
     const ai = CATEGORIES.indexOf(a.category); const bi = CATEGORIES.indexOf(b.category);
     return ((ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi)) || a.position - b.position || a.item.localeCompare(b.item);
   });
@@ -1552,7 +1556,7 @@ function updateVenueCount(id, venueIdx, value) {
 }
 
 function renderStock() {
-  const items = getAllItems().sort((a, b) => {
+  const items = getOrderItems().sort((a, b) => {
     const ai = CATEGORIES.indexOf(a.category); const bi = CATEGORIES.indexOf(b.category);
     return ((ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi)) || a.item.localeCompare(b.item);
   });
@@ -1710,6 +1714,7 @@ function renderPM() {
             <th style="text-align:center">Risk Tier</th>
             <th style="text-align:center">Cost</th>
             <th style="text-align:center">Sell</th>
+            <th style="text-align:center;width:80px">In Orders</th>
             <th></th>
           </tr></thead>
           <tbody id="pmtbody-${key}"></tbody>
@@ -1746,6 +1751,11 @@ function renderPM() {
         </select></td>
         <td style="text-align:center"><input class="pm-input narrow" style="text-align:center" type="number" step="0.01" min="0" value="${item.cost||''}" placeholder="—" onchange="updateProduct('${item.id}','cost',+this.value)"></td>
         <td style="text-align:center"><input class="pm-input narrow" style="text-align:center" type="number" step="0.01" min="0" value="${item.sell||''}" placeholder="—" onchange="updateProduct('${item.id}','sell',+this.value)"></td>
+        <td style="text-align:center">
+          <button class="btn btn-icon${item.excludeFromOrders ? '' : ' btn-disc on'}" title="${item.excludeFromOrders ? 'Excluded from orders — click to include' : 'In orders — click to exclude'}" onclick="toggleOrderFlag('${item.id}')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><polyline points="20 6 9 17 4 12"/></svg>
+          </button>
+        </td>
         <td style="display:flex;gap:4px;align-items:center;padding-top:6px">
           <button class="btn btn-icon btn-disc ${item.discontinued ? 'on' : ''}" title="${item.discontinued ? 'Mark as active' : 'Do not order'}" onclick="toggleDiscontinued('${item.id}')">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
@@ -1817,6 +1827,13 @@ function toggleDiscontinued(id) {
   const item = getAllItems().find(i => i.id === id);
   if (!item) return;
   updateProduct(id, 'discontinued', !item.discontinued);
+  renderPM();
+}
+
+function toggleOrderFlag(id) {
+  const item = getAllItems().find(i => i.id === id);
+  if (!item) return;
+  updateProduct(id, 'excludeFromOrders', !item.excludeFromOrders);
   renderPM();
 }
 
