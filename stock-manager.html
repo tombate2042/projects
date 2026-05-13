@@ -103,14 +103,13 @@
   tbody tr { border-bottom: 1px solid rgba(255,255,255,0.04); transition: background 0.1s; }
   tbody tr:hover { background: rgba(255,255,255,0.02); }
   tbody td { padding: 7px 10px; vertical-align: middle; }
-  tbody td:first-child { padding-left: 0; }
+  tbody td:first-child { padding-left: 24px; }
   .item-name { font-size: 13px; font-weight: 500; }
   .item-sub { font-size: 11px; color: var(--text3); margin-top: 1px; }
   .mono { font-family: var(--mono); }
 
   /* DEAL ROW HIGHLIGHT */
-  tbody tr.in-deal td:first-child { border-left: 3px solid var(--deal-colour, #888); }
-  tbody tr.in-deal td:first-child { padding-left: 21px; }
+  tbody tr.in-deal td:first-child { border-left: 3px solid var(--deal-colour, #888); padding-left: 21px; }
 
   /* INLINE INPUTS */
   .cell-input { background: transparent; border: 1px solid transparent; border-radius: 4px; color: var(--text); font-family: var(--sans); font-size: 13px; padding: 3px 6px; outline: none; transition: border-color 0.15s, background 0.15s; }
@@ -134,18 +133,37 @@
   .deals-toolbar { padding: 14px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
   .deals-grid { padding: 24px; display: flex; flex-direction: column; gap: 16px; }
   .deal-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+
+  /* STATS BUBBLE */
+  .deal-stats-bar { display: flex; align-items: center; gap: 8px; padding: 10px 16px; border-bottom: 1px solid var(--border); background: rgba(255,255,255,0.02); flex-wrap: wrap; }
+  .stat-pill { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; border: 1px solid; }
+  .stat-pill-locked { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.1); color: var(--text2); }
+  .stat-pill-met    { background: rgba(106,223,153,0.12); border-color: rgba(106,223,153,0.3); color: var(--green); }
+  .stat-pill-unmet  { background: rgba(255,107,107,0.10); border-color: rgba(255,107,107,0.3); color: var(--red); }
+  .stat-pill-neutral{ background: rgba(255,193,74,0.10);  border-color: rgba(255,193,74,0.3);  color: var(--amber); }
+  .req-input { background: var(--surface2); border: 1px solid var(--border); border-radius: 4px; color: var(--text); font-family: var(--mono); font-size: 12px; width: 46px; padding: 2px 6px; outline: none; text-align: center; margin-left: 2px; }
+  .req-input:focus { border-color: var(--accent); }
+  .req-label { font-size: 11px; color: var(--text3); margin-left: 4px; }
+
   .deal-card-header { display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-bottom: 1px solid var(--border); }
   .deal-colour-swatch { width: 20px; height: 20px; border-radius: 4px; cursor: pointer; flex-shrink: 0; border: 2px solid rgba(255,255,255,0.1); transition: border-color 0.15s; }
   .deal-colour-swatch:hover { border-color: rgba(255,255,255,0.3); }
   .deal-name-input { background: transparent; border: none; color: var(--text); font-family: var(--sans); font-size: 14px; font-weight: 600; outline: none; flex: 1; }
   .deal-name-input:focus { background: var(--surface2); border-radius: 4px; padding: 2px 6px; }
   .deal-items-table { width: 100%; border-collapse: collapse; }
-  .deal-items-table td { padding: 8px 16px; border-bottom: 1px solid rgba(255,255,255,0.04); font-size: 13px; }
+  .deal-items-table td { padding: 7px 16px; border-bottom: 1px solid rgba(255,255,255,0.04); font-size: 13px; vertical-align: middle; }
   .deal-items-table tr:last-child td { border-bottom: none; }
   .deal-items-table .item-cat { font-size: 11px; color: var(--text3); }
+  .deal-items-table tr.is-locked { background: rgba(255,255,255,0.025); }
   .deal-empty { padding: 16px; color: var(--text3); font-size: 12px; }
-  .deal-footer { padding: 10px 16px; border-top: 1px solid var(--border); display: flex; gap: 8px; }
+  .deal-footer { padding: 10px 16px; border-top: 1px solid var(--border); display: flex; gap: 8px; align-items: center; }
   .no-deals-msg { padding: 48px 24px; text-align: center; color: var(--text3); font-size: 13px; }
+
+  /* LOCK BUTTON */
+  .lock-btn { background: none; border: 1px solid transparent; border-radius: 4px; padding: 3px 5px; cursor: pointer; color: var(--text3); transition: all 0.15s; line-height: 1; }
+  .lock-btn:hover { border-color: var(--border2); color: var(--text2); }
+  .lock-btn.locked { color: var(--accent); border-color: rgba(200,245,106,0.3); background: var(--accent-dim); }
+  .locked-label { font-size: 10px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--accent); margin-right: 4px; }
 
   /* COLOUR PICKER POPOVER */
   .colour-popover { position: absolute; background: var(--surface2); border: 1px solid var(--border2); border-radius: 8px; padding: 10px; display: flex; gap: 8px; flex-wrap: wrap; width: 168px; z-index: 300; box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
@@ -620,6 +638,15 @@ function fieldChanged(id, field, input) {
 }
 
 // ─── BRAND DEALS RENDER ───────────────────────────────────────────────────────
+function dealStats(deal) {
+  const locked   = (deal.lockedItemIds || []).length;
+  const variable = (deal.itemIds || []).filter(id => !(deal.lockedItemIds || []).includes(id)).length;
+  const required = deal.requiredCount || 0;
+  const variableMet = required > 0 && variable >= required;
+  const variableShort = required > 0 && variable < required;
+  return { locked, variable, required, variableMet, variableShort };
+}
+
 function renderDeals() {
   const content = document.getElementById('dealsContent');
   const deals = state.brandDeals || [];
@@ -635,25 +662,72 @@ function renderDeals() {
   grid.className = 'deals-grid';
 
   deals.forEach(deal => {
-    const dealItems = allItems.filter(m => (deal.itemIds || []).includes(m.id));
+    const lockedIds  = new Set(deal.lockedItemIds || []);
+    const dealItems  = allItems.filter(m => (deal.itemIds || []).includes(m.id))
+      .sort((a, b) => {
+        // locked items first
+        const al = lockedIds.has(a.id), bl = lockedIds.has(b.id);
+        if (al !== bl) return al ? -1 : 1;
+        return a.item.localeCompare(b.item);
+      });
+    const st = dealStats(deal);
     const card = document.createElement('div');
     card.className = 'deal-card';
     card.style.borderLeft = `3px solid ${deal.colour}`;
 
+    // ── stats bubble ──
+    const lockedPill = `
+      <span class="stat-pill stat-pill-locked">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="11" height="11"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        ${st.locked} locked
+      </span>`;
+
+    let variablePill = '';
+    if (st.required > 0) {
+      const pillClass = st.variableMet ? 'stat-pill-met' : 'stat-pill-unmet';
+      const icon = st.variableMet
+        ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="11" height="11"><polyline points="20 6 9 17 4 12"/></svg>`
+        : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="11" height="11"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
+      variablePill = `<span class="stat-pill ${pillClass}">${icon} ${st.variable} / ${st.required} variable</span>`;
+    } else {
+      variablePill = `<span class="stat-pill stat-pill-neutral">${st.variable} variable</span>`;
+    }
+
+    const reqEditor = `
+      <span class="req-label">Required variable:</span>
+      <input class="req-input" type="number" min="0" value="${st.required}"
+        onchange="setRequiredCount('${deal.id}',this.value)" title="How many variable items are required">`;
+
+    // ── item rows ──
     const itemRows = dealItems.length
-      ? dealItems.map(m => `
-        <tr>
-          <td style="padding-left:16px">
-            <div style="font-size:13px;font-weight:500">${esc(m.item)}</div>
-            <div class="item-cat">${esc(m.category)}${m.supplier ? ' · ' + esc(m.supplier) : ''}</div>
-          </td>
-          <td style="text-align:right;padding-right:8px">
-            <button class="btn btn-sm btn-danger" onclick="removeItemFromDeal('${deal.id}','${m.id}')">Remove</button>
-          </td>
-        </tr>`).join('')
-      : `<tr><td colspan="2" class="deal-empty">No items in this deal yet.</td></tr>`;
+      ? dealItems.map(m => {
+          const isLocked = lockedIds.has(m.id);
+          return `
+          <tr class="${isLocked ? 'is-locked' : ''}">
+            <td style="width:28px;padding-right:4px">
+              <button class="lock-btn${isLocked ? ' locked' : ''}" title="${isLocked ? 'Locked — click to make variable' : 'Variable — click to lock'}"
+                onclick="toggleLockItem('${deal.id}','${m.id}')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13">
+                  ${isLocked
+                    ? `<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>`
+                    : `<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/>`}
+                </svg>
+              </button>
+            </td>
+            <td>
+              ${isLocked ? '<span class="locked-label">Locked</span>' : ''}
+              <span style="font-weight:500">${esc(m.item)}</span>
+              <div class="item-cat">${esc(m.category)}${m.supplier ? ' · ' + esc(m.supplier) : ''}</div>
+            </td>
+            <td style="text-align:right;padding-right:8px;white-space:nowrap">
+              <button class="btn btn-sm btn-danger" onclick="removeItemFromDeal('${deal.id}','${m.id}')">Remove</button>
+            </td>
+          </tr>`;
+        }).join('')
+      : `<tr><td colspan="3" class="deal-empty">No items in this deal yet.</td></tr>`;
 
     card.innerHTML = `
+      <div class="deal-stats-bar">${lockedPill}${variablePill}<span style="flex:1"></span>${reqEditor}</div>
       <div class="deal-card-header">
         <div class="deal-colour-swatch" id="swatch-${deal.id}" style="background:${deal.colour}" onclick="openColourPicker('${deal.id}',this)" title="Change colour"></div>
         <input class="deal-name-input" type="text" value="${esc(deal.name)}" placeholder="Deal name"
@@ -699,7 +773,7 @@ function createDeal() {
   const name = document.getElementById('newDealName').value.trim();
   if (!name) { document.getElementById('newDealName').focus(); return; }
   if (!state.brandDeals) state.brandDeals = [];
-  state.brandDeals.push({ id: crypto.randomUUID(), name, colour: _newDealColour, itemIds: [] });
+  state.brandDeals.push({ id: crypto.randomUUID(), name, colour: _newDealColour, itemIds: [], lockedItemIds: [], requiredCount: 0 });
   saveState();
   closeModal('newDealModal');
   renderDeals();
@@ -726,9 +800,31 @@ function removeItemFromDeal(dealId, itemId) {
   const deal = (state.brandDeals || []).find(d => d.id === dealId);
   if (!deal) return;
   deal.itemIds = (deal.itemIds || []).filter(id => id !== itemId);
+  deal.lockedItemIds = (deal.lockedItemIds || []).filter(id => id !== itemId);
   saveState();
   renderDeals();
   renderProducts();
+}
+
+function toggleLockItem(dealId, itemId) {
+  const deal = (state.brandDeals || []).find(d => d.id === dealId);
+  if (!deal) return;
+  if (!deal.lockedItemIds) deal.lockedItemIds = [];
+  if (deal.lockedItemIds.includes(itemId)) {
+    deal.lockedItemIds = deal.lockedItemIds.filter(id => id !== itemId);
+  } else {
+    deal.lockedItemIds.push(itemId);
+  }
+  saveState();
+  renderDeals();
+}
+
+function setRequiredCount(dealId, value) {
+  const deal = (state.brandDeals || []).find(d => d.id === dealId);
+  if (!deal) return;
+  deal.requiredCount = Math.max(0, parseInt(value) || 0);
+  saveState();
+  renderDeals();
 }
 
 function refreshDealBadgesInProducts() {
