@@ -218,6 +218,27 @@
   .hidden-row { display: none; }
   .no-items-msg { padding: 32px 24px; color: var(--text3); font-size: 13px; }
 
+  /* BAR STOCK TAB */
+  .bars-layout { display: grid; grid-template-columns: 220px 1fr; min-height: calc(100vh - 90px); }
+  .bars-sidebar { background: var(--surface); border-right: 1px solid var(--border); padding: 12px; display: flex; flex-direction: column; gap: 4px; }
+  .bars-sidebar-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+  .bars-sidebar-label { font-size: 10px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text3); }
+  .bar-btn { width: 100%; padding: 8px 11px; background: none; border: 1px solid transparent; border-radius: 5px; font-size: 13px; font-weight: 500; text-align: left; cursor: pointer; color: var(--text2); font-family: var(--sans); transition: 0.12s; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .bar-btn:hover  { background: var(--surface2); border-color: var(--border); }
+  .bar-btn.active { background: var(--accent-dim2); border-color: rgba(200,245,106,0.4); color: var(--accent); }
+  .bars-main { padding: 1.5rem; }
+  .bar-title-row { display: flex; align-items: center; gap: 12px; margin-bottom: 1.5rem; }
+  .bar-name-input { flex: 1; background: transparent; border: none; border-bottom: 2px solid var(--border); color: var(--text); font-family: var(--sans); font-size: 20px; font-weight: 600; padding: 4px 0; outline: none; transition: border-color 0.15s; }
+  .bar-name-input:focus { border-bottom-color: var(--accent); }
+  .bar-items-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin-bottom: 12px; }
+  .bar-items-table { width: 100%; border-collapse: collapse; }
+  .bar-items-table thead th { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text3); background: var(--surface2); border-bottom: 1px solid var(--border); padding: 8px 12px; text-align: left; white-space: nowrap; }
+  .bar-items-table tbody tr { border-bottom: 1px solid rgba(255,255,255,0.04); transition: background 0.1s; }
+  .bar-items-table tbody tr:last-child { border-bottom: none; }
+  .bar-items-table tbody tr:hover { background: rgba(255,255,255,0.03); }
+  .bar-items-table tbody td { padding: 8px 12px; font-size: 13px; vertical-align: middle; }
+  .bar-items-empty { padding: 32px 12px; color: var(--text3); font-size: 13px; text-align: center; }
+
   /* PRINT */
   #printArea { display: none; }
   @media print {
@@ -272,6 +293,7 @@
   <div class="nav-tabs">
     <button class="nav-tab active" id="tab-products" onclick="switchTab('products')">Products</button>
     <button class="nav-tab" id="tab-deals" onclick="switchTab('deals')">Brand Deals <span id="dealsBadge" style="display:none;font-size:10px;background:var(--accent-dim2);color:var(--accent);border-radius:10px;padding:1px 6px;margin-left:4px"></span></button>
+    <button class="nav-tab" id="tab-bars" onclick="switchTab('bars')">Bar Stock</button>
   </div>
 </div>
 
@@ -326,6 +348,22 @@
     </button>
   </div>
   <div id="dealsContent"></div>
+</div>
+
+<!-- ═══ BAR STOCK VIEW ═══ -->
+<div class="view" id="view-bars">
+  <div class="bars-layout">
+    <div class="bars-sidebar">
+      <div class="bars-sidebar-head">
+        <span class="bars-sidebar-label">Bars</span>
+        <button class="btn btn-sm btn-primary" onclick="addBar()">+ New</button>
+      </div>
+      <div id="bar-list"></div>
+    </div>
+    <div class="bars-main" id="bars-main">
+      <div style="text-align:center;padding:4rem 2rem;color:var(--text3);font-size:13px">No bars yet. Click <strong style="color:var(--text2)">+ New</strong> to add a bar.</div>
+    </div>
+  </div>
 </div>
 
 <!-- ═══ GIST MODAL ═══ -->
@@ -495,8 +533,10 @@ let activeBrandOwner = 'all';
 let activeStatus = 'all';
 let activeTab = 'products';
 
-// deal modal working state
+// item picker working state
+let _pickerMode    = 'deal'; // 'deal' | 'bar'
 let _addItemsDealId = null;
+let _addItemsBarId  = null;
 
 function loadState() {
   try {
@@ -512,6 +552,7 @@ function normalise(s) {
   if (!s.catalog || !Array.isArray(s.catalog)) s.catalog = [];
   if (!s.productOverrides) s.productOverrides = {};
   if (!s.brandDeals || !Array.isArray(s.brandDeals)) s.brandDeals = [];
+  if (!s.barLocations || !Array.isArray(s.barLocations)) s.barLocations = [];
   return s;
 }
 
@@ -597,6 +638,7 @@ function switchTab(tab) {
   document.getElementById('view-' + tab).classList.add('active');
   document.getElementById('tab-' + tab).classList.add('active');
   if (tab === 'deals') renderDeals();
+  if (tab === 'bars')  renderBars();
 }
 
 // ─── SEARCH & FILTER ──────────────────────────────────────────────────────────
@@ -1062,6 +1104,7 @@ document.addEventListener('click', e => {
 
 // ─── ADD ITEMS MODAL ──────────────────────────────────────────────────────────
 function openAddItemsModal(dealId) {
+  _pickerMode = 'deal';
   _addItemsDealId = dealId;
   const deal = (state.brandDeals || []).find(d => d.id === dealId);
   document.getElementById('addItemsTitle').textContent = `Add Items — ${deal ? deal.name : ''}`;
@@ -1071,8 +1114,14 @@ function openAddItemsModal(dealId) {
 }
 
 function buildItemPickerList(q) {
-  const deal = (state.brandDeals || []).find(d => d.id === _addItemsDealId);
-  const alreadyIn = new Set(deal ? deal.itemIds : []);
+  let alreadyIn;
+  if (_pickerMode === 'bar') {
+    const bar = (state.barLocations || []).find(b => b.id === _addItemsBarId);
+    alreadyIn = new Set(bar ? (bar.itemIds || []) : []);
+  } else {
+    const deal = (state.brandDeals || []).find(d => d.id === _addItemsDealId);
+    alreadyIn = new Set(deal ? deal.itemIds : []);
+  }
   const items = getAllItems()
     .filter(m => !alreadyIn.has(m.id))
     .filter(m => !q || m.item.toLowerCase().includes(q) || (m.category||'').toLowerCase().includes(q) || (m.supplier||'').toLowerCase().includes(q))
@@ -1099,9 +1148,20 @@ function filterItemPicker(q) {
 }
 
 function confirmAddItems() {
+  const checked = [...document.querySelectorAll('#itemPickerList input[type="checkbox"]:checked')];
+  if (_pickerMode === 'bar') {
+    const bar = (state.barLocations || []).find(b => b.id === _addItemsBarId);
+    if (!bar) return;
+    if (!checked.length) { closeModal('addItemsModal'); return; }
+    if (!bar.itemIds) bar.itemIds = [];
+    checked.forEach(cb => { if (!bar.itemIds.includes(cb.value)) bar.itemIds.push(cb.value); });
+    saveState();
+    closeModal('addItemsModal');
+    renderBarMain();
+    return;
+  }
   const deal = (state.brandDeals || []).find(d => d.id === _addItemsDealId);
   if (!deal) return;
-  const checked = [...document.querySelectorAll('#itemPickerList input[type="checkbox"]:checked')];
   if (!checked.length) { closeModal('addItemsModal'); return; }
   if (!deal.itemIds) deal.itemIds = [];
   checked.forEach(cb => {
@@ -1111,6 +1171,135 @@ function confirmAddItems() {
   closeModal('addItemsModal');
   renderDeals();
   renderProducts();
+}
+
+// ─── BAR STOCK ────────────────────────────────────────────────────────────────
+let currentBarId = null;
+
+function renderBars() {
+  renderBarList();
+  renderBarMain();
+}
+
+function renderBarList() {
+  const bars = state.barLocations || [];
+  const el = document.getElementById('bar-list');
+  el.innerHTML = bars.map(b => `
+    <button class="bar-btn${b.id === currentBarId ? ' active' : ''}" onclick="selectBar('${b.id}')">
+      ${esc(b.name) || '<em style="opacity:.5">Untitled</em>'}
+    </button>`).join('');
+}
+
+function selectBar(id) {
+  currentBarId = id;
+  renderBarList();
+  renderBarMain();
+}
+
+function addBar() {
+  if (!state.barLocations) state.barLocations = [];
+  const b = { id: crypto.randomUUID(), name: 'New Bar', itemIds: [] };
+  state.barLocations.push(b);
+  saveState();
+  currentBarId = b.id;
+  renderBars();
+  setTimeout(() => document.querySelector('.bar-name-input')?.select(), 50);
+}
+
+function deleteBar(id) {
+  const b = (state.barLocations || []).find(x => x.id === id);
+  if (!confirm(`Delete "${b ? b.name : 'this bar'}"? This cannot be undone.`)) return;
+  state.barLocations = (state.barLocations || []).filter(x => x.id !== id);
+  if (currentBarId === id) currentBarId = (state.barLocations[0] || {}).id || null;
+  saveState();
+  renderBars();
+}
+
+function renameBar(id, name) {
+  const b = (state.barLocations || []).find(x => x.id === id);
+  if (b) { b.name = name; saveState(); renderBarList(); }
+}
+
+function removeItemFromBar(barId, itemId) {
+  const b = (state.barLocations || []).find(x => x.id === barId);
+  if (!b) return;
+  b.itemIds = (b.itemIds || []).filter(id => id !== itemId);
+  saveState();
+  renderBarMain();
+}
+
+function openAddItemsToBar(barId) {
+  _pickerMode = 'bar';
+  _addItemsBarId = barId;
+  const bar = (state.barLocations || []).find(b => b.id === barId);
+  document.getElementById('addItemsTitle').textContent = `Add Items — ${bar ? esc(bar.name) : ''}`;
+  document.getElementById('itemPickerSearch').value = '';
+  buildItemPickerList('');
+  document.getElementById('addItemsModal').classList.add('open');
+}
+
+function renderBarMain() {
+  const el = document.getElementById('bars-main');
+  const bars = state.barLocations || [];
+
+  if (!bars.length) {
+    el.innerHTML = '<div style="text-align:center;padding:4rem 2rem;color:var(--text3);font-size:13px">No bars yet. Click <strong style="color:var(--text2)">+ New</strong> to add a bar.</div>';
+    return;
+  }
+
+  const b = bars.find(x => x.id === currentBarId);
+  if (!b) {
+    el.innerHTML = '<div style="text-align:center;padding:4rem 2rem;color:var(--text3);font-size:13px">Select a bar from the sidebar.</div>';
+    return;
+  }
+
+  const allItems = getAllItems();
+  const barItems = (b.itemIds || [])
+    .map(id => allItems.find(m => m.id === id)).filter(Boolean)
+    .sort((a, bv) => {
+      const ai = CATEGORIES.indexOf(a.category), bi = CATEGORIES.indexOf(bv.category);
+      return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi) || a.item.localeCompare(bv.item);
+    });
+
+  const rows = barItems.length
+    ? barItems.map(m => `
+      <tr>
+        <td>
+          <div class="item-name">${esc(m.item)}</div>
+          ${m.size ? `<div class="item-sub">${esc(m.size)}</div>` : ''}
+        </td>
+        <td style="color:var(--text2);font-size:12px">${esc(m.category || '')}</td>
+        <td style="color:var(--text2);font-size:12px">${esc(m.brand_owner || '')}</td>
+        <td style="color:var(--text2);font-size:12px">${esc(m.supplier || '')}</td>
+        <td style="text-align:right">
+          <button class="btn btn-sm btn-danger" onclick="removeItemFromBar('${b.id}','${m.id}')">Remove</button>
+        </td>
+      </tr>`).join('')
+    : `<tr><td colspan="5" class="bar-items-empty">No items added yet — click <strong style="color:var(--text2)">Add Items</strong> below to stock this bar.</td></tr>`;
+
+  el.innerHTML = `
+    <div class="bar-title-row">
+      <input class="bar-name-input" type="text" value="${esc(b.name)}" placeholder="Bar name…"
+        onchange="renameBar('${b.id}',this.value)">
+      <button class="btn btn-sm btn-danger" onclick="deleteBar('${b.id}')">Delete Bar</button>
+    </div>
+    <div class="bar-items-wrap">
+      <table class="bar-items-table">
+        <thead><tr>
+          <th style="width:38%">Item</th>
+          <th style="width:18%">Category</th>
+          <th style="width:18%">Brand Owner</th>
+          <th style="width:14%">Supplier</th>
+          <th></th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+    <button class="btn btn-sm btn-primary" onclick="openAddItemsToBar('${b.id}')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="11" height="11"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Add Items
+    </button>
+    <span style="font-size:11px;color:var(--text3);margin-left:8px">${barItems.length} item${barItems.length !== 1 ? 's' : ''}</span>`;
 }
 
 // ─── GIST SYNC ────────────────────────────────────────────────────────────────
