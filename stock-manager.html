@@ -285,6 +285,14 @@
   .ctl-rm:hover { color: var(--red); background: var(--red-dim); }
   .ctl-ing-add-btn { width: 100%; padding: 7px; background: none; border: none; border-top: 1px solid var(--border); color: var(--text3); font-size: 12px; cursor: pointer; font-family: var(--sans); transition: all 0.15s; }
   .ctl-ing-add-btn:hover { background: rgba(255,255,255,0.03); color: var(--text2); }
+  .ctl-stats-bar { display: flex; align-items: center; gap: 16px; margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--border); flex-wrap: wrap; }
+  .ctl-stat { display: flex; flex-direction: column; gap: 1px; }
+  .ctl-stat-lbl { font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text3); }
+  .ctl-stat-val { font-family: var(--mono); font-size: 13px; font-weight: 500; color: var(--text); }
+  .ctl-stat-sep { color: var(--border2); font-size: 18px; align-self: center; line-height: 1; }
+  .ctl-price-input { background: var(--surface2); border: 1px solid var(--border); border-radius: 4px; color: var(--text); font-family: var(--mono); font-size: 13px; font-weight: 500; width: 68px; padding: 2px 6px; outline: none; }
+  .ctl-price-input:hover { border-color: var(--border2); }
+  .ctl-price-input:focus { border-color: var(--accent); }
 
   /* PRINT */
   #printArea { display: none; }
@@ -560,7 +568,11 @@
           <div class="form-label">Glass</div>
           <input class="form-input" id="ctl-glass" type="text" placeholder="e.g. Coupe, Rocks">
         </div>
-        <div class="form-row" style="grid-column:1/-1">
+        <div class="form-row">
+          <div class="form-label">Price ($)</div>
+          <input class="form-input" id="ctl-price" type="number" step="0.01" min="0" placeholder="0.00">
+        </div>
+        <div class="form-row">
           <div class="form-label">Garnish</div>
           <input class="form-input" id="ctl-garnish" type="text" placeholder="e.g. Dehydrated lemon wheel">
         </div>
@@ -1447,6 +1459,36 @@ function renderCocktails() {
   el.innerHTML = '<div class="cocktails-grid">' + filtered.map(cocktailCardHTML).join('') + '</div>';
 }
 
+function calcCocktailCost(c) {
+  const allItems = getAllItems();
+  let total = 0;
+  let hasUncosted = false;
+  for (const ing of (c.ingredients || [])) {
+    if (!ing.itemId || !ing.vol) { if (ing.name) hasUncosted = true; continue; }
+    const item = allItems.find(m => m.id === ing.itemId);
+    if (!item || !item.cost) { hasUncosted = true; continue; }
+    const ml = parseSizeMl(item.size);
+    if (!ml) { hasUncosted = true; continue; }
+    total += (item.cost / ml) * parseFloat(ing.vol);
+  }
+  return { cost: total, hasUncosted };
+}
+
+function setCocktailPrice(id, value) {
+  const c = (state.cocktails || []).find(x => x.id === id);
+  if (!c) return;
+  c.price = parseFloat(value) || 0;
+  saveState();
+  const { cost, hasUncosted } = calcCocktailCost(c);
+  const price = c.price;
+  const gp = price > 0 ? (price - cost) / price : null;
+  const gpEl = document.getElementById('ctl-gp-' + id);
+  if (gpEl) {
+    gpEl.textContent = gp !== null ? fmtPct(gp) : '—';
+    gpEl.className = 'ctl-stat-val ' + gpClass(gp);
+  }
+}
+
 function cocktailCardHTML(c) {
   const sKey   = { signatures:'sig', classics:'classic', na:'na' }[c.section] || 'sig';
   const sLabel = { signatures:'Signature', classics:'Classic', na:'Non-Alcoholic' }[c.section] || '';
@@ -1460,6 +1502,33 @@ function cocktailCardHTML(c) {
       <span class="ctl-ing-vl">${i.vol ? i.vol + 'mL' : '—'}</span>
     </li>`;
   }).join('');
+
+  const { cost, hasUncosted } = calcCocktailCost(c);
+  const price = c.price || 0;
+  const gp    = price > 0 ? (price - cost) / price : null;
+  const costStr  = cost > 0 ? '$' + cost.toFixed(2) + (hasUncosted ? '*' : '') : (hasUncosted ? '—*' : '—');
+  const statsBar = `
+    <div class="ctl-stats-bar">
+      <div class="ctl-stat">
+        <span class="ctl-stat-lbl">Cost</span>
+        <span class="ctl-stat-val" title="${hasUncosted ? 'Some ingredients have no catalog link or cost data' : ''}">${costStr}</span>
+      </div>
+      <span class="ctl-stat-sep">·</span>
+      <div class="ctl-stat">
+        <span class="ctl-stat-lbl">Price</span>
+        <span style="display:flex;align-items:center;gap:3px">
+          <span style="font-family:var(--mono);font-size:13px;color:var(--text3)">$</span>
+          <input class="ctl-price-input" type="number" step="0.01" min="0"
+            value="${price > 0 ? price.toFixed(2) : ''}" placeholder="0.00"
+            onchange="setCocktailPrice('${c.id}',this.value)">
+        </span>
+      </div>
+      <span class="ctl-stat-sep">·</span>
+      <div class="ctl-stat">
+        <span class="ctl-stat-lbl">GP</span>
+        <span class="ctl-stat-val ${gpClass(gp)}" id="ctl-gp-${c.id}">${gp !== null ? fmtPct(gp) : '—'}</span>
+      </div>
+    </div>`;
 
   const footer = c.garnish
     ? `<div class="ctl-card-footer"><div class="ctl-garnish"><strong>Garnish</strong>${esc(c.garnish)}</div></div>`
@@ -1485,6 +1554,7 @@ function cocktailCardHTML(c) {
       </div>
       ${ings ? `<div class="ctl-spec-label">Ingredients</div><ul class="ctl-ing-list">${ings}</ul>` : ''}
       ${c.method ? `<div class="ctl-spec-label">Method</div><div class="ctl-method">${esc(c.method)}</div>` : ''}
+      ${statsBar}
     </div>
     ${footer}
   </div>`;
@@ -1512,12 +1582,13 @@ function openCocktailModal(id = null) {
     document.getElementById('ctl-name').value    = c.name;
     document.getElementById('ctl-section').value = c.section;
     document.getElementById('ctl-glass').value   = c.glass || '';
+    document.getElementById('ctl-price').value   = c.price > 0 ? c.price : '';
     document.getElementById('ctl-garnish').value = c.garnish || '';
     document.getElementById('ctl-method').value  = c.method || '';
     (c.ingredients || []).forEach(i => addCocktailIng(i.name, i.vol));
   } else {
     document.getElementById('cocktailModalTitle').textContent = 'Add Cocktail';
-    ['ctl-name','ctl-glass','ctl-garnish','ctl-method'].forEach(k => { document.getElementById(k).value = ''; });
+    ['ctl-name','ctl-glass','ctl-price','ctl-garnish','ctl-method'].forEach(k => { document.getElementById(k).value = ''; });
     document.getElementById('ctl-section').value = 'signatures';
     addCocktailIng();
   }
@@ -1553,6 +1624,7 @@ function saveCocktail() {
     name,
     section:     document.getElementById('ctl-section').value,
     glass:       document.getElementById('ctl-glass').value.trim(),
+    price:       parseFloat(document.getElementById('ctl-price').value) || 0,
     garnish:     document.getElementById('ctl-garnish').value.trim(),
     method:      document.getElementById('ctl-method').value.trim(),
     ingredients: getCocktailIngredients(),
