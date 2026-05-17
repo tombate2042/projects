@@ -239,6 +239,53 @@
   .bar-items-table tbody td { padding: 8px 12px; font-size: 13px; vertical-align: middle; }
   .bar-items-empty { padding: 32px 12px; color: var(--text3); font-size: 13px; text-align: center; }
 
+  /* COCKTAILS TAB */
+  .form-select { background: var(--surface2); border: 1px solid var(--border); border-radius: 5px; color: var(--text); font-family: var(--sans); font-size: 13px; padding: 8px 10px; outline: none; width: 100%; }
+  .form-select:focus { border-color: var(--accent); }
+  .form-textarea { background: var(--surface2); border: 1px solid var(--border); border-radius: 5px; color: var(--text); font-family: var(--sans); font-size: 13px; padding: 8px 10px; outline: none; width: 100%; resize: vertical; min-height: 70px; }
+  .form-textarea:focus { border-color: var(--accent); }
+  .cocktails-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+  .ctl-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; transition: box-shadow 0.2s; }
+  .ctl-card:hover { box-shadow: 0 6px 20px rgba(0,0,0,0.35); }
+  .ctl-accent { height: 3px; }
+  .ctl-sig .ctl-accent     { background: var(--accent); }
+  .ctl-classic .ctl-accent { background: #6ab4ff; }
+  .ctl-na .ctl-accent      { background: #6adf99; }
+  .ctl-card-header { padding: 14px 16px 12px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+  .ctl-card-name { font-size: 16px; font-weight: 600; color: var(--text); flex: 1; }
+  .ctl-card-actions { display: flex; gap: 4px; flex-shrink: 0; }
+  .ctl-card-body { padding: 14px 16px; }
+  .ctl-meta { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
+  .ctl-badge { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; padding: 3px 8px; border-radius: 10px; border: 1px solid; }
+  .ctl-badge-sig     { background: var(--accent-dim); border-color: rgba(200,245,106,0.3); color: var(--accent); }
+  .ctl-badge-classic { background: rgba(106,180,255,0.1); border-color: rgba(106,180,255,0.3); color: #6ab4ff; }
+  .ctl-badge-na      { background: rgba(106,223,153,0.1); border-color: rgba(106,223,153,0.3); color: #6adf99; }
+  .ctl-spec-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text3); margin-top: 10px; margin-bottom: 4px; }
+  .ctl-spec-label:first-child { margin-top: 0; }
+  .ctl-ing-list { list-style: none; }
+  .ctl-ing-list li { display: flex; align-items: baseline; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.04); font-size: 13px; }
+  .ctl-ing-list li:last-child { border-bottom: none; }
+  .ctl-ing-nm { color: var(--text); }
+  .ctl-ing-nm.linked { color: var(--accent); }
+  .ctl-ing-vl { font-family: var(--mono); font-size: 12px; color: var(--text3); flex-shrink: 0; margin-left: 8px; }
+  .ctl-method { font-size: 13px; color: var(--text2); line-height: 1.5; }
+  .ctl-card-footer { padding: 10px 16px; border-top: 1px solid var(--border); background: rgba(255,255,255,0.02); }
+  .ctl-garnish { font-size: 12px; color: var(--text2); }
+  .ctl-garnish strong { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text3); margin-right: 4px; }
+  .ctl-ing-builder { border: 1px solid var(--border); border-radius: 6px; overflow: hidden; margin-top: 4px; }
+  .ctl-ing-builder-head { display: flex; background: var(--surface2); border-bottom: 1px solid var(--border); }
+  .ctl-ing-builder-head span { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text3); padding: 7px 10px; }
+  .ctl-vol-head { border-left: 1px solid var(--border); min-width: 72px; }
+  .ctl-ing-row-b { display: grid; grid-template-columns: 1fr 72px 32px; border-bottom: 1px solid rgba(255,255,255,0.04); }
+  .ctl-ing-row-b:last-child { border-bottom: none; }
+  .ctl-ing-row-b input { background: transparent; border: none; border-right: 1px solid rgba(255,255,255,0.06); color: var(--text); font-family: var(--sans); font-size: 13px; padding: 7px 10px; outline: none; width: 100%; }
+  .ctl-ing-row-b input:focus { background: rgba(255,255,255,0.03); }
+  .ctl-ing-row-b input.vol-in { font-family: var(--mono); }
+  .ctl-rm { background: none; border: none; border-left: 1px solid rgba(255,255,255,0.06); color: var(--text3); cursor: pointer; font-size: 14px; line-height: 1; }
+  .ctl-rm:hover { color: var(--red); background: var(--red-dim); }
+  .ctl-ing-add-btn { width: 100%; padding: 7px; background: none; border: none; border-top: 1px solid var(--border); color: var(--text3); font-size: 12px; cursor: pointer; font-family: var(--sans); transition: all 0.15s; }
+  .ctl-ing-add-btn:hover { background: rgba(255,255,255,0.03); color: var(--text2); }
+
   /* PRINT */
   #printArea { display: none; }
   @media print {
@@ -294,6 +341,7 @@
     <button class="nav-tab active" id="tab-products" onclick="switchTab('products')">Products</button>
     <button class="nav-tab" id="tab-deals" onclick="switchTab('deals')">Brand Deals <span id="dealsBadge" style="display:none;font-size:10px;background:var(--accent-dim2);color:var(--accent);border-radius:10px;padding:1px 6px;margin-left:4px"></span></button>
     <button class="nav-tab" id="tab-bars" onclick="switchTab('bars')">Bar Stock</button>
+    <button class="nav-tab" id="tab-cocktails" onclick="switchTab('cocktails')">Cocktails</button>
   </div>
 </div>
 
@@ -364,6 +412,24 @@
       <div style="text-align:center;padding:4rem 2rem;color:var(--text3);font-size:13px">No bars yet. Click <strong style="color:var(--text2)">+ New</strong> to add a bar.</div>
     </div>
   </div>
+</div>
+
+<!-- ═══ COCKTAILS VIEW ═══ -->
+<div class="view" id="view-cocktails">
+  <div class="toolbar">
+    <div class="chips" id="cocktailFilterChips">
+      <button class="chip active" onclick="setCocktailFilter('all')">All</button>
+      <button class="chip" onclick="setCocktailFilter('signatures')">Signatures</button>
+      <button class="chip" onclick="setCocktailFilter('classics')">Classics</button>
+      <button class="chip" onclick="setCocktailFilter('na')">Non-Alcoholic</button>
+    </div>
+    <div style="flex:1"></div>
+    <button class="btn btn-sm btn-primary" onclick="openCocktailModal()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Add Cocktail
+    </button>
+  </div>
+  <div id="cocktailsContent" style="padding:24px"></div>
 </div>
 
 <!-- ═══ GIST MODAL ═══ -->
@@ -472,6 +538,58 @@
   </div>
 </div>
 
+<!-- ═══ COCKTAIL MODAL ═══ -->
+<div class="modal-overlay" id="cocktailModal">
+  <div class="modal" style="width:520px;max-width:96vw;max-height:unset">
+    <h3 id="cocktailModalTitle">Add Cocktail</h3>
+    <div class="modal-body" style="max-height:72vh;overflow-y:auto">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-row" style="grid-column:1/-1">
+          <div class="form-label">Cocktail Name *</div>
+          <input class="form-input" id="ctl-name" type="text" placeholder="e.g. Orchard Sour">
+        </div>
+        <div class="form-row">
+          <div class="form-label">Section</div>
+          <select class="form-select" id="ctl-section">
+            <option value="signatures">Signatures</option>
+            <option value="classics">Classics</option>
+            <option value="na">Non-Alcoholic</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <div class="form-label">Glass</div>
+          <input class="form-input" id="ctl-glass" type="text" placeholder="e.g. Coupe, Rocks">
+        </div>
+        <div class="form-row" style="grid-column:1/-1">
+          <div class="form-label">Garnish</div>
+          <input class="form-input" id="ctl-garnish" type="text" placeholder="e.g. Dehydrated lemon wheel">
+        </div>
+      </div>
+      <div class="form-row" style="margin-top:4px">
+        <div class="form-label">Ingredients <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text3)">— type to search catalog or enter free text</span></div>
+        <div class="ctl-ing-builder">
+          <div class="ctl-ing-builder-head">
+            <span style="flex:1">Ingredient</span>
+            <span class="ctl-vol-head">mL</span>
+          </div>
+          <div id="ctl-ing-list"></div>
+          <button class="ctl-ing-add-btn" onclick="addCocktailIng()">+ Add Ingredient</button>
+        </div>
+      </div>
+      <div class="form-row" style="margin-top:12px">
+        <div class="form-label">Method</div>
+        <textarea class="form-textarea" id="ctl-method" placeholder="e.g. Dry shake aquafab, add ice, shake hard, double strain into chilled coupe."></textarea>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('cocktailModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveCocktail()">Save</button>
+    </div>
+  </div>
+</div>
+
+<datalist id="cocktailCatalogList"></datalist>
+
 <!-- ═══ PRINT MODAL ═══ -->
 <div class="modal-overlay" id="printModal">
   <div class="modal">
@@ -553,6 +671,7 @@ function normalise(s) {
   if (!s.productOverrides) s.productOverrides = {};
   if (!s.brandDeals || !Array.isArray(s.brandDeals)) s.brandDeals = [];
   if (!s.barLocations || !Array.isArray(s.barLocations)) s.barLocations = [];
+  if (!s.cocktails   || !Array.isArray(s.cocktails))    s.cocktails = [];
   return s;
 }
 
@@ -637,8 +756,9 @@ function switchTab(tab) {
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
   document.getElementById('view-' + tab).classList.add('active');
   document.getElementById('tab-' + tab).classList.add('active');
-  if (tab === 'deals') renderDeals();
-  if (tab === 'bars')  renderBars();
+  if (tab === 'deals')     renderDeals();
+  if (tab === 'bars')      renderBars();
+  if (tab === 'cocktails') renderCocktails();
 }
 
 // ─── SEARCH & FILTER ──────────────────────────────────────────────────────────
@@ -1300,6 +1420,161 @@ function renderBarMain() {
       Add Items
     </button>
     <span style="font-size:11px;color:var(--text3);margin-left:8px">${barItems.length} item${barItems.length !== 1 ? 's' : ''}</span>`;
+}
+
+// ─── COCKTAILS ────────────────────────────────────────────────────────────────
+let cocktailFilter = 'all';
+let editingCocktailId = null;
+
+function renderCocktails() {
+  const cocktails = state.cocktails || [];
+  const filtered = cocktailFilter === 'all' ? cocktails : cocktails.filter(c => c.section === cocktailFilter);
+
+  const filters = ['all','signatures','classics','na'];
+  document.querySelectorAll('#cocktailFilterChips .chip').forEach((btn, i) => {
+    btn.classList.toggle('active', filters[i] === cocktailFilter);
+  });
+
+  const el = document.getElementById('cocktailsContent');
+  if (!cocktails.length) {
+    el.innerHTML = '<div style="text-align:center;padding:4rem 2rem;color:var(--text3);font-size:13px">No cocktails yet. Click <strong style="color:var(--text2)">Add Cocktail</strong> to create your first spec.</div>';
+    return;
+  }
+  if (!filtered.length) {
+    el.innerHTML = '<div style="text-align:center;padding:4rem 2rem;color:var(--text3);font-size:13px">No cocktails in this section yet.</div>';
+    return;
+  }
+  el.innerHTML = '<div class="cocktails-grid">' + filtered.map(cocktailCardHTML).join('') + '</div>';
+}
+
+function cocktailCardHTML(c) {
+  const sKey   = { signatures:'sig', classics:'classic', na:'na' }[c.section] || 'sig';
+  const sLabel = { signatures:'Signature', classics:'Classic', na:'Non-Alcoholic' }[c.section] || '';
+  const bCls   = { sig:'ctl-badge-sig', classic:'ctl-badge-classic', na:'ctl-badge-na' }[sKey];
+  const allItems = getAllItems();
+
+  const ings = (c.ingredients || []).map(i => {
+    const linked = i.itemId && allItems.some(m => m.id === i.itemId);
+    return `<li>
+      <span class="ctl-ing-nm${linked ? ' linked' : ''}">${esc(i.name)}</span>
+      <span class="ctl-ing-vl">${i.vol ? i.vol + 'mL' : '—'}</span>
+    </li>`;
+  }).join('');
+
+  const footer = c.garnish
+    ? `<div class="ctl-card-footer"><div class="ctl-garnish"><strong>Garnish</strong>${esc(c.garnish)}</div></div>`
+    : '';
+
+  return `<div class="ctl-card ctl-${sKey}">
+    <div class="ctl-accent"></div>
+    <div class="ctl-card-header">
+      <div class="ctl-card-name">${esc(c.name)}</div>
+      <div class="ctl-card-actions">
+        <button class="btn btn-sm btn-icon" onclick="openCocktailModal('${c.id}')" title="Edit">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
+        <button class="btn btn-sm btn-icon btn-danger" onclick="deleteCocktail('${c.id}')" title="Delete">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="ctl-card-body">
+      <div class="ctl-meta">
+        <span class="ctl-badge ${bCls}">${sLabel}</span>
+        ${c.glass ? `<span class="ctl-badge" style="background:rgba(255,255,255,0.05);border-color:var(--border2);color:var(--text2)">${esc(c.glass)}</span>` : ''}
+      </div>
+      ${ings ? `<div class="ctl-spec-label">Ingredients</div><ul class="ctl-ing-list">${ings}</ul>` : ''}
+      ${c.method ? `<div class="ctl-spec-label">Method</div><div class="ctl-method">${esc(c.method)}</div>` : ''}
+    </div>
+    ${footer}
+  </div>`;
+}
+
+function setCocktailFilter(filter) {
+  cocktailFilter = filter;
+  renderCocktails();
+}
+
+function buildCatalogDatalist() {
+  const dl = document.getElementById('cocktailCatalogList');
+  if (!dl) return;
+  dl.innerHTML = getAllItems().map(m => `<option value="${esc(m.item)}">`).join('');
+}
+
+function openCocktailModal(id = null) {
+  editingCocktailId = id;
+  buildCatalogDatalist();
+  document.getElementById('ctl-ing-list').innerHTML = '';
+  if (id) {
+    const c = (state.cocktails || []).find(x => x.id === id);
+    if (!c) return;
+    document.getElementById('cocktailModalTitle').textContent = 'Edit Cocktail';
+    document.getElementById('ctl-name').value    = c.name;
+    document.getElementById('ctl-section').value = c.section;
+    document.getElementById('ctl-glass').value   = c.glass || '';
+    document.getElementById('ctl-garnish').value = c.garnish || '';
+    document.getElementById('ctl-method').value  = c.method || '';
+    (c.ingredients || []).forEach(i => addCocktailIng(i.name, i.vol));
+  } else {
+    document.getElementById('cocktailModalTitle').textContent = 'Add Cocktail';
+    ['ctl-name','ctl-glass','ctl-garnish','ctl-method'].forEach(k => { document.getElementById(k).value = ''; });
+    document.getElementById('ctl-section').value = 'signatures';
+    addCocktailIng();
+  }
+  document.getElementById('cocktailModal').classList.add('open');
+  setTimeout(() => document.getElementById('ctl-name').focus(), 50);
+}
+
+function addCocktailIng(name = '', vol = '') {
+  const row = document.createElement('div');
+  row.className = 'ctl-ing-row-b';
+  row.innerHTML = `
+    <input list="cocktailCatalogList" placeholder="e.g. Bulleit Bourbon" value="${esc(name)}">
+    <input class="vol-in" type="number" placeholder="45" value="${esc(vol)}" min="0" step="0.5">
+    <button class="ctl-rm" onclick="this.closest('.ctl-ing-row-b').remove()">✕</button>`;
+  document.getElementById('ctl-ing-list').appendChild(row);
+}
+
+function getCocktailIngredients() {
+  const allItems = getAllItems();
+  return [...document.querySelectorAll('#ctl-ing-list .ctl-ing-row-b')].map(row => {
+    const inputs = row.querySelectorAll('input');
+    const name = inputs[0].value.trim();
+    const vol  = inputs[1].value.trim();
+    const match = allItems.find(m => m.item.toLowerCase() === name.toLowerCase());
+    return { itemId: match ? match.id : null, name, vol };
+  }).filter(i => i.name);
+}
+
+function saveCocktail() {
+  const name = document.getElementById('ctl-name').value.trim();
+  if (!name) { document.getElementById('ctl-name').focus(); return; }
+  const data = {
+    name,
+    section:     document.getElementById('ctl-section').value,
+    glass:       document.getElementById('ctl-glass').value.trim(),
+    garnish:     document.getElementById('ctl-garnish').value.trim(),
+    method:      document.getElementById('ctl-method').value.trim(),
+    ingredients: getCocktailIngredients(),
+  };
+  if (!state.cocktails) state.cocktails = [];
+  if (editingCocktailId) {
+    const idx = state.cocktails.findIndex(c => c.id === editingCocktailId);
+    if (idx !== -1) state.cocktails[idx] = { ...state.cocktails[idx], ...data };
+  } else {
+    state.cocktails.push({ id: crypto.randomUUID(), ...data });
+  }
+  saveState();
+  closeModal('cocktailModal');
+  renderCocktails();
+}
+
+function deleteCocktail(id) {
+  const c = (state.cocktails || []).find(x => x.id === id);
+  if (!confirm(`Delete "${c ? c.name : 'this cocktail'}"?`)) return;
+  state.cocktails = (state.cocktails || []).filter(x => x.id !== id);
+  saveState();
+  renderCocktails();
 }
 
 // ─── GIST SYNC ────────────────────────────────────────────────────────────────
