@@ -778,6 +778,53 @@
   }
   .sync-log .log-err { color: #e07070; }
   .sync-log .log-info { color: #9a968e; }
+
+  /* ── BISTRO TYPE DROPDOWN ── */
+  .bistro-type-wrap { position: relative; cursor: pointer; }
+  .bistro-chevron {
+    position: absolute;
+    bottom: 5px;
+    right: 7px;
+    font-size: 9px;
+    opacity: 0.45;
+    line-height: 1;
+    pointer-events: none;
+  }
+  .bistro-type-wrap:hover .bistro-chevron,
+  .bistro-type-wrap.active .bistro-chevron { opacity: 0.9; }
+  .bistro-type-menu {
+    display: none;
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: 0 4px 14px rgba(0,0,0,0.12);
+    z-index: 30;
+    overflow: hidden;
+    min-width: 110px;
+  }
+  .bistro-type-menu.open { display: block; }
+  .bistro-type-menu button {
+    display: block;
+    width: 100%;
+    padding: 9px 12px;
+    background: none;
+    border: none;
+    border-bottom: 1px solid var(--border);
+    font-family: var(--sans);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text2);
+    text-align: left;
+    cursor: pointer;
+    transition: 0.1s;
+  }
+  .bistro-type-menu button:last-child { border-bottom: none; }
+  .bistro-type-menu button:hover { background: var(--surface2); color: var(--text); }
+  .bistro-type-menu button.selected { background: var(--accent-light); color: var(--accent); }
 </style>
 </head>
 <body>
@@ -886,7 +933,14 @@
         <button class="menu-type-btn" onclick="selectMenuType('canape-a')" id="mt-canape-a">2hr Canapé<br><span style="font-size:10px;font-weight:400;opacity:0.7;">6 items</span></button>
         <button class="menu-type-btn" onclick="selectMenuType('canape-b')" id="mt-canape-b">3hr Canapé<br><span style="font-size:10px;font-weight:400;opacity:0.7;">8 items</span></button>
         <button class="menu-type-btn" onclick="selectMenuType('banquet')" id="mt-banquet">Banquet<br><span style="font-size:10px;font-weight:400;opacity:0.7;">6 items</span></button>
-        <button class="menu-type-btn" onclick="selectMenuType('bistro')" id="mt-bistro">Bistro<br><span style="font-size:10px;font-weight:400;opacity:0.7;">Per person</span></button>
+        <div class="menu-type-btn bistro-type-wrap" id="mt-bistro" onclick="selectMenuType(currentBistroSubtype||'bistro')">
+          Bistro<br><span style="font-size:10px;font-weight:400;opacity:0.7;" id="bistro-mode-label">Per person</span>
+          <span class="bistro-chevron" onclick="toggleBistroMenu(event)">▾</span>
+          <div class="bistro-type-menu" id="bistro-type-menu" onclick="event.stopPropagation()">
+            <button id="bistro-opt-pp"    onclick="selectBistroMode('bistro')">Per person</button>
+            <button id="bistro-opt-group" onclick="selectBistroMode('bistro-group')">Group</button>
+          </div>
+        </div>
         <button class="menu-type-btn" onclick="selectMenuType('misc')" id="mt-misc">Misc<br><span style="font-size:10px;font-weight:400;opacity:0.7;">Other</span></button>
       </div>
 
@@ -939,6 +993,12 @@
             <div class="meal-modal-footer" id="meal-modal-footer"></div>
           </div>
         </div>
+      </div>
+
+      <!-- Bistro Group -->
+      <div class="menu-panel" id="mp-bistro-group">
+        <p style="font-size:13px;color:var(--text2);margin-bottom:12px;">Select dishes and enter quantities for the group.</p>
+        <div id="bg-items"></div>
       </div>
 
       <!-- Misc -->
@@ -1241,8 +1301,10 @@ let selectedCanapeA = [];
 let selectedCanapeB = [];
 let selectedBanquet = [];
 let bistroRows = [];
+let bistroGroupItems = {};
 let mealModalState = { guestIdx: -1, dish: '', addOns: [], notes: '' };
 let currentMenuType = null;
+let currentBistroSubtype = 'bistro';
 
 /* ════════════════════════════════════════════
    GIST SYNC
@@ -1949,6 +2011,7 @@ function loadFormData() {
         renderBanquetItems();
       }
       if (d.menuType === 'bistro') { bistroRows = d.bistroRows || []; renderBistroRows(); }
+      if (d.menuType === 'bistro-group') { bistroGroupItems = d.bistroGroupItems || {}; renderBistroGroupItems(); }
     }
   } catch(e) {}
 }
@@ -1976,7 +2039,8 @@ function getFormData() {
     canapeA: selectedCanapeA,
     canapeB: selectedCanapeB,
     banquet: selectedBanquet,
-    bistroRows: bistroRows
+    bistroRows: bistroRows,
+    bistroGroupItems: bistroGroupItems
   };
 }
 
@@ -1990,16 +2054,74 @@ function v(id) {
 ════════════════════════════════════════════ */
 function selectMenuType(type, silent) {
   currentMenuType = type;
+  if (type === 'bistro' || type === 'bistro-group') currentBistroSubtype = type;
   document.querySelectorAll('.menu-type-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('mt-' + type).classList.add('active');
+  const btnEl = document.getElementById(type === 'bistro-group' ? 'mt-bistro' : 'mt-' + type);
+  if (btnEl) btnEl.classList.add('active');
+  const modeLabel = document.getElementById('bistro-mode-label');
+  if (modeLabel) modeLabel.textContent = type === 'bistro-group' ? 'Group' : 'Per person';
+  document.getElementById('bistro-opt-pp')?.classList.toggle('selected', type === 'bistro');
+  document.getElementById('bistro-opt-group')?.classList.toggle('selected', type === 'bistro-group');
   document.querySelectorAll('.menu-panel').forEach(p => p.classList.remove('active'));
-  document.getElementById('mp-' + type).classList.add('active');
+  const panelEl = document.getElementById('mp-' + type);
+  if (panelEl) panelEl.classList.add('active');
   refreshFoodSelectors();
   if (type === 'canape-a') renderCanapeItems('a');
   if (type === 'canape-b') renderCanapeItems('b');
   if (type === 'banquet') renderBanquetItems();
   if (type === 'bistro') { if (bistroRows.length === 0) addBistroRow(); else renderBistroRows(); }
+  if (type === 'bistro-group') renderBistroGroupItems();
   if (!silent) autoSave();
+}
+
+function toggleBistroMenu(e) {
+  e.stopPropagation();
+  document.getElementById('bistro-type-menu').classList.toggle('open');
+}
+
+function selectBistroMode(type) {
+  document.getElementById('bistro-type-menu').classList.remove('open');
+  selectMenuType(type);
+}
+
+function renderBistroGroupItems() {
+  const container = document.getElementById('bg-items');
+  if (!container) return;
+  let html = '';
+  BISTRO_DISH_CATS.forEach(({ label, key }) => {
+    const items = (menuData[key] || []).map(i => typeof i === 'object' ? i.name : i).filter(Boolean);
+    if (!items.length) return;
+    html += `<div style="margin-bottom:14px;">
+      <div style="font-size:11px;font-family:var(--sans);text-transform:uppercase;letter-spacing:0.05em;color:var(--text3);margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid var(--border);">${escHtml(label)}</div>
+      <div style="display:flex;flex-direction:column;gap:4px;">`;
+    items.forEach(name => {
+      const qty = bistroGroupItems[name] || 0;
+      const on  = qty > 0;
+      html += `<div style="display:flex;align-items:center;gap:10px;padding:7px 10px;border:1px solid ${on ? 'var(--accent-mid)' : 'var(--border)'};border-radius:var(--radius);background:${on ? 'var(--accent-light)' : 'var(--surface)'};transition:0.1s;">
+        <input type="checkbox" ${on ? 'checked' : ''} style="accent-color:var(--accent-mid);width:14px;height:14px;flex-shrink:0;cursor:pointer;"
+          onchange="toggleBistroGroupItem('${escJs(name)}',this.checked)">
+        <span style="flex:1;font-size:13px;color:var(--text);">${escHtml(name)}</span>
+        ${on ? `<span style="font-size:11px;color:var(--text3);flex-shrink:0;">Qty</span>
+          <input type="number" min="1" value="${qty}" style="width:52px;border:1px solid var(--accent-mid);border-radius:var(--radius);padding:4px 6px;font-size:13px;text-align:center;background:var(--surface);outline:none;"
+            oninput="updateBistroGroupQty('${escJs(name)}',this.value)">` : ''}
+      </div>`;
+    });
+    html += `</div></div>`;
+  });
+  container.innerHTML = html || '<p style="font-size:13px;color:var(--text3);padding:8px 0;">No bistro items yet — add them in Menu Manager.</p>';
+}
+
+function toggleBistroGroupItem(name, checked) {
+  if (checked) { if (!bistroGroupItems[name]) bistroGroupItems[name] = 1; }
+  else { delete bistroGroupItems[name]; }
+  autoSave();
+  renderBistroGroupItems();
+}
+
+function updateBistroGroupQty(name, val) {
+  const n = parseInt(val, 10);
+  if (n > 0) bistroGroupItems[name] = n; else delete bistroGroupItems[name];
+  autoSave();
 }
 
 /* ════════════════════════════════════════════
@@ -2519,6 +2641,7 @@ function refreshFoodSelectors() {
   if (currentMenuType === 'canape-b') renderCanapeItems('b');
   if (currentMenuType === 'banquet') renderBanquetItems();
   if (currentMenuType === 'bistro') renderBistroRows();
+  if (currentMenuType === 'bistro-group') renderBistroGroupItems();
 }
 
 
@@ -2607,6 +2730,20 @@ function buildRunsheet() {
         <div style="padding:12px 24px 6px;"><div class="rs-food-type">Bistro Sit-Down</div></div>
         <table class="rs-bistro-table">
           <thead><tr><th class="rs-bistro-num">#</th><th>Guest Name</th><th>Meal</th></tr></thead>
+          <tbody>${tableRows}</tbody>
+        </table>
+      </div>`;
+  } else if (d.menuType === 'bistro-group') {
+    const entries = Object.entries(d.bistroGroupItems || {}).filter(([, qty]) => qty > 0);
+    const tableRows = entries.map(([name, qty]) =>
+      `<tr><td>${escHtml(name)}</td><td class="rs-bistro-num" style="text-align:center;font-weight:600;width:60px;">${qty}</td></tr>`
+    ).join('') || '<tr><td colspan="2" style="text-align:center;color:#aaa;padding:16px;font-family:var(--sans);font-size:13px;">No items selected</td></tr>';
+    foodHtml = `
+      <div class="rs-section-title">Food Selection — Bistro Group Order</div>
+      <div class="rs-row full" style="padding:0;">
+        <div style="padding:12px 24px 6px;"><div class="rs-food-type">Bistro Group</div></div>
+        <table class="rs-bistro-table">
+          <thead><tr><th>Item</th><th style="text-align:center;width:60px;">Qty</th></tr></thead>
           <tbody>${tableRows}</tbody>
         </table>
       </div>`;
@@ -2756,7 +2893,7 @@ function clearForm() {
     const el = document.getElementById(id);
     if (el) el.value = '';
   });
-  selectedCanapeA = []; selectedCanapeB = []; bistroRows = []; currentMenuType = null;
+  selectedCanapeA = []; selectedCanapeB = []; bistroRows = []; bistroGroupItems = {}; currentBistroSubtype = 'bistro'; currentMenuType = null;
   document.querySelectorAll('.menu-type-btn').forEach(b => b.classList.remove('active'));
   document.querySelectorAll('.menu-panel').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.location-btn').forEach(b => b.classList.remove('selected'));
@@ -2834,6 +2971,10 @@ function clearPin() {
   msg.style.color = 'var(--accent)';
   msg.textContent = 'PIN removed. Settings are now open access.';
 }
+
+document.addEventListener('click', () => {
+  document.getElementById('bistro-type-menu')?.classList.remove('open');
+});
 
 init();
 </script>
