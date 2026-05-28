@@ -463,6 +463,7 @@
   <button class="tab-btn active" id="tab-btn-menus"      onclick="switchTab('menus')">Menus</button>
   <button class="tab-btn"        id="tab-btn-options"    onclick="switchTab('options')">Booking Options</button>
   <button class="tab-btn"        id="tab-btn-enquiries"  onclick="switchTab('enquiries')">Enquiries</button>
+  <button class="tab-btn"        id="tab-btn-runsheet"   onclick="switchTab('runsheet')">Runsheet</button>
   <button class="tab-btn"        id="tab-btn-venue"      onclick="switchTab('venue')">Venue</button>
   <button class="tab-btn"        id="tab-btn-settings"   onclick="switchTab('settings')">Settings</button>
 </div>
@@ -536,6 +537,11 @@
       <tbody id="enqBody"></tbody>
     </table>
   </div>
+</div>
+
+<!-- ── RUNSHEET ── -->
+<div id="tab-runsheet" class="tab-panel">
+  <iframe src="runsheet.html" style="width:100%;height:calc(100vh - 90px);border:none;display:block;"></iframe>
 </div>
 
 <!-- ── VENUE ── -->
