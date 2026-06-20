@@ -1721,6 +1721,7 @@ async function pullFromGist() {
         if (!data.venue.spaces)    data.venue.spaces    = [];
         if (!data.venue.packages)  data.venue.packages  = [];
         if (!data.venue.contact)   data.venue.contact   = {};
+        if (!data.menus)           data.menus           = [];
         if (!data.bookingOptions)  data.bookingOptions  = {};
         if (!data.bookingLimits)   data.bookingLimits   = {};
         localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
