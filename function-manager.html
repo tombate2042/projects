@@ -1717,6 +1717,7 @@ async function pullFromGist() {
       const content = json.files?.['vmm_data.json']?.content;
       if (content) {
         data = JSON.parse(content);
+        if (!data.venue)           data.venue           = {};
         if (!data.venue.spaces)    data.venue.spaces    = [];
         if (!data.venue.packages)  data.venue.packages  = [];
         if (!data.venue.contact)   data.venue.contact   = {};
