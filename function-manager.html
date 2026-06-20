@@ -964,14 +964,13 @@ const STORAGE_KEY  = 'vmm_data';
 const GIST_KEY     = 'vmm_gist';
 const ENQ_KEY      = 'functions_v1';
 const DIETARY_TAGS = ['V', 'VG', 'GF', 'DF', 'NF'];
-const BOOKING_OPTIONS = [
-  { key: 'two-hr-canape',   label: '6pc Canapé' },
-  { key: 'three-hr-canape', label: '8pc Canapé' },
-  { key: 'banquet',         label: 'Banquet' },
-  { key: 'bistro-meal',     label: 'Bistro Meal' },
-  { key: 'bistro-ff',       label: 'Bistro Finger Food' },
-  { key: 'misc',            label: 'Miscellaneous' },
-];
+function getBookingOptions() {
+  const pkgs = (data.venue?.packages || []).filter(p => p.name);
+  return [
+    ...pkgs.map(p => ({ key: p.id, label: p.name })),
+    { key: 'misc', label: 'Miscellaneous' }
+  ];
+}
 const ENQ_STATUS_STYLE = {
   'Enquiry':      { bg:'#e8eef8', color:'#2b5fa8', border:'#b3cef5' },
   'Quoted':       { bg:'#fef4e4', color:'#8a5200', border:'#f5d896' },
@@ -1306,11 +1305,17 @@ function renderItem(menuId, subId, item) {
 ════════════════════════════════════ */
 function renderOptionsTab() {
   const container = document.getElementById('options-body');
+  const bookingOpts = getBookingOptions();
   const allSubs = data.menus.flatMap(m =>
     (m.subcategories || []).filter(s => s.name).map(s => ({ ...s, menuName: m.name }))
   );
 
-  container.innerHTML = BOOKING_OPTIONS.map(opt => {
+  if (bookingOpts.every(o => o.key === 'misc')) {
+    container.innerHTML = `<div class="info-note">No packages defined yet — add them in the <strong>Venue</strong> tab first.</div>`;
+    return;
+  }
+
+  container.innerHTML = bookingOpts.map(opt => {
     if (opt.key === 'misc') {
       return `<div class="card">
         <div class="card-head">${esc(opt.label)}</div>
@@ -1793,17 +1798,22 @@ function rsSelectLocation(loc) {
 
 /* ── Food type grid (from BOOKING_OPTIONS) ── */
 function rsRenderFoodTypeGrid() {
+  const opts = getBookingOptions();
   const grid = document.getElementById('rs-food-type-grid');
   if (!grid) return;
-  grid.innerHTML = BOOKING_OPTIONS.map(opt =>
-    `<button class="rs-food-type-btn${rsCurrentMenuType === opt.key ? ' active' : ''}" onclick="rsSelectMenuType('${opt.key}')">${esc(opt.label)}</button>`
+  if (opts.every(o => o.key === 'misc')) {
+    grid.innerHTML = '<p style="font-size:13px;color:var(--text3);">No packages defined — add them in the <strong>Venue</strong> tab first.</p>';
+    return;
+  }
+  grid.innerHTML = opts.map(opt =>
+    `<button class="rs-food-type-btn${rsCurrentMenuType === opt.key ? ' active' : ''}" data-key="${esc(opt.key)}" onclick="rsSelectMenuType('${rsEscJs(opt.key)}')">${esc(opt.label)}</button>`
   ).join('');
 }
 
 function rsSelectMenuType(type) {
   rsCurrentMenuType = type;
-  document.querySelectorAll('.rs-food-type-btn').forEach((b, i) =>
-    b.classList.toggle('active', BOOKING_OPTIONS[i]?.key === type)
+  document.querySelectorAll('.rs-food-type-btn').forEach(b =>
+    b.classList.toggle('active', b.dataset.key === type)
   );
   rsRenderFoodPanel(type);
   rsAutoSave();
