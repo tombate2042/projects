@@ -1796,7 +1796,7 @@ function rsSelectLocation(loc) {
   rsAutoSave();
 }
 
-/* ── Food type grid (from BOOKING_OPTIONS) ── */
+/* ── Food type grid ── */
 function rsRenderFoodTypeGrid() {
   const opts = getBookingOptions();
   const grid = document.getElementById('rs-food-type-grid');
@@ -2190,7 +2190,7 @@ function rsBuildRunsheet() {
   const timeStr  = [d.start ? rsFormatTime(d.start) : '', d.end ? rsFormatTime(d.end) : ''].filter(Boolean).join(' – ') || '—';
   const venueName = data.venue?.name || 'The Republic Bar';
   const type = d.menuType;
-  const opt  = BOOKING_OPTIONS.find(o => o.key === type);
+  const opt  = getBookingOptions().find(o => o.key === type);
 
   let foodHtml = '';
 
@@ -2202,25 +2202,6 @@ function rsBuildRunsheet() {
         <div class="rs-food-badge">Miscellaneous</div>
         <div style="font-size:14px;line-height:1.6;white-space:pre-wrap;font-family:var(--sans);">${esc(miscText) || '<em style="color:#aaa;">No details provided</em>'}</div>
       </div></div>`;
-
-  } else if (type === 'bistro-meal') {
-    const tableRows = (d.bistroRows || []).filter(r => r.name || r.dish).map((r, i) => {
-      const addOnText = (r.addOns || []).map(a => a.split(':').pop()).filter(Boolean).join(' · ');
-      return `<tr>
-        <td style="width:32px;text-align:center;color:var(--text3);font-size:11px;">${i + 1}</td>
-        <td>${esc(r.name) || '—'}</td>
-        <td>${esc(r.dish) || '—'}${addOnText ? `<span style="color:#888;font-size:12px;margin-left:6px;">· ${esc(addOnText)}</span>` : ''}${r.notes ? `<div style="font-size:12px;color:#888;font-style:italic;margin-top:2px;">${esc(r.notes)}</div>` : ''}</td>
-      </tr>`;
-    }).join('') || '<tr><td colspan="3" style="text-align:center;color:#aaa;padding:16px;font-family:var(--sans);font-size:13px;">No guests added</td></tr>';
-    foodHtml = `
-      <div class="rs-section-title">Food Selection</div>
-      <div class="rs-body-row full" style="padding:0;">
-        <div style="padding:12px 24px 6px;"><div class="rs-food-badge">${esc(opt?.label || 'Bistro Meal')}</div></div>
-        <table class="rs-print-table">
-          <thead><tr><th style="width:32px;">#</th><th>Guest Name</th><th>Meal</th></tr></thead>
-          <tbody>${tableRows}</tbody>
-        </table>
-      </div>`;
 
   } else if (type) {
     const subcats  = rsGetSubcats(type);
