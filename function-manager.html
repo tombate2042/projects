@@ -2116,7 +2116,8 @@ function rsShowMealStep2() {
   document.getElementById('rs-meal-modal-title').textContent = rsMealModal.dish;
   const allItems = rsGetAllItemsForType(rsMealModal.optKey);
   const item = allItems.find(i => i.name === rsMealModal.dish);
-  const mods = (item?.modifiers || []).filter(m => m.group && m.options);
+  const mods   = (item?.modifiers || []).filter(m => (!m.type || m.type === 'group') && m.group && m.options);
+  const addOns = (item?.modifiers || []).filter(m => m.type === 'item' && m.name);
 
   let html = '';
   mods.forEach(mod => {
@@ -2129,6 +2130,15 @@ function rsShowMealStep2() {
     });
     html += `</div>`;
   });
+  if (addOns.length) {
+    html += `<div class="rs-meal-cat-title">Add Ons</div><div class="rs-meal-item-grid">`;
+    addOns.forEach(addon => {
+      const key = '_addon:' + addon.name + (addon.price ? ' (' + addon.price + ')' : '');
+      const sel = rsMealModal.addOns.includes(key) ? ' selected' : '';
+      html += `<button class="rs-meal-item-btn${sel}" onclick="rsToggleMealAddon('${rsEscJs(key)}')">${esc(addon.name)}${addon.price ? `<span style="font-size:11px;opacity:0.65;margin-left:5px;">${esc(addon.price)}</span>` : ''}</button>`;
+    });
+    html += `</div>`;
+  }
   html += `<div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border);">
     <div class="rs-meal-cat-title" style="margin-top:0;">Notes <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text3);">optional</span></div>
     <textarea rows="2" id="rs-meal-notes-input"
