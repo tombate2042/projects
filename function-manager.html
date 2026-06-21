@@ -2575,11 +2575,15 @@ function rsBuildRunsheet() {
           <div class="rs-cell-value large">${esc(d.client) || '—'}</div>
           ${d.contact ? `<div style="font-size:13px;color:var(--text3);margin-top:3px;font-family:var(--sans);">${esc(d.contact)}</div>` : ''}
         </div>
-        <div class="rs-cell">
-          <div class="rs-cell-label">Prepaid</div>
-          <div class="rs-cell-value large">${d.prepaid ? (d.prepaid.trim().startsWith('$') ? esc(d.prepaid.trim()) : '$' + esc(d.prepaid.trim())) : '—'}</div>
-          <div class="rs-cell-label" style="margin-top:10px;">Food Cost</div>
-          <div class="rs-cell-value">${d.foodCost ? (d.foodCost.trim().startsWith('$') ? esc(d.foodCost.trim()) : '$' + esc(d.foodCost.trim())) : '—'}</div>
+        <div class="rs-cell" style="display:flex;gap:0;padding:0;">
+          <div style="flex:1;padding:14px 16px;border-right:1px solid var(--border);">
+            <div class="rs-cell-label">Prepaid</div>
+            <div class="rs-cell-value large">${d.prepaid ? (d.prepaid.trim().startsWith('$') ? esc(d.prepaid.trim()) : '$' + esc(d.prepaid.trim())) : '—'}</div>
+          </div>
+          <div style="flex:1;padding:14px 16px;">
+            <div class="rs-cell-label">Food Cost</div>
+            <div class="rs-cell-value">${d.foodCost ? (d.foodCost.trim().startsWith('$') ? esc(d.foodCost.trim()) : '$' + esc(d.foodCost.trim())) : '—'}</div>
+          </div>
         </div>
         <div class="rs-cell">
           <div class="rs-cell-label">Cheque #</div>
