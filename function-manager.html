@@ -2460,11 +2460,20 @@ function rsBuildRunsheet() {
     return;
   }
 
-  const fullDateStr = d.date ? rsFormatDate(d.date) : null;
-  const dateStr     = fullDateStr || '—';
-  const dayName     = fullDateStr ? fullDateStr.split(',')[0] : '—';
-  const shortDate   = fullDateStr ? fullDateStr.split(',').slice(1).join(',').trim() : '';
-  const timeStr     = [d.start ? rsFormatTime(d.start) : '', d.end ? rsFormatTime(d.end) : ''].filter(Boolean).join(' – ') || '—';
+  const timeStr = [d.start ? rsFormatTime(d.start) : '', d.end ? rsFormatTime(d.end) : ''].filter(Boolean).join(' – ') || '—';
+  let dayName = '—', shortDate = '', dateStr = '—';
+  if (d.date) {
+    let _dt;
+    if (/^\d{2}\.\d{2}\.\d{4}$/.test(d.date)) {
+      const [_d, _m, _y] = d.date.split('.').map(Number);
+      _dt = new Date(_y, _m - 1, _d);
+    } else { _dt = new Date(d.date + 'T12:00:00'); }
+    if (!isNaN(_dt?.getTime())) {
+      dayName   = _dt.toLocaleDateString('en-AU', { weekday: 'long' });
+      shortDate = _dt.toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' });
+      dateStr   = _dt.toLocaleDateString('en-AU', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    }
+  }
   const venueName = data.venue?.name || 'The Republic Bar';
   const type    = d.menuType;
   const opt     = getBookingOptions().find(o => o.key === type);
