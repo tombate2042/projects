@@ -2490,20 +2490,29 @@ function rsBuildRunsheet() {
   } else if (type && pkgType === 'shared') {
     const qtys    = (typeof d.selectedItems?.[type] === 'object' && !Array.isArray(d.selectedItems?.[type])) ? d.selectedItems[type] : {};
     const subcats = rsGetSubcats(type);
-    const rows    = subcats.flatMap(sub =>
-      (sub.items || [])
-        .filter(i => i.name && qtys[i.name] > 0)
-        .map(i => `<div class="rs-item-row">
-          <span class="rs-item-name">${esc(i.name)}</span>
-          <span class="rs-item-desc" style="font-weight:600;color:var(--accent);">× ${qtys[i.name]}</span>
-        </div>`)
-    ).join('') || '<em style="color:#aaa;font-size:13px;font-family:var(--sans);">No dishes selected</em>';
+    let sharedRows = '';
+    subcats.forEach(sub => {
+      const subItems = (sub.items || []).filter(i => i.name && qtys[i.name] > 0);
+      if (!subItems.length) return;
+      sharedRows += `<tr><td colspan="3" style="background:var(--accent-light);color:var(--accent);font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:6px 16px;border-bottom:1px solid var(--border);">${esc(sub.name)}</td></tr>`;
+      subItems.forEach(i => {
+        sharedRows += `<tr>
+          <td style="width:52px;text-align:center;font-weight:700;color:var(--accent);font-size:15px;">${qtys[i.name]}</td>
+          <td style="font-weight:600;">${esc(i.name)}</td>
+          <td style="color:var(--text3);font-size:12px;">${i.description ? esc(i.description) : ''}</td>
+        </tr>`;
+      });
+    });
+    if (!sharedRows) sharedRows = '<tr><td colspan="3" style="text-align:center;color:#aaa;padding:16px;font-family:var(--sans);font-size:13px;">No dishes selected</td></tr>';
     foodHtml = `
       <div class="rs-section-title">Food Selection</div>
-      <div class="rs-body-row full"><div class="rs-cell">
-        <div class="rs-food-badge">${esc(opt?.label || type)}</div>
-        <div class="rs-item-list">${rows}</div>
-      </div></div>`;
+      <div class="rs-body-row full" style="padding:0;">
+        <div style="padding:12px 24px 6px;"><div class="rs-food-badge">${esc(opt?.label || type)}</div></div>
+        <table class="rs-print-table">
+          <thead><tr><th style="width:52px;">Qty</th><th>Item</th><th>Notes</th></tr></thead>
+          <tbody>${sharedRows}</tbody>
+        </table>
+      </div>`;
 
   } else if (type) {
     /* Platter — selected is { itemName: qty } */
@@ -2512,23 +2521,30 @@ function rsBuildRunsheet() {
     const selected = (rawSel && typeof rawSel === 'object' && !Array.isArray(rawSel))
       ? rawSel
       : (Array.isArray(rawSel) ? Object.fromEntries(rawSel.map(n => [n, null])) : {});
-    const itemsHtml = subcats.flatMap(sub =>
-      (sub.items || [])
-        .filter(i => i.name && selected[i.name] !== undefined)
-        .map(i => {
-          const qty = selected[i.name];
-          return `<div class="rs-item-row">
-            <span class="rs-item-name">${esc(i.name)}</span>
-            <span class="rs-item-desc">${qty ? `<strong style="color:var(--accent);">× ${qty}</strong>` : ''}${i.description ? ` ${esc(i.description)}` : ''}</span>
-          </div>`;
-        })
-    ).join('') || '<em style="color:#aaa;font-size:13px;font-family:var(--sans);">No items selected</em>';
+    let platterRows = '';
+    subcats.forEach(sub => {
+      const subItems = (sub.items || []).filter(i => i.name && selected[i.name] !== undefined);
+      if (!subItems.length) return;
+      platterRows += `<tr><td colspan="3" style="background:var(--accent-light);color:var(--accent);font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:6px 16px;border-bottom:1px solid var(--border);">${esc(sub.name)}</td></tr>`;
+      subItems.forEach(i => {
+        const qty = selected[i.name];
+        platterRows += `<tr>
+          <td style="width:52px;text-align:center;font-weight:700;color:var(--accent);font-size:15px;">${qty ?? '—'}</td>
+          <td style="font-weight:600;">${esc(i.name)}</td>
+          <td style="color:var(--text3);font-size:12px;">${i.description ? esc(i.description) : ''}</td>
+        </tr>`;
+      });
+    });
+    if (!platterRows) platterRows = '<tr><td colspan="3" style="text-align:center;color:#aaa;padding:16px;font-family:var(--sans);font-size:13px;">No items selected</td></tr>';
     foodHtml = `
       <div class="rs-section-title">Food Selection</div>
-      <div class="rs-body-row full"><div class="rs-cell">
-        <div class="rs-food-badge">${esc(opt?.label || type)}</div>
-        <div class="rs-item-list">${itemsHtml}</div>
-      </div></div>`;
+      <div class="rs-body-row full" style="padding:0;">
+        <div style="padding:12px 24px 6px;"><div class="rs-food-badge">${esc(opt?.label || type)}</div></div>
+        <table class="rs-print-table">
+          <thead><tr><th style="width:52px;">Qty</th><th>Item</th><th>Notes</th></tr></thead>
+          <tbody>${platterRows}</tbody>
+        </table>
+      </div>`;
   }
 
   out.innerHTML = `
@@ -2547,8 +2563,8 @@ function rsBuildRunsheet() {
         <div class="rs-cell"><div class="rs-cell-label">Contact</div><div class="rs-cell-value">${esc(d.contact) || '—'}</div></div>
       </div>
       <div class="rs-body-row three">
-        <div class="rs-cell"><div class="rs-cell-label">Prepaid</div><div class="rs-cell-value large">${esc(d.prepaid) || '—'}</div></div>
-        <div class="rs-cell"><div class="rs-cell-label">Food Cost</div><div class="rs-cell-value">${esc(d.foodCost) || '—'}</div></div>
+        <div class="rs-cell"><div class="rs-cell-label">Prepaid</div><div class="rs-cell-value large">${d.prepaid ? (d.prepaid.trim().startsWith('$') ? esc(d.prepaid.trim()) : '$' + esc(d.prepaid.trim())) : '—'}</div></div>
+        <div class="rs-cell"><div class="rs-cell-label">Food Cost</div><div class="rs-cell-value">${d.foodCost ? (d.foodCost.trim().startsWith('$') ? esc(d.foodCost.trim()) : '$' + esc(d.foodCost.trim())) : '—'}</div></div>
         <div class="rs-cell"><div class="rs-cell-label">Guests</div><div class="rs-cell-value">${esc(d.pax) || '—'}</div></div>
       </div>
       ${foodHtml}
