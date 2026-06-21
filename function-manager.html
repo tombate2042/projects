@@ -558,7 +558,7 @@
   .rs-event-name { font-size: 26px; font-weight: normal; letter-spacing: 0.3px; margin-bottom: 4px; }
   .rs-pax-badge { background: rgba(255,255,255,0.15); border-radius: 4px; padding: 6px 14px; font-family: var(--sans); font-size: 11px; letter-spacing: 1px; text-transform: uppercase; color: rgba(255,255,255,0.9); text-align: right; }
   .rs-pax-num { font-size: 28px; font-weight: 700; font-family: 'Georgia',serif; display: block; line-height: 1; margin-top: 4px; }
-  .rs-date-badge { background: rgba(255,255,255,0.15); border-radius: 4px; padding: 8px 16px; color: rgba(255,255,255,0.95); text-align: center; width: 196px; box-sizing: border-box; }
+  .rs-date-badge { background: rgba(255,255,255,0.15); border-radius: 4px; padding: 8px 16px; color: rgba(255,255,255,0.95); text-align: center; width: 216px; box-sizing: border-box; }
   .rs-date-line { font-size: 18px; font-family: 'Gill Sans','Gill Sans MT',Calibri,'Trebuchet MS',sans-serif; font-weight: 700; display: block; line-height: 1.5; letter-spacing: 0.5px; }
   .rs-body-row { display: grid; grid-template-columns: 1fr 1fr; border-bottom: 1px solid var(--border); }
   .rs-body-row.three { grid-template-columns: 1fr 1fr 1fr; }
@@ -2444,7 +2444,7 @@ function rsFormatDate(str) {
 function rsFormatTime(str) {
   if (!str) return '';
   const [h, m] = str.split(':').map(Number);
-  return `${h % 12 || 12}:${String(m).padStart(2,'0')}${h >= 12 ? 'pm' : 'am'}`;
+  return `${h % 12 || 12}${m ? ':' + String(m).padStart(2,'0') : ''}${h >= 12 ? 'pm' : 'am'}`;
 }
 
 function rsEscJs(s) { return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
