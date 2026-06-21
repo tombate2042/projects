@@ -558,7 +558,7 @@
   /* Runsheet print output */
   .rs-masthead { background: var(--accent); color: #fff; padding: 24px 32px; display: flex; justify-content: space-between; align-items: flex-start; }
   .rs-venue-label { font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; opacity: 0.6; margin-bottom: 6px; font-family: 'Montserrat', sans-serif; }
-  .rs-event-name { font-size: 36px; font-weight: 700; letter-spacing: 0.3px; margin-bottom: 4px; font-family: 'Montserrat', sans-serif; }
+  .rs-event-name { font-size: 36px; line-height: 1.2; font-weight: 700; letter-spacing: 0.3px; margin-bottom: 4px; font-family: 'Montserrat', sans-serif; }
   .rs-pax-badge { background: rgba(255,255,255,0.15); border-radius: 4px; padding: 6px 14px; font-family: var(--sans); font-size: 11px; letter-spacing: 1px; text-transform: uppercase; color: rgba(255,255,255,0.9); text-align: right; }
   .rs-pax-num { font-size: 28px; font-weight: 700; font-family: 'Montserrat', sans-serif; display: block; line-height: 1; margin-top: 4px; }
   .rs-date-badge { background: rgba(255,255,255,0.15); border-radius: 4px; padding: 8px 16px; color: rgba(255,255,255,0.95); text-align: center; width: 250px; box-sizing: border-box; }
@@ -2503,6 +2503,19 @@ function rsFormatTime(str) {
 function rsEscJs(s) { return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
 
 /* ── Build runsheet output ── */
+function rsFitEventName() {
+  const el = document.querySelector('#rs-output .rs-event-name');
+  if (!el) return;
+  let size = 36;
+  el.style.fontSize = size + 'px';
+  while (size > 16) {
+    const lineH = parseFloat(getComputedStyle(el).lineHeight) || size * 1.2;
+    if (el.offsetHeight <= Math.ceil(lineH * 2) + 2) break;
+    size -= 1;
+    el.style.fontSize = size + 'px';
+  }
+}
+
 function rsBuildRunsheet() {
   const d   = rsGetFormData();
   const out = document.getElementById('rs-output');
@@ -2643,6 +2656,21 @@ function rsBuildRunsheet() {
         </div>
       </div>
       ${foodHtml}
+      ${(() => {
+        const addons = Object.entries(d.addonItems || {}).filter(([,q]) => q > 0);
+        if (!addons.length) return '';
+        const rows = addons.map(([name, qty]) => `<tr>
+          <td style="width:52px;text-align:center;font-weight:700;color:var(--accent);font-size:15px;">${qty}</td>
+          <td style="font-weight:600;">${esc(name)}</td>
+        </tr>`).join('');
+        return `<div class="rs-section-title">Add Ons</div>
+        <div class="rs-body-row full" style="padding:0;">
+          <table class="rs-print-table">
+            <thead><tr><th style="width:52px;">Qty</th><th>Item</th></tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>`;
+      })()}
       <div class="rs-section-title">Notes &amp; Special Requirements</div>
       <div class="rs-notes-cell">${esc(d.notes) || '<em style="color:#aaa;">No notes</em>'}</div>
       <div class="rs-footer">
@@ -2650,6 +2678,7 @@ function rsBuildRunsheet() {
         <span>${esc(venueName)} — Confidential Event Runsheet</span>
       </div>
     </div>`;
+  rsFitEventName();
 }
 </script>
 </body>
