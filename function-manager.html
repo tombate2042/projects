@@ -1917,6 +1917,7 @@ function rsRenderFoodPanel(type) {
   const limits  = data.bookingLimits?.[type] || {};
   const rawSel  = rsSelectedItems[type];
   const selected = (rawSel && typeof rawSel === 'object' && !Array.isArray(rawSel)) ? rawSel : {};
+  const pax     = Math.max(1, parseInt(rsV('rs-pax')) || 1);
 
   if (!subcats.length) {
     panel.innerHTML = `<p style="font-size:13px;color:var(--text3);padding:8px 0;">No subcategories assigned to this type yet — configure them in the <strong>Booking Options</strong> tab.</p>`;
@@ -1929,9 +1930,9 @@ function rsRenderFoodPanel(type) {
     if (!items.length) return;
     const limit       = limits[sub.id];
     const subSelCount = items.filter(i => selected[i.name] !== undefined).length;
-    const selCountStr = limit
-      ? `<span style="font-weight:600;color:${subSelCount >= limit ? '#c0392b' : 'var(--accent)'};">${subSelCount}/${limit}</span>`
-      : `<span style="font-weight:600;color:${subSelCount > 0 ? 'var(--accent)' : 'var(--text3)'};">${subSelCount}</span>`;
+    const subQtyTotal = items.reduce((sum, i) => sum + (selected[i.name] || 0), 0);
+    const atLimit     = limit ? subQtyTotal >= limit * pax : false;
+    const selCountStr = `<span style="font-weight:600;color:${atLimit ? '#c0392b' : subSelCount > 0 ? 'var(--accent)' : 'var(--text3)'};">${subSelCount}</span>`;
     html += `<div style="margin-bottom:14px;">
       <div style="font-size:11px;font-family:var(--sans);text-transform:uppercase;letter-spacing:0.05em;color:var(--text3);margin-bottom:6px;display:flex;align-items:center;gap:6px;">${esc(sub.name)} ${selCountStr}</div>
       <div class="rs-canape-grid">`;
@@ -1957,25 +1958,20 @@ function rsTogglePlatterItem(type, itemName) {
   if (selected[itemName] !== undefined) {
     delete selected[itemName];
   } else {
-    const limits = data.bookingLimits?.[type] || {};
-    if (Object.keys(limits).length) {
-      const sub = rsGetSubcats(type).find(s => (s.items || []).some(i => i.name === itemName));
-      if (sub) {
-        const limit = limits[sub.id];
-        if (limit) {
-          const subNames = (sub.items || []).map(i => i.name);
-          if (Object.keys(selected).filter(n => subNames.includes(n)).length >= limit) {
-            alert(`${sub.name} limit is ${limit}. Deselect one first.`);
-            return;
-          }
-        }
+    const pax      = Math.max(1, parseInt(rsV('rs-pax')) || 1);
+    const sub      = rsGetSubcats(type).find(s => (s.items || []).some(i => i.name === itemName));
+    const subItems = sub?.items || [];
+    const subNames = subItems.map(i => i.name);
+    const subQtyTotal = subNames.reduce((sum, n) => sum + (selected[n] || 0), 0);
+    if (sub) {
+      const limits = data.bookingLimits?.[type] || {};
+      const limit  = limits[sub.id];
+      if (limit && subQtyTotal >= limit * pax) {
+        alert(`${sub.name} is fully allocated. Reduce an existing item's quantity first.`);
+        return;
       }
     }
-    const pax     = Math.max(1, parseInt(rsV('rs-pax')) || 1);
-    const sub     = rsGetSubcats(type).find(s => (s.items || []).some(i => i.name === itemName));
-    const subItems = sub?.items || [];
-    const subQtyTotal = subItems.reduce((sum, i) => sum + (selected[i.name] || 0), 0);
-    selected[itemName] = Math.max(1, pax - subQtyTotal);
+    selected[itemName] = pax;
   }
   rsRenderFoodPanel(type);
   rsAutoSave();
