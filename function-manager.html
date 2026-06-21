@@ -870,6 +870,14 @@
       </div>
     </div>
 
+    <div class="card">
+      <div class="card-head">Customer Menu Page</div>
+      <div class="card-body">
+        <p style="font-size:13px;color:var(--text2);margin-bottom:14px;">Downloads <code>menu-data.json</code> — add it to your GitHub repo alongside <code>venue-menu.html</code> to update the public-facing page.</p>
+        <button class="btn btn-primary" onclick="publishMenuData()">↓ Download menu-data.json</button>
+      </div>
+    </div>
+
     <div class="info-note">
       All menus and venue data are stored in this browser under <code>vmm_data</code>. Enquiries are stored separately under <code>functions_v1</code> and are not included in the Gist sync.
     </div>
@@ -1707,6 +1715,22 @@ function clearAll() {
   data = { venue: { name:'', tagline:'', intro:'', spaces:[], packages:[], contact:{} }, menus:[], bookingOptions:{}, bookingLimits:{} };
   currentMenuId = null;
   save(); renderAll();
+}
+
+function publishMenuData() {
+  const payload = {
+    venue:          data.venue,
+    menus:          data.menus,
+    bookingOptions: data.bookingOptions,
+    publishedAt:    new Date().toISOString()
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = 'menu-data.json';
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 /* ════════════════════════════════════

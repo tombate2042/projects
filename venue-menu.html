@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Loading…</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --green:       #1a3a2a;
+  --green-mid:   #2d6b48;
+  --green-light: #e8f0eb;
+  --text:        #1a1916;
+  --text2:       #5a5750;
+  --text3:       #9a968e;
+  --bg:          #faf9f7;
+  --surface:     #ffffff;
+  --border:      #e4e1d8;
+  --radius:      8px;
+  --sans:        'Montserrat', 'Helvetica Neue', Arial, sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { font-family: var(--sans); background: var(--bg); color: var(--text); line-height: 1.6; }
+
+/* ── HERO ── */
+.hero {
+  background: var(--green);
+  color: #fff;
+  padding: 80px 24px 56px;
+  text-align: center;
+}
+.hero-name {
+  font-size: clamp(32px, 6vw, 64px);
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  line-height: 1.1;
+}
+.hero-tagline {
+  margin-top: 14px;
+  font-size: clamp(12px, 1.8vw, 16px);
+  font-weight: 600;
+  opacity: 0.6;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+}
+.hero-address {
+  margin-top: 14px;
+  font-size: 14px;
+  opacity: 0.5;
+  font-weight: 400;
+}
+.hero-links {
+  margin-top: 24px;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.hero-link {
+  color: rgba(255,255,255,0.8);
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 18px;
+  border: 1px solid rgba(255,255,255,0.25);
+  border-radius: 99px;
+  transition: 0.15s;
+}
+.hero-link:hover { background: rgba(255,255,255,0.12); color: #fff; }
+
+/* ── NAV ── */
+.site-nav {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.site-nav::-webkit-scrollbar { display: none; }
+.nav-inner {
+  display: flex;
+  padding: 0 24px;
+  max-width: 920px;
+  margin: 0 auto;
+}
+.nav-link {
+  padding: 14px 20px;
+  color: var(--text2);
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  border-bottom: 2px solid transparent;
+  white-space: nowrap;
+  transition: color 0.15s, border-color 0.15s;
+}
+.nav-link:hover { color: var(--text); }
+.nav-link.active { color: var(--green); border-bottom-color: var(--green-mid); }
+
+/* ── SECTIONS ── */
+.section {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 64px 24px;
+}
+.section + .section { border-top: 1px solid var(--border); }
+.section-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: var(--green-mid);
+  margin-bottom: 28px;
+}
+
+/* ── ABOUT ── */
+.intro-text {
+  font-size: 16px;
+  color: var(--text2);
+  line-height: 1.9;
+  max-width: 680px;
+}
+
+/* ── SPACES ── */
+.spaces-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+  gap: 20px;
+}
+.space-card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+}
+.space-card-header {
+  padding: 22px 22px 18px;
+  color: #fff;
+}
+.space-card-name {
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+.space-card-floor {
+  font-size: 12px;
+  opacity: 0.65;
+  margin-top: 3px;
+  font-weight: 500;
+}
+.space-card-body {
+  padding: 16px 20px 20px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.space-capacity {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--green-mid);
+  background: var(--green-light);
+  padding: 3px 10px;
+  border-radius: 99px;
+  align-self: flex-start;
+}
+.space-desc {
+  font-size: 13px;
+  color: var(--text2);
+  line-height: 1.6;
+}
+.space-features {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 2px;
+}
+.space-features li {
+  font-size: 12px;
+  color: var(--text2);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 3px 9px;
+  font-weight: 500;
+}
+
+/* ── PACKAGES ── */
+.packages-list { display: flex; flex-direction: column; gap: 16px; }
+.pkg-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.pkg-card-head {
+  padding: 20px 24px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.12s;
+}
+.pkg-card-head:hover { background: var(--bg); }
+.pkg-name { font-size: 17px; font-weight: 700; color: var(--text); }
+.pkg-subdesc {
+  font-size: 13px;
+  color: var(--text2);
+  margin-top: 4px;
+  line-height: 1.5;
+}
+.pkg-right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-shrink: 0;
+}
+.pkg-price {
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--green);
+}
+.pkg-chevron {
+  color: var(--text3);
+  font-size: 11px;
+  transition: transform 0.2s;
+  line-height: 1;
+  margin-top: 3px;
+}
+.pkg-card.open .pkg-chevron { transform: rotate(180deg); }
+.pkg-menu {
+  display: none;
+  border-top: 1px solid var(--border);
+}
+.pkg-card.open .pkg-menu { display: block; }
+
+/* ── MENU ITEMS ── */
+.menu-subcat { border-bottom: 1px solid var(--border); }
+.menu-subcat:last-child { border-bottom: none; }
+.menu-subcat-name {
+  padding: 10px 24px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--green-mid);
+  background: var(--green-light);
+}
+.menu-items { padding: 4px 0; }
+.menu-item {
+  padding: 10px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+  transition: background 0.1s;
+}
+.menu-item:hover { background: var(--bg); }
+.menu-item-left { flex: 1; min-width: 0; }
+.menu-item-name { font-size: 14px; font-weight: 600; color: var(--text); }
+.menu-item-desc { font-size: 12px; color: var(--text2); margin-top: 2px; line-height: 1.5; }
+.menu-item-tags { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 5px; }
+.diet-tag {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--green-mid);
+  background: var(--green-light);
+  border-radius: 3px;
+  padding: 1px 5px;
+  border: 1px solid #b8d4c4;
+  letter-spacing: 0.3px;
+}
+.menu-item-price {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text2);
+  white-space: nowrap;
+  flex-shrink: 0;
+  padding-top: 1px;
+}
+
+/* ── CONTACT ── */
+.contact-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 28px;
+}
+.contact-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text3);
+  margin-bottom: 5px;
+}
+.contact-value {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text);
+  line-height: 1.4;
+}
+.contact-value a { color: var(--green-mid); text-decoration: none; }
+.contact-value a:hover { text-decoration: underline; }
+
+/* ── FOOTER ── */
+.site-footer {
+  background: var(--green);
+  color: rgba(255,255,255,0.4);
+  text-align: center;
+  padding: 22px 24px;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+}
+
+/* ── ERROR / LOADING ── */
+.state-placeholder {
+  text-align: center;
+  padding: 100px 24px;
+  color: var(--text3);
+  font-size: 15px;
+}
+.state-placeholder h2 { font-size: 20px; color: var(--text2); margin-bottom: 8px; font-weight: 600; }
+
+@media (max-width: 600px) {
+  .hero { padding: 56px 20px 40px; }
+  .section { padding: 44px 20px; }
+  .pkg-card-head { flex-wrap: wrap; }
+  .menu-item { padding: 10px 16px; }
+  .menu-subcat-name { padding: 10px 16px; }
+}
+</style>
+</head>
+<body>
+
+<div id="root">
+  <div class="state-placeholder">Loading…</div>
+</div>
+
+<script>
+function esc(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function getPackageSubcats(data, pkgId) {
+  const ids = data.bookingOptions?.[pkgId] || [];
+  const result = [];
+  for (const menu of data.menus || []) {
+    for (const sub of menu.subcategories || []) {
+      if (ids.includes(sub.id)) result.push(sub);
+    }
+  }
+  return result;
+}
+
+function renderPage(data) {
+  const v       = data.venue  || {};
+  const contact = v.contact   || {};
+  const spaces  = (v.spaces   || []).filter(s => s.name);
+  const pkgs    = (v.packages || []).filter(p => p.name);
+
+  document.title = v.name || 'Venue';
+
+  // ── NAV ──────────────────────────────────────────────────────
+  const navItems = [];
+  if (v.intro)       navItems.push({ href: '#about',    label: 'About'    });
+  if (spaces.length) navItems.push({ href: '#spaces',   label: 'Spaces'   });
+  if (pkgs.length)   navItems.push({ href: '#packages', label: 'Packages' });
+  const hasContact = contact.email || contact.phone || contact.website || contact.address;
+  if (hasContact)    navItems.push({ href: '#contact',  label: 'Contact'  });
+
+  // ── HERO ─────────────────────────────────────────────────────
+  const heroLinks = [];
+  if (contact.phone)   heroLinks.push(`<a class="hero-link" href="tel:${esc(contact.phone)}">${esc(contact.phone)}</a>`);
+  if (contact.email)   heroLinks.push(`<a class="hero-link" href="mailto:${esc(contact.email)}">${esc(contact.email)}</a>`);
+  if (contact.website) {
+    const url = contact.website.startsWith('http') ? contact.website : 'https://' + contact.website;
+    heroLinks.push(`<a class="hero-link" href="${esc(url)}" target="_blank" rel="noopener">Website</a>`);
+  }
+
+  // ── ABOUT ────────────────────────────────────────────────────
+  const aboutHtml = v.intro ? `
+    <section class="section" id="about">
+      <div class="section-label">About</div>
+      <div class="intro-text">${esc(v.intro).replace(/\n/g, '<br>')}</div>
+    </section>` : '';
+
+  // ── SPACES ───────────────────────────────────────────────────
+  let spacesHtml = '';
+  if (spaces.length) {
+    const cards = spaces.map(s => {
+      const features = (s.features || '').split('\n').map(f => f.trim()).filter(Boolean);
+      return `
+        <div class="space-card">
+          <div class="space-card-header" style="background:linear-gradient(135deg,${esc(s.color1||'#1a3a2a')},${esc(s.color2||'#2d6b48')})">
+            <div class="space-card-name">${esc(s.name)}</div>
+            ${s.floor ? `<div class="space-card-floor">${esc(s.floor)}</div>` : ''}
+          </div>
+          <div class="space-card-body">
+            ${s.capacity    ? `<span class="space-capacity">${esc(s.capacity)}</span>` : ''}
+            ${s.description ? `<div class="space-desc">${esc(s.description)}</div>` : ''}
+            ${features.length ? `<ul class="space-features">${features.map(f=>`<li>${esc(f)}</li>`).join('')}</ul>` : ''}
+          </div>
+        </div>`;
+    }).join('');
+    spacesHtml = `
+      <section class="section" id="spaces">
+        <div class="section-label">Spaces</div>
+        <div class="spaces-grid">${cards}</div>
+      </section>`;
+  }
+
+  // ── PACKAGES ─────────────────────────────────────────────────
+  let packagesHtml = '';
+  if (pkgs.length) {
+    const cards = pkgs.map((pkg, i) => {
+      const subcats = getPackageSubcats(data, pkg.id);
+      const menuHtml = subcats.map(sc => {
+        const items = (sc.items || []).filter(item => item.name);
+        if (!items.length) return '';
+        const rows = items.map(item => {
+          const tags = (item.dietaries || []);
+          return `
+            <div class="menu-item">
+              <div class="menu-item-left">
+                <div class="menu-item-name">${esc(item.name)}</div>
+                ${item.description ? `<div class="menu-item-desc">${esc(item.description)}</div>` : ''}
+                ${tags.length ? `<div class="menu-item-tags">${tags.map(t=>`<span class="diet-tag">${esc(t)}</span>`).join('')}</div>` : ''}
+              </div>
+              ${item.price ? `<div class="menu-item-price">${esc(item.price)}</div>` : ''}
+            </div>`;
+        }).join('');
+        return `
+          <div class="menu-subcat">
+            <div class="menu-subcat-name">${esc(sc.name)}</div>
+            <div class="menu-items">${rows}</div>
+          </div>`;
+      }).join('');
+
+      return `
+        <div class="pkg-card${i === 0 ? ' open' : ''}" id="pkg-${esc(pkg.id)}">
+          <div class="pkg-card-head" onclick="togglePkg('pkg-${esc(pkg.id)}')">
+            <div>
+              <div class="pkg-name">${esc(pkg.name)}</div>
+              ${pkg.description ? `<div class="pkg-subdesc">${esc(pkg.description)}</div>` : ''}
+            </div>
+            <div class="pkg-right">
+              ${pkg.price ? `<div class="pkg-price">${esc(pkg.price)}</div>` : ''}
+              ${menuHtml  ? `<div class="pkg-chevron">▼</div>` : ''}
+            </div>
+          </div>
+          ${menuHtml ? `<div class="pkg-menu">${menuHtml}</div>` : ''}
+        </div>`;
+    }).join('');
+
+    packagesHtml = `
+      <section class="section" id="packages">
+        <div class="section-label">Packages &amp; Menus</div>
+        <div class="packages-list">${cards}</div>
+      </section>`;
+  }
+
+  // ── CONTACT ──────────────────────────────────────────────────
+  let contactHtml = '';
+  if (hasContact) {
+    const rows = [];
+    if (contact.address) {
+      const mapsUrl = 'https://maps.google.com/?q=' + encodeURIComponent(contact.address);
+      rows.push({ label: 'Address', html: `<a href="${esc(mapsUrl)}" target="_blank" rel="noopener">${esc(contact.address)}</a>` });
+    }
+    if (contact.phone)   rows.push({ label: 'Phone',   html: `<a href="tel:${esc(contact.phone)}">${esc(contact.phone)}</a>` });
+    if (contact.email)   rows.push({ label: 'Email',   html: `<a href="mailto:${esc(contact.email)}">${esc(contact.email)}</a>` });
+    if (contact.website) {
+      const url = contact.website.startsWith('http') ? contact.website : 'https://' + contact.website;
+      rows.push({ label: 'Website', html: `<a href="${esc(url)}" target="_blank" rel="noopener">${esc(contact.website)}</a>` });
+    }
+    contactHtml = `
+      <section class="section" id="contact">
+        <div class="section-label">Contact</div>
+        <div class="contact-grid">
+          ${rows.map(r => `
+            <div>
+              <div class="contact-label">${r.label}</div>
+              <div class="contact-value">${r.html}</div>
+            </div>`).join('')}
+        </div>
+      </section>`;
+  }
+
+  // ── ASSEMBLE ─────────────────────────────────────────────────
+  document.getElementById('root').innerHTML = `
+    <header class="hero">
+      <div class="hero-name">${esc(v.name) || 'Venue'}</div>
+      ${v.tagline ? `<div class="hero-tagline">${esc(v.tagline)}</div>` : ''}
+      ${contact.address ? `<div class="hero-address">${esc(contact.address)}</div>` : ''}
+      ${heroLinks.length ? `<div class="hero-links">${heroLinks.join('')}</div>` : ''}
+    </header>
+    ${navItems.length > 1 ? `
+      <nav class="site-nav" id="site-nav">
+        <div class="nav-inner">
+          ${navItems.map(n => `<a class="nav-link" href="${n.href}">${n.label}</a>`).join('')}
+        </div>
+      </nav>` : ''}
+    ${aboutHtml}
+    ${spacesHtml}
+    ${packagesHtml}
+    ${contactHtml}
+    <footer class="site-footer">${esc(v.name) || ''}</footer>
+  `;
+
+  // Active nav link on scroll
+  const links = document.querySelectorAll('.nav-link');
+  if (links.length) {
+    links[0].classList.add('active');
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          links.forEach(l => l.classList.remove('active'));
+          const match = document.querySelector(`.nav-link[href="#${e.target.id}"]`);
+          if (match) match.classList.add('active');
+        }
+      });
+    }, { rootMargin: '-40% 0px -55% 0px' });
+    document.querySelectorAll('section[id]').forEach(s => observer.observe(s));
+  }
+}
+
+function togglePkg(id) {
+  document.getElementById(id).classList.toggle('open');
+}
+
+fetch('./menu-data.json')
+  .then(r => { if (!r.ok) throw new Error(); return r.json(); })
+  .then(renderPage)
+  .catch(() => {
+    document.getElementById('root').innerHTML = `
+      <div class="state-placeholder">
+        <h2>Menu coming soon</h2>
+        <p>Check back shortly.</p>
+      </div>`;
+  });
+</script>
+</body>
+</html>
