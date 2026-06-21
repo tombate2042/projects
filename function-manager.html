@@ -559,8 +559,8 @@
   .rs-pax-badge { background: rgba(255,255,255,0.15); border-radius: 4px; padding: 6px 14px; font-family: var(--sans); font-size: 11px; letter-spacing: 1px; text-transform: uppercase; color: rgba(255,255,255,0.9); text-align: right; }
   .rs-pax-num { font-size: 28px; font-weight: 700; font-family: 'Georgia',serif; display: block; line-height: 1; margin-top: 4px; }
   .rs-date-badge { background: rgba(255,255,255,0.15); border-radius: 4px; padding: 6px 14px; font-family: var(--sans); color: rgba(255,255,255,0.9); text-align: right; }
-  .rs-date-val { font-size: 17px; font-weight: 700; font-family: var(--sans); display: block; line-height: 1.3; }
-  .rs-date-sub { font-size: 12px; display: block; margin-top: 2px; opacity: 0.75; font-family: var(--sans); }
+  .rs-date-val { font-size: 21px; font-weight: 700; font-family: var(--sans); display: block; line-height: 1.3; }
+  .rs-date-sub { font-size: 14px; display: block; margin-top: 3px; opacity: 0.75; font-family: var(--sans); }
   .rs-body-row { display: grid; grid-template-columns: 1fr 1fr; border-bottom: 1px solid var(--border); }
   .rs-body-row.three { grid-template-columns: 1fr 1fr 1fr; }
   .rs-body-row.full { grid-template-columns: 1fr; }
@@ -2575,8 +2575,16 @@ function rsBuildRunsheet() {
           <div class="rs-cell-value large">${esc(d.client) || '—'}</div>
           ${d.contact ? `<div style="font-size:13px;color:var(--text3);margin-top:3px;font-family:var(--sans);">${esc(d.contact)}</div>` : ''}
         </div>
-        <div class="rs-cell"><div class="rs-cell-label">Prepaid</div><div class="rs-cell-value large">${d.prepaid ? (d.prepaid.trim().startsWith('$') ? esc(d.prepaid.trim()) : '$' + esc(d.prepaid.trim())) : '—'}</div></div>
-        <div class="rs-cell"><div class="rs-cell-label">Food Cost</div><div class="rs-cell-value">${d.foodCost ? (d.foodCost.trim().startsWith('$') ? esc(d.foodCost.trim()) : '$' + esc(d.foodCost.trim())) : '—'}</div></div>
+        <div class="rs-cell">
+          <div class="rs-cell-label">Prepaid</div>
+          <div class="rs-cell-value large">${d.prepaid ? (d.prepaid.trim().startsWith('$') ? esc(d.prepaid.trim()) : '$' + esc(d.prepaid.trim())) : '—'}</div>
+          <div class="rs-cell-label" style="margin-top:10px;">Food Cost</div>
+          <div class="rs-cell-value">${d.foodCost ? (d.foodCost.trim().startsWith('$') ? esc(d.foodCost.trim()) : '$' + esc(d.foodCost.trim())) : '—'}</div>
+        </div>
+        <div class="rs-cell">
+          <div class="rs-cell-label">Cheque #</div>
+          <div class="rs-cell-value" style="min-height:36px;"></div>
+        </div>
       </div>
       ${foodHtml}
       <div class="rs-section-title">Notes &amp; Special Requirements</div>
