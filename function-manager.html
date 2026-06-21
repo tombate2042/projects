@@ -516,6 +516,14 @@
   .rs-bistro-guest-table td input[type="text"] { border: 1px solid var(--border); border-radius: var(--radius); padding: 6px 8px; font-family: var(--sans); font-size: 13px; width: 100%; background: var(--surface); color: var(--text); outline: none; }
   .rs-bistro-guest-table td input[type="text"]:focus { border-color: var(--accent-mid); }
 
+  .rs-shared-item { display: flex; align-items: center; justify-content: space-between; padding: 7px 10px; border-radius: var(--radius); border: 1px solid var(--border); background: var(--surface); margin-bottom: 6px; gap: 12px; }
+  .rs-shared-item span { font-size: 13px; color: var(--text); flex: 1; }
+  .rs-shared-item .rs-qty { display: flex; align-items: center; gap: 8px; }
+  .rs-shared-item .rs-qty-num { font-size: 14px; font-weight: 600; color: var(--text); min-width: 20px; text-align: center; }
+  .rs-shared-item .rs-qty-btn { border: 1px solid var(--border); background: var(--bg); color: var(--text); border-radius: 4px; width: 26px; height: 26px; font-size: 15px; line-height: 1; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+  .rs-shared-item .rs-qty-btn:hover { border-color: var(--accent-mid); color: var(--accent); }
+  .rs-shared-item.has-qty { border-color: var(--accent-mid); background: var(--accent-light); }
+
   .rs-meal-modal-overlay {
     position: fixed; inset: 0; background: rgba(0,0,0,0.45);
     z-index: 500; display: none; align-items: center; justify-content: center;
@@ -970,6 +978,11 @@ function getBookingOptions() {
     ...pkgs.map(p => ({ key: p.id, label: p.name })),
     { key: 'misc', label: 'Miscellaneous' }
   ];
+}
+
+function getPackageType(optKey) {
+  const pkg = (data.venue?.packages || []).find(p => p.id === optKey);
+  return pkg?.type || 'platter';
 }
 const ENQ_STATUS_STYLE = {
   'Enquiry':      { bg:'#e8eef8', color:'#2b5fa8', border:'#b3cef5' },
@@ -1584,7 +1597,7 @@ function renderSpaces() {
 }
 
 function addPackage() {
-  data.venue.packages.push({ id: genId(), name: '', price: '', description: '' });
+  data.venue.packages.push({ id: genId(), name: '', price: '', description: '', type: 'platter' });
   save(); renderPackages();
 }
 
@@ -1602,6 +1615,11 @@ function renderPackages() {
   const el   = document.getElementById('packages-body');
   const pkgs = data.venue.packages;
   if (!pkgs.length) { el.innerHTML = '<p style="font-size:13px;color:var(--text3);">No packages added yet.</p>'; return; }
+  const PKG_TYPES = [
+    { value: 'platter',  label: 'Platter / per person'      },
+    { value: 'shared',   label: 'Shared dishes / per dish'  },
+    { value: 'alacarte', label: 'À la carte / per guest'    },
+  ];
   el.innerHTML = pkgs.map((p, i) => `
     <div class="dyn-item">
       <div class="dyn-item-head">
@@ -1610,6 +1628,11 @@ function renderPackages() {
       </div>
       <div class="grid3">
         <div class="field"><label>Name</label><input type="text" value="${esc(p.name)}" placeholder="e.g. 2 Hour Canapé" oninput="updatePackage('${p.id}','name',this.value)"></div>
+        <div class="field"><label>Type</label>
+          <select oninput="updatePackage('${p.id}','type',this.value)" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);color:var(--text);font-family:var(--sans);font-size:13px;">
+            ${PKG_TYPES.map(t => `<option value="${t.value}"${(p.type||'platter')===t.value?' selected':''}>${t.label}</option>`).join('')}
+          </select>
+        </div>
         <div class="field"><label>Price</label><input type="text" value="${esc(p.price)}" placeholder="e.g. $45pp" oninput="updatePackage('${p.id}','price',this.value)"></div>
       </div>
       <div class="field"><label>Description</label><input type="text" value="${esc(p.description)}" placeholder="e.g. 6 Piece · 2 Small, 2 Premium, 1 Slider, 1 Substantial" oninput="updatePackage('${p.id}','description',this.value)"></div>
@@ -1851,12 +1874,19 @@ function rsRenderFoodPanel(type) {
     return;
   }
 
-  if (type === 'bistro-meal') {
-    rsRenderBistroPanel(panel);
+  const pkgType = getPackageType(type);
+
+  if (pkgType === 'alacarte') {
+    rsRenderBistroPanel(panel, type);
     return;
   }
 
-  /* Checkbox-style (canapé, banquet, bistro-ff, etc.) */
+  if (pkgType === 'shared') {
+    rsRenderSharedPanel(panel, type);
+    return;
+  }
+
+  /* Platter / per-person — checkbox with optional limits */
   const subcats = rsGetSubcats(type);
   const limits  = data.bookingLimits?.[type] || {};
   const selected = rsSelectedItems[type] || [];
@@ -1922,8 +1952,8 @@ function rsToggleItem(optKey, itemName, el) {
   rsAutoSave();
 }
 
-/* ── Bistro per-guest ── */
-function rsRenderBistroPanel(container) {
+/* ── À la carte per-guest ── */
+function rsRenderBistroPanel(container, type) {
   container.innerHTML = `
     <table class="rs-bistro-guest-table">
       <thead><tr>
@@ -1936,7 +1966,51 @@ function rsRenderBistroPanel(container) {
       <tbody id="rs-bistro-rows"></tbody>
     </table>
     <button class="btn btn-add btn-sm" style="margin-top:10px;" onclick="rsAddBistroRow()">+ Add guest</button>`;
-  rsRenderBistroRows();
+  rsRenderBistroRows(type);
+}
+
+/* ── Shared dishes / per-dish ── */
+function rsRenderSharedPanel(panel, type) {
+  const subcats = rsGetSubcats(type);
+  if (!subcats.length) {
+    panel.innerHTML = `<p style="font-size:13px;color:var(--text3);padding:8px 0;">No subcategories assigned to this package yet — configure them in the <strong>Booking Options</strong> tab.</p>`;
+    return;
+  }
+  const qtys = (typeof rsSelectedItems[type] === 'object' && !Array.isArray(rsSelectedItems[type]))
+    ? rsSelectedItems[type] : {};
+  let html = '';
+  subcats.forEach(sub => {
+    const items = (sub.items || []).filter(i => i.name);
+    if (!items.length) return;
+    html += `<div style="margin-bottom:16px;">
+      <div style="font-size:11px;font-family:var(--sans);text-transform:uppercase;letter-spacing:0.05em;color:var(--text3);margin-bottom:8px;">${esc(sub.name)}</div>`;
+    items.forEach(item => {
+      const qty = qtys[item.name] || 0;
+      const hasQty = qty > 0;
+      html += `<div class="rs-shared-item${hasQty ? ' has-qty' : ''}">
+        <span>${esc(item.name)}</span>
+        <div class="rs-qty">
+          <button class="rs-qty-btn" onclick="rsSharedQty('${rsEscJs(type)}','${rsEscJs(item.name)}',-1)">−</button>
+          <span class="rs-qty-num">${qty}</span>
+          <button class="rs-qty-btn" onclick="rsSharedQty('${rsEscJs(type)}','${rsEscJs(item.name)}',1)">+</button>
+        </div>
+      </div>`;
+    });
+    html += `</div>`;
+  });
+  panel.innerHTML = html || '<p style="font-size:13px;color:var(--text3);">No items found.</p>';
+}
+
+function rsSharedQty(type, itemName, delta) {
+  if (typeof rsSelectedItems[type] !== 'object' || Array.isArray(rsSelectedItems[type])) {
+    rsSelectedItems[type] = {};
+  }
+  const cur  = rsSelectedItems[type][itemName] || 0;
+  const next = Math.max(0, cur + delta);
+  if (next === 0) delete rsSelectedItems[type][itemName];
+  else            rsSelectedItems[type][itemName] = next;
+  rsRenderFoodPanel(type);
+  rsAutoSave();
 }
 
 function rsAddBistroRow() {
@@ -1951,9 +2025,10 @@ function rsRemoveBistroRow(i) {
   rsAutoSave();
 }
 
-function rsRenderBistroRows() {
+function rsRenderBistroRows(type) {
   const tbody = document.getElementById('rs-bistro-rows');
   if (!tbody) return;
+  const pkgType = type || rsCurrentMenuType;
   tbody.innerHTML = rsBistroRows.map((row, i) => {
     const mealHtml = row.dish
       ? `<div style="font-size:13px;font-weight:500;">${esc(row.dish)}</div>${row.addOns?.length ? `<div style="font-size:12px;color:var(--text3);">${row.addOns.map(a => a.split(':').pop()).join(' · ')}</div>` : ''}${row.notes ? `<div style="font-size:12px;color:var(--text3);font-style:italic;">${esc(row.notes)}</div>` : ''}`
@@ -1964,15 +2039,16 @@ function rsRenderBistroRows() {
         style="border:1px solid var(--border);border-radius:var(--radius);padding:6px 8px;font-family:var(--sans);font-size:13px;width:100%;background:var(--surface);color:var(--text);outline:none;"
         oninput="rsBistroRows[${i}].name=this.value;rsAutoSave()"></td>
       <td>${mealHtml}</td>
-      <td><button class="btn btn-outline btn-sm" onclick="rsOpenMealModal(${i})">${row.dish ? 'Edit' : 'Select Meal'}</button></td>
+      <td><button class="btn btn-outline btn-sm" onclick="rsOpenMealModal(${i},'${rsEscJs(pkgType)}')">${row.dish ? 'Edit' : 'Select Meal'}</button></td>
       <td><button class="btn-icon" onclick="rsRemoveBistroRow(${i})">✕</button></td>
     </tr>`;
   }).join('');
 }
 
-function rsOpenMealModal(guestIdx) {
+function rsOpenMealModal(guestIdx, optKey) {
   rsMealModal = {
     guestIdx,
+    optKey: optKey || rsCurrentMenuType,
     dish:   rsBistroRows[guestIdx]?.dish   || '',
     addOns: [...(rsBistroRows[guestIdx]?.addOns || [])],
     notes:  rsBistroRows[guestIdx]?.notes  || ''
@@ -1988,7 +2064,7 @@ function rsCloseMealModal() {
 function rsShowMealStep1() {
   const guestName = rsBistroRows[rsMealModal.guestIdx]?.name || `Guest ${rsMealModal.guestIdx + 1}`;
   document.getElementById('rs-meal-modal-title').textContent = `Select Meal — ${guestName}`;
-  const subcats = rsGetSubcats('bistro-meal');
+  const subcats = rsGetSubcats(rsMealModal.optKey);
   let html = '';
   subcats.forEach(sub => {
     const items = (sub.items || []).filter(i => i.name);
@@ -2001,7 +2077,7 @@ function rsShowMealStep1() {
     html += `</div>`;
   });
   document.getElementById('rs-meal-modal-body').innerHTML = html ||
-    '<p style="color:var(--text3);font-size:13px;">No items found — assign subcategories to "Bistro Meal" in the Booking Options tab.</p>';
+    '<p style="color:var(--text3);font-size:13px;">No items found — assign subcategories to this package in the Booking Options tab.</p>';
   document.getElementById('rs-meal-modal-footer').innerHTML =
     `<button class="btn btn-outline" onclick="rsCloseMealModal()">Cancel</button>`;
 }
@@ -2014,7 +2090,7 @@ function rsPickMealDish(dishName) {
 
 function rsShowMealStep2() {
   document.getElementById('rs-meal-modal-title').textContent = rsMealModal.dish;
-  const allItems = rsGetAllItemsForType('bistro-meal');
+  const allItems = rsGetAllItemsForType(rsMealModal.optKey);
   const item = allItems.find(i => i.name === rsMealModal.dish);
   const mods = (item?.modifiers || []).filter(m => m.group && m.options);
 
@@ -2189,8 +2265,9 @@ function rsBuildRunsheet() {
   const dateStr  = d.date  ? rsFormatDate(d.date)  : '—';
   const timeStr  = [d.start ? rsFormatTime(d.start) : '', d.end ? rsFormatTime(d.end) : ''].filter(Boolean).join(' – ') || '—';
   const venueName = data.venue?.name || 'The Republic Bar';
-  const type = d.menuType;
-  const opt  = getBookingOptions().find(o => o.key === type);
+  const type    = d.menuType;
+  const opt     = getBookingOptions().find(o => o.key === type);
+  const pkgType = type && type !== 'misc' ? getPackageType(type) : null;
 
   let foodHtml = '';
 
@@ -2203,9 +2280,46 @@ function rsBuildRunsheet() {
         <div style="font-size:14px;line-height:1.6;white-space:pre-wrap;font-family:var(--sans);">${esc(miscText) || '<em style="color:#aaa;">No details provided</em>'}</div>
       </div></div>`;
 
+  } else if (type && pkgType === 'alacarte') {
+    const tableRows = (d.bistroRows || []).filter(r => r.name || r.dish).map((r, i) => {
+      const addOnText = (r.addOns || []).map(a => a.split(':').pop()).filter(Boolean).join(' · ');
+      return `<tr>
+        <td style="width:32px;text-align:center;color:var(--text3);font-size:11px;">${i + 1}</td>
+        <td>${esc(r.name) || '—'}</td>
+        <td>${esc(r.dish) || '—'}${addOnText ? `<span style="color:#888;font-size:12px;margin-left:6px;">· ${esc(addOnText)}</span>` : ''}${r.notes ? `<div style="font-size:12px;color:#888;font-style:italic;margin-top:2px;">${esc(r.notes)}</div>` : ''}</td>
+      </tr>`;
+    }).join('') || '<tr><td colspan="3" style="text-align:center;color:#aaa;padding:16px;font-family:var(--sans);font-size:13px;">No guests added</td></tr>';
+    foodHtml = `
+      <div class="rs-section-title">Food Selection</div>
+      <div class="rs-body-row full" style="padding:0;">
+        <div style="padding:12px 24px 6px;"><div class="rs-food-badge">${esc(opt?.label || type)}</div></div>
+        <table class="rs-print-table">
+          <thead><tr><th style="width:32px;">#</th><th>Guest Name</th><th>Meal</th></tr></thead>
+          <tbody>${tableRows}</tbody>
+        </table>
+      </div>`;
+
+  } else if (type && pkgType === 'shared') {
+    const qtys    = (typeof d.selectedItems?.[type] === 'object' && !Array.isArray(d.selectedItems?.[type])) ? d.selectedItems[type] : {};
+    const subcats = rsGetSubcats(type);
+    const rows    = subcats.flatMap(sub =>
+      (sub.items || [])
+        .filter(i => i.name && qtys[i.name] > 0)
+        .map(i => `<div class="rs-item-row">
+          <span class="rs-item-name">${esc(i.name)}</span>
+          <span class="rs-item-desc" style="font-weight:600;color:var(--accent);">× ${qtys[i.name]}</span>
+        </div>`)
+    ).join('') || '<em style="color:#aaa;font-size:13px;font-family:var(--sans);">No dishes selected</em>';
+    foodHtml = `
+      <div class="rs-section-title">Food Selection</div>
+      <div class="rs-body-row full"><div class="rs-cell">
+        <div class="rs-food-badge">${esc(opt?.label || type)}</div>
+        <div class="rs-item-list">${rows}</div>
+      </div></div>`;
+
   } else if (type) {
     const subcats  = rsGetSubcats(type);
-    const selected = d.selectedItems?.[type] || [];
+    const selected = Array.isArray(d.selectedItems?.[type]) ? d.selectedItems[type] : [];
     const itemsHtml = subcats.flatMap(sub =>
       (sub.items || [])
         .filter(i => i.name && selected.includes(i.name))
