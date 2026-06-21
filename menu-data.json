@@ -1,0 +1,747 @@
+{
+  "venue": {
+    "spaces": [
+      {
+        "id": "_fpscgnd",
+        "name": "Taylor's Rooftop",
+        "floor": "Level 3",
+        "capacity": "200 Cocktail",
+        "description": "On the third floor, you will find our renowned, Taylors\nRooftop & the perfect choice for your special event. \nOffering open air vibes, live DJs & a retractable roof, it’s the\nplace to be across each season. \nWhether it be a casual get together or a cocktail style\nevent, you’re spoilt for choice when it comes to your\ncelebration.",
+        "features": "AV Options\nRetractable Roof\nWheelchair Accessible\nDance Floor Option\nPrivate Bar (For exclusive venue hire only)\nFlexible Furniture Layout\nCasual Bookings",
+        "color1": "#678d84",
+        "color2": "#bc655b"
+      },
+      {
+        "id": "_xnpqcah",
+        "name": "Sports Bar",
+        "floor": "Level 2",
+        "capacity": "75 Cocktail",
+        "description": "On the second floor, you will find our one of a kind\nSports Bar.\nA place for those that enjoy the finer things in life. Whether\na celebration for the ages or a small intimate function,\nwe’re here for you to sip, savour and indulge.\nAvailable for exclusive use, it’s the perfect spot for the more\nintimate get togethers or private cocktail events. ",
+        "features": "AV Options\nExclusive Use \nWheelchair Accessible\nBathrooms on same level\nPrivate Bar (For exclusive hire only)\nFlexible Furniture Layout\nCasual Bookings",
+        "color1": "#4b0711",
+        "color2": "#f5d9c1"
+      },
+      {
+        "id": "_4s5ubqe",
+        "name": "Bistro",
+        "floor": "Level 1",
+        "capacity": "75 Cocktail",
+        "description": "On the first floor, we have our Bistro, whether you are\nlooking to catch a game live & loud, enjoy a meal with work\ncolleagues or friends or just looking for a haven away from\nthe bustling streets, the Bistro has it all.\nThe Bistro is available to book as a casual table or group\nbookings.",
+        "features": "AV Options\nExclusive Use Available\nWheelchair Accessible\nBathrooms on same level\nPrivate Bar (For exclusive venue hire only)\nFlexible Furniture Layout\nCasual Bookings",
+        "color1": "#003227",
+        "color2": "#956e43"
+      },
+      {
+        "id": "_l0x8hpp",
+        "name": "Republic Bar",
+        "floor": "Ground Floor",
+        "capacity": "",
+        "description": "At street level, we’re an escape from the bustling streets.\nStep inside (or outside) for after-work catch-ups & casual\nget togethers.\nWith indoor & outdoor spaces, Public Bar is the perfect\nmeeting spot.\nBoth areas are available to book as a casual table or group\nbooking.",
+        "features": "AV Options\nWheelchair Accessible\nPrivate Bar (For exclusive venue hire only)\nFlexible Furniture Layout\nStreet Accessible\nCasual Bookings",
+        "color1": "#956e43",
+        "color2": "#003227"
+      }
+    ],
+    "packages": [
+      {
+        "id": "_ohvkuo1",
+        "name": "6pc Canape",
+        "price": "45",
+        "description": "A selection of 2 Small ・ 2 Premium ・ 1 Substantial ・ 1 Slider "
+      },
+      {
+        "id": "_sfjgwph",
+        "name": "8pc Canape",
+        "price": "59",
+        "description": "A selection of 2 Small ・ 2 Premium ・ 2 Substantial ・ 2 Slider"
+      },
+      {
+        "id": "_y8q27gz",
+        "name": "Bistro - Group Share",
+        "price": "",
+        "description": "A mix of items from our Snacks & Sharing menu to spread amongst the group",
+        "type": "shared"
+      },
+      {
+        "id": "_yz67w3a",
+        "name": "Bistro - A la carte",
+        "price": "",
+        "description": "Individual meals for all guests from our Bistro menu",
+        "type": "alacarte"
+      }
+    ],
+    "contact": {
+      "email": "info@republichotel.com",
+      "phone": "(02) 9252 6522",
+      "address": "69-73 Pitt St, Sydney NSW 2000",
+      "website": "https://republichotel.com/"
+    },
+    "name": "The Republic Hotel",
+    "tagline": "Four Levels, One Republic",
+    "intro": "Four distinctly different experiences under one iconic roof in the\nheart of Sydney.\nSituated in the heart of the city, The Republic is a perfectly placed\nmeeting point. \nBe it our open-air rooftop, private event space, sports bar or full\nvenue buy out, we have a space to suit your needs. \nFrom intimate celebrations to casual group bookings & corporate\nprivate functions, we are here to help make your next event a\nsuccess.\n"
+  },
+  "menus": [
+    {
+      "id": "_uo14e6c",
+      "name": "Canapes",
+      "subcategories": [
+        {
+          "id": "_gk59bwu",
+          "name": "Small",
+          "priceNote": "6 each",
+          "items": [
+            {
+              "id": "_bux7lza",
+              "name": "Whipped Ricotta & Honeycomb Tart",
+              "description": "Monte Fresco, Australian Honeycomb (v)",
+              "price": "6",
+              "dietaries": [
+                "V"
+              ],
+              "modifiers": []
+            },
+            {
+              "id": "_nn60e2m",
+              "name": "Pumpkin Arancini",
+              "description": "Beetroot Mayonnaise (vg, gf)",
+              "price": "6",
+              "dietaries": [
+                "VG",
+                "DF",
+                "V"
+              ],
+              "modifiers": []
+            },
+            {
+              "id": "_34fp40c",
+              "name": "Spiced Chicken Bites",
+              "description": "Republic Secret Spice Coating, Black Garlic Mayo (gf)",
+              "price": "6",
+              "dietaries": [
+                "GF"
+              ],
+              "modifiers": []
+            },
+            {
+              "id": "_67ydprz",
+              "name": "Tuna Cucumber Log",
+              "description": "Cooked Tuna, Japanese Mayo, Parsley, Green Tobiko (gf)",
+              "price": "6",
+              "dietaries": [
+                "GF"
+              ],
+              "modifiers": []
+            }
+          ]
+        },
+        {
+          "id": "_cschjsp",
+          "name": "Premium",
+          "priceNote": "9.5 each",
+          "items": [
+            {
+              "id": "_hikko49",
+              "name": "Shucked Oysters",
+              "description": "Champagne & Cucumber Mignonette",
+              "price": "9.5",
+              "dietaries": [],
+              "modifiers": []
+            },
+            {
+              "id": "_9urrscn",
+              "name": "Tempura King Prawns",
+              "description": "Yuzu Mayo, Pickled Ginger",
+              "price": "9.5",
+              "dietaries": [],
+              "modifiers": []
+            },
+            {
+              "id": "_0f51ruk",
+              "name": "Peking Duck Crepe ",
+              "description": "Hoisin, Cucumber, Shallot",
+              "price": "9.5",
+              "dietaries": [],
+              "modifiers": []
+            },
+            {
+              "id": "_zqwkudb",
+              "name": "Pork & Fennel Sausage Roll ",
+              "description": "Dijonnaisse",
+              "price": "9.5",
+              "dietaries": [],
+              "modifiers": []
+            },
+            {
+              "id": "_9r6l9u8",
+              "name": "Beef & Burgandy Pie ",
+              "description": "Duchess Potato",
+              "price": "9.5",
+              "dietaries": [],
+              "modifiers": []
+            }
+          ]
+        },
+        {
+          "id": "_d6wq2xj",
+          "name": "Substantial",
+          "priceNote": "9.5 each",
+          "items": [
+            {
+              "id": "_1m2yg2z",
+              "name": "Lamb Souvlaki Boat",
+              "description": "Lamb Backstrap, Tomato, Onion, Kalamata Olive, Cucumber, Oregano, tzatziki (gf)",
+              "price": "9.5",
+              "dietaries": [
+                "GF"
+              ],
+              "modifiers": []
+            },
+            {
+              "id": "_2xpwp06",
+              "name": "Salmon Noodle Boat",
+              "description": "Roast Salmon, Green Tea Noodle, Wombok, Carrot, Capsicum, Edamame, Bean Sprout, Sesame Seed, Japanese Dress (df)",
+              "price": "9.5",
+              "dietaries": [
+                "DF"
+              ],
+              "modifiers": []
+            },
+            {
+              "id": "_7qkvzrm",
+              "name": "Fish & Chips",
+              "description": "Beer Battered Fish, Chips, House Tartare, Lemon",
+              "price": "9.5",
+              "dietaries": [],
+              "modifiers": []
+            }
+          ]
+        },
+        {
+          "id": "_jzkv4ji",
+          "name": "Sliders",
+          "priceNote": "9.5 each",
+          "items": [
+            {
+              "id": "_dg6mslf",
+              "name": "Portobello Mushroom",
+              "description": "Baby Spinach, Balsamic Onion, Brie, Basil Mayo (v)",
+              "price": "9.5",
+              "dietaries": [
+                "V"
+              ],
+              "modifiers": []
+            },
+            {
+              "id": "_kgsdgxv",
+              "name": "Fried Chicken",
+              "description": "Jalapeno Mayo, Slaw",
+              "price": "9.5",
+              "dietaries": [],
+              "modifiers": []
+            },
+            {
+              "id": "_t67s9sv",
+              "name": "Cheeseburger",
+              "description": "Wagyu Beef, Cheese, Pickle, American Mustard, Ketchup",
+              "price": "9.5",
+              "dietaries": [],
+              "modifiers": []
+            }
+          ]
+        },
+        {
+          "id": "_c3aan1q",
+          "name": "Dessert",
+          "priceNote": "4.5 each",
+          "items": [
+            {
+              "id": "_ytl3abg",
+              "name": "Macaroons",
+              "description": "Assorted Selection",
+              "price": "4.5",
+              "dietaries": [],
+              "modifiers": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "_5ogquda",
+      "name": "Bistro",
+      "subcategories": [
+        {
+          "id": "_fbs9zyw",
+          "name": "Snacks & Sharing",
+          "priceNote": "",
+          "items": [
+            {
+              "id": "_0im7gmp",
+              "name": "Hot Chips",
+              "description": "rosemary salt, aioli (v, ngi) ",
+              "price": "14",
+              "dietaries": [
+                "V",
+                "GF"
+              ],
+              "modifiers": []
+            },
+            {
+              "id": "_9jqvqh0",
+              "name": "Garlic Sourdough Baguette",
+              "description": "garlic butter, oregano (v) ",
+              "price": "14",
+              "dietaries": [
+                "V"
+              ],
+              "modifiers": []
+            },
+            {
+              "id": "_e3mz0do",
+              "name": "Fried Chicken Bites",
+              "description": "black garlic mayo (ngi)",
+              "price": "20",
+              "dietaries": [
+                "GF"
+              ],
+              "modifiers": []
+            },
+            {
+              "id": "_ofu5tvr",
+              "name": "Korean Chicken Wings",
+              "description": "hot pepper paste, sesame seeds, shallots ",
+              "price": "22",
+              "dietaries": [],
+              "modifiers": []
+            },
+            {
+              "id": "_vgjgko9",
+              "name": "Salt & Pink Pepper Squid",
+              "description": "chilli, chives, yuzu mayo (ngi, i) ",
+              "price": "22",
+              "dietaries": [
+                "GF"
+              ],
+              "modifiers": []
+            },
+            {
+              "id": "_r0hm05j",
+              "name": "Potato Scallops",
+              "description": "vinegar salt, tomato ketchup (v)",
+              "price": "14",
+              "dietaries": [
+                "V"
+              ],
+              "modifiers": []
+            }
+          ]
+        },
+        {
+          "id": "_ywu1xk9",
+          "name": "Burgers",
+          "priceNote": "served w/ chips & tomato sauce",
+          "items": [
+            {
+              "id": "_qvo2z58",
+              "name": "Republic Burger",
+              "description": "wagyu beef, lettuce, tomato, onion, cheese, burger sauce ",
+              "price": "25",
+              "dietaries": [],
+              "modifiers": [
+                {
+                  "id": "_mfl1ku0",
+                  "type": "item",
+                  "name": "Double",
+                  "price": "4"
+                },
+                {
+                  "id": "_31bt44h",
+                  "type": "item",
+                  "name": "GF Bun",
+                  "price": "3"
+                }
+              ]
+            },
+            {
+              "id": "_trblrti",
+              "name": "Butternut Burger",
+              "description": "beetroot mayo, crispy kale, goats' feta, walnut crumble (v)",
+              "price": "25",
+              "dietaries": [
+                "V"
+              ],
+              "modifiers": [
+                {
+                  "id": "_wwwkpes",
+                  "type": "item",
+                  "name": "Extra Patty",
+                  "price": "6"
+                },
+                {
+                  "id": "_uaihmvj",
+                  "type": "item",
+                  "name": "GF Bun",
+                  "price": "3"
+                }
+              ]
+            },
+            {
+              "id": "_zezi9iq",
+              "name": "Chicken Burger",
+              "description": "fried chicken, hot honey ranch, cheese, lettuce, pickles ",
+              "price": "25",
+              "dietaries": [],
+              "modifiers": [
+                {
+                  "id": "_uqdsn3y",
+                  "type": "item",
+                  "name": "Extra Patty",
+                  "price": "6"
+                },
+                {
+                  "id": "_th7cz8s",
+                  "type": "item",
+                  "name": "GF Bun",
+                  "price": "3"
+                }
+              ]
+            },
+            {
+              "id": "_x257pjv",
+              "name": "Republic Steak Sandwich",
+              "description": "scotch fillet, peperonata, tomato, roquette, chimichurri mayo, cheese on toasted Turkish ",
+              "price": "29",
+              "dietaries": [],
+              "modifiers": [
+                {
+                  "id": "_mhcgosz",
+                  "type": "item",
+                  "name": "Double Scotch",
+                  "price": "14"
+                },
+                {
+                  "id": "_zv0p6jx",
+                  "type": "item",
+                  "name": "GF Bun",
+                  "price": "3"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "_asz6gds",
+          "name": "Pub Classics",
+          "priceNote": "served with chips, salad & gravy",
+          "items": [
+            {
+              "id": "_tlnuoyd",
+              "name": "250g Rump Steak",
+              "description": "Southern Prime, grain-fed, NSW (ngi)",
+              "price": "32",
+              "dietaries": [
+                "GF"
+              ],
+              "modifiers": [
+                {
+                  "id": "_8vqc6oq",
+                  "type": "group",
+                  "group": "Cooking Temp",
+                  "options": "Bleu, Rare, Medium Rare, Medium, Medium Well, Well Done"
+                }
+              ]
+            },
+            {
+              "id": "_tdy2c3i",
+              "name": "Chicken Schnitzel",
+              "description": "250g panko crumbed schnitzel",
+              "price": "26",
+              "dietaries": [],
+              "modifiers": [
+                {
+                  "id": "_e6vitsl",
+                  "type": "item",
+                  "name": "Make it a parmi",
+                  "price": "5"
+                }
+              ]
+            },
+            {
+              "id": "_d19fpkl",
+              "name": "Free Range Chicken Breast",
+              "description": "250g, lemon-brined & grilled (ngi)",
+              "price": "26",
+              "dietaries": [
+                "GF"
+              ],
+              "modifiers": [
+                {
+                  "id": "_yady736",
+                  "type": "item",
+                  "name": "Make it a parmi",
+                  "price": "5"
+                }
+              ]
+            },
+            {
+              "id": "_4dyfkv5",
+              "name": "Veal Schnitzel",
+              "description": "250g crumbed schnitzel",
+              "price": "29",
+              "dietaries": [],
+              "modifiers": [
+                {
+                  "id": "_xwgnphw",
+                  "type": "item",
+                  "name": "Make it a parmi",
+                  "price": "5"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "_w7unlzm",
+          "name": "Bowls",
+          "priceNote": "",
+          "items": [
+            {
+              "id": "_ircliz0",
+              "name": "Roast Salmon Noodles",
+              "description": "green tea noodles, wombok, cucumber, bean sprout, edamame, carrot, wakame, capsicum, sesame dressing (vo, a) ",
+              "price": "28",
+              "dietaries": [],
+              "modifiers": [
+                {
+                  "id": "_zflm6hu",
+                  "type": "item",
+                  "name": "Add Chicken",
+                  "price": "6"
+                },
+                {
+                  "id": "_1t6hoa0",
+                  "type": "item",
+                  "name": "Add Salmon",
+                  "price": "8"
+                }
+              ]
+            },
+            {
+              "id": "_uzcj9yq",
+              "name": "Caesar",
+              "description": "Romaine, Grana Padano, garlic butter croutons, pancetta, egg, Caesar dressing",
+              "price": "22",
+              "dietaries": [],
+              "modifiers": [
+                {
+                  "id": "_pk1nj6r",
+                  "type": "item",
+                  "name": "Add Chicken",
+                  "price": "6"
+                },
+                {
+                  "id": "_i2ldy56",
+                  "type": "item",
+                  "name": "Add Salmon",
+                  "price": "8"
+                }
+              ]
+            },
+            {
+              "id": "_zhhau6j",
+              "name": "Greek Lamb",
+              "description": "lamb backstrap souvlaki, cos, tomato, cucumber, red onion, feta, pita bread, olive, tzatziki",
+              "price": "30",
+              "dietaries": [],
+              "modifiers": [
+                {
+                  "id": "_jomy34k",
+                  "type": "item",
+                  "name": "Add Chicken",
+                  "price": "6"
+                },
+                {
+                  "id": "_raf6hoe",
+                  "type": "item",
+                  "name": "Add Salmon",
+                  "price": "8"
+                }
+              ]
+            },
+            {
+              "id": "_zz8m42d",
+              "name": "Protein Power",
+              "description": "ground taco beef, sweet potato, avocado, pickled cabbage, cottage cheese, hot maple (ngi)",
+              "price": "26",
+              "dietaries": [
+                "GF"
+              ],
+              "modifiers": [
+                {
+                  "id": "_gdarfz0",
+                  "type": "item",
+                  "name": "Add Chicken",
+                  "price": "6"
+                },
+                {
+                  "id": "_2lr8klp",
+                  "type": "item",
+                  "name": "Add Salmon",
+                  "price": "8"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "_skedvuf",
+          "name": "Mains",
+          "priceNote": "",
+          "items": [
+            {
+              "id": "_est3jph",
+              "name": "Fish & Chips",
+              "description": "beer battered barramundi, chips, house tartare, lemon (i)",
+              "price": "29",
+              "dietaries": [],
+              "modifiers": []
+            },
+            {
+              "id": "_m4p4r7c",
+              "name": "Beef & Guinness Pie",
+              "description": "potato mash, truffle butter peas, gravy",
+              "price": "27",
+              "dietaries": [],
+              "modifiers": []
+            },
+            {
+              "id": "_ipcqu67",
+              "name": "Plant Powered Schnitzel",
+              "description": "soy-based schnitzel, chips, salad, vegan mayo (ve)",
+              "price": "25",
+              "dietaries": [
+                "VG",
+                "V"
+              ],
+              "modifiers": [
+                {
+                  "id": "_fnm0oj0",
+                  "type": "item",
+                  "name": "Make it a parmi",
+                  "price": "5"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "_92erdkd",
+          "name": "Sides",
+          "priceNote": "",
+          "items": [
+            {
+              "id": "_g2u6ntm",
+              "name": "Seasonal Veg",
+              "description": "steamed veg with salt (ve, ngi)",
+              "price": "12",
+              "dietaries": [
+                "VG",
+                "V",
+                "GF"
+              ],
+              "modifiers": []
+            },
+            {
+              "id": "_5b25oib",
+              "name": "Potato Mash",
+              "description": "buttery mash potato, rosemary salt (ngi, v)",
+              "price": "12",
+              "dietaries": [
+                "V",
+                "GF"
+              ],
+              "modifiers": []
+            },
+            {
+              "id": "_hwczmst",
+              "name": "Cauliflower Mac & Cheese",
+              "description": "Swiss cheese mornay, parsley, chive, parmesan polenta crust (v)",
+              "price": "15",
+              "dietaries": [
+                "V"
+              ],
+              "modifiers": []
+            },
+            {
+              "id": "_qlwiptp",
+              "name": "Side Salad",
+              "description": "house salad (ngi, ve)",
+              "price": "12",
+              "dietaries": [
+                "VG",
+                "V",
+                "GF"
+              ],
+              "modifiers": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "_4q27d0m",
+      "name": "Platters",
+      "subcategories": [
+        {
+          "id": "_m7taiix",
+          "name": "Platters",
+          "priceNote": "",
+          "items": [
+            {
+              "id": "_bvzi13o",
+              "name": "Small Platter",
+              "description": "A selection of Lavosh, Aged Cheddar, Grapes, Antipesto Vege Medley, Hummus & Basil Pesto",
+              "price": "80",
+              "dietaries": [],
+              "modifiers": []
+            },
+            {
+              "id": "_vpzopq5",
+              "name": "Large Platter",
+              "description": "A selection of Lavosh, Sourdough, Brie, Aged Cheddar, Grapes, Mixed Nuts, Antipesto Vege Medley, Hummus, Basil Pesto, Salami & Prosciutto",
+              "price": "120",
+              "dietaries": [],
+              "modifiers": []
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "bookingOptions": {
+    "_ohvkuo1": [
+      "_gk59bwu",
+      "_cschjsp",
+      "_d6wq2xj",
+      "_jzkv4ji"
+    ],
+    "_sfjgwph": [
+      "_gk59bwu",
+      "_cschjsp",
+      "_jzkv4ji",
+      "_d6wq2xj"
+    ],
+    "_y8q27gz": [
+      "_fbs9zyw"
+    ],
+    "_yz67w3a": [
+      "_fbs9zyw",
+      "_ywu1xk9",
+      "_asz6gds",
+      "_w7unlzm",
+      "_skedvuf",
+      "_92erdkd"
+    ]
+  },
+  "publishedAt": "2026-06-21T13:17:15.543Z"
+}
