@@ -547,8 +547,6 @@
   .rs-meal-item-btn:hover { border-color: var(--accent-mid); background: var(--accent-light); color: var(--accent); }
   .rs-meal-item-btn.selected { border-color: var(--accent-mid); background: var(--accent-light); color: var(--accent); font-weight: 600; }
 
-  .rs-misc-textarea { width: 100%; border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 12px; font-family: var(--sans); font-size: 13px; color: var(--text); min-height: 100px; resize: vertical; background: var(--surface); outline: none; }
-  .rs-misc-textarea:focus { border-color: var(--accent-mid); }
 
   .rs-preview-wrap { max-width: 820px; margin: 0 auto; padding: 2rem; }
   .rs-preview-actions { display: flex; gap: 10px; margin-bottom: 1.5rem; align-items: center; }
@@ -740,6 +738,7 @@
       <div class="rs-card-body">
         <div class="rs-food-type-grid" id="rs-food-type-grid"></div>
         <div id="rs-food-panel"></div>
+        <div id="rs-addons-panel"></div>
       </div>
     </div>
 
@@ -978,10 +977,7 @@ const ENQ_KEY      = 'functions_v1';
 const DIETARY_TAGS = ['V', 'VG', 'GF', 'DF', 'NF'];
 function getBookingOptions() {
   const pkgs = (data.venue?.packages || []).filter(p => p.name);
-  return [
-    ...pkgs.map(p => ({ key: p.id, label: p.name })),
-    { key: 'misc', label: 'Miscellaneous' }
-  ];
+  return pkgs.map(p => ({ key: p.id, label: p.name }));
 }
 
 function getPackageType(optKey) {
@@ -1349,18 +1345,12 @@ function renderOptionsTab() {
     (m.subcategories || []).filter(s => s.name).map(s => ({ ...s, menuName: m.name }))
   );
 
-  if (bookingOpts.every(o => o.key === 'misc')) {
+  if (!bookingOpts.length) {
     container.innerHTML = `<div class="info-note">No packages defined yet — add them in the <strong>Venue</strong> tab first.</div>`;
     return;
   }
 
   container.innerHTML = bookingOpts.map(opt => {
-    if (opt.key === 'misc') {
-      return `<div class="card">
-        <div class="card-head">${esc(opt.label)}</div>
-        <div class="card-body"><p style="font-size:13px;color:var(--text3);">Shows all items from all menus — no configuration needed.</p></div>
-      </div>`;
-    }
     const selected = data.bookingOptions?.[opt.key] || [];
     const limits   = data.bookingLimits?.[opt.key]  || {};
     if (!allSubs.length) {
@@ -1803,11 +1793,13 @@ if (gistCfg.token && gistCfg.gistId) pullFromGist();
 /* ════════════════════════════════════
    RUNSHEET
 ════════════════════════════════════ */
-let rsCurrentMenuType  = null;
-let rsSelectedItems    = {};
-let rsBistroRows       = [];
-let rsMealModal        = { guestIdx: -1, dish: '', addOns: [], notes: '' };
-let rsFoodCostIsAuto   = true;
+let rsCurrentMenuType      = null;
+let rsSelectedItems        = {};
+let rsBistroRows           = [];
+let rsMealModal            = { guestIdx: -1, dish: '', addOns: [], notes: '' };
+let rsFoodCostIsAuto       = true;
+let rsAddonItems           = {};
+let rsAddonExpandedSubcats = new Set();
 
 function rsInit() {
   rsRenderLocButtons();
@@ -1851,7 +1843,7 @@ function rsRenderFoodTypeGrid() {
   const opts = getBookingOptions();
   const grid = document.getElementById('rs-food-type-grid');
   if (!grid) return;
-  if (opts.every(o => o.key === 'misc')) {
+  if (!opts.length) {
     grid.innerHTML = '<p style="font-size:13px;color:var(--text3);">No packages defined — add them in the <strong>Venue</strong> tab first.</p>';
     return;
   }
@@ -1867,6 +1859,7 @@ function rsSelectMenuType(type) {
     b.classList.toggle('active', b.dataset.key === type)
   );
   rsRenderFoodPanel(type);
+  rsRenderAddonsPanel();
   rsAutoSave();
 }
 
@@ -1894,13 +1887,6 @@ function rsRenderFoodPanel(type) {
   if (!panel) return;
 
   if (!type) { panel.innerHTML = ''; return; }
-
-  if (type === 'misc') {
-    const cur = rsSelectedItems['_misc'] || '';
-    panel.innerHTML = `<div class="rs-field"><label>Food notes / custom order</label>
-      <textarea class="rs-misc-textarea" id="rs-misc-notes" placeholder="Describe food requirements, custom items…" oninput="rsSelectedItems['_misc']=this.value;rsAutoSave()">${esc(cur)}</textarea></div>`;
-    return;
-  }
 
   const pkgType = getPackageType(type);
 
@@ -2181,6 +2167,73 @@ function rsSaveMeal() {
   rsAutoSave();
 }
 
+/* ── Add Ons panel ── */
+function rsRenderAddonsPanel() {
+  const el = document.getElementById('rs-addons-panel');
+  if (!el) return;
+  const menus = (data.menus || []).filter(m =>
+    (m.subcategories || []).some(s => (s.items || []).some(i => i.name))
+  );
+  if (!menus.length || !rsCurrentMenuType) { el.innerHTML = ''; return; }
+
+  let html = `<div style="margin-top:20px;border-top:1px solid var(--border);padding-top:16px;">
+    <div style="font-size:11px;font-family:var(--sans);text-transform:uppercase;letter-spacing:0.08em;color:var(--text3);margin-bottom:12px;font-weight:600;">Add Ons</div>`;
+
+  menus.forEach(menu => {
+    const subcats = (menu.subcategories || []).filter(s => (s.items || []).some(i => i.name));
+    if (!subcats.length) return;
+    html += `<div style="margin-bottom:8px;">
+      <div style="font-size:12px;font-weight:600;color:var(--text2);font-family:var(--sans);margin-bottom:4px;padding-left:2px;">${esc(menu.name)}</div>`;
+    subcats.forEach(sub => {
+      const items = (sub.items || []).filter(i => i.name);
+      if (!items.length) return;
+      const expanded = rsAddonExpandedSubcats.has(sub.id);
+      const count = items.filter(i => (rsAddonItems[i.name] || 0) > 0).length;
+      html += `<div style="margin-bottom:3px;">
+        <button onclick="rsToggleAddonSubcat('${rsEscJs(sub.id)}')" style="width:100%;text-align:left;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:7px 10px;cursor:pointer;font-family:var(--sans);font-size:13px;color:var(--text);display:flex;align-items:center;gap:6px;">
+          <span style="color:var(--text3);font-size:10px;width:10px;">${expanded ? '▾' : '▸'}</span>
+          <span style="flex:1;">${esc(sub.name)}</span>
+          ${count > 0 ? `<span style="font-weight:600;color:var(--accent);font-size:12px;">${count}</span>` : ''}
+        </button>`;
+      if (expanded) {
+        html += `<div style="padding:4px 0 4px 12px;">`;
+        items.forEach(item => {
+          const qty = rsAddonItems[item.name] || 0;
+          html += `<div class="rs-shared-item${qty > 0 ? ' has-qty' : ''}">
+            <span>${esc(item.name)}</span>
+            <div class="rs-qty">
+              <button class="rs-qty-btn" onclick="rsAddonQty('${rsEscJs(item.name)}',-1)">−</button>
+              <span class="rs-qty-num">${qty}</span>
+              <button class="rs-qty-btn" onclick="rsAddonQty('${rsEscJs(item.name)}',1)">+</button>
+            </div>
+          </div>`;
+        });
+        html += `</div>`;
+      }
+      html += `</div>`;
+    });
+    html += `</div>`;
+  });
+
+  html += `</div>`;
+  el.innerHTML = html;
+}
+
+function rsAddonQty(itemName, delta) {
+  const cur  = rsAddonItems[itemName] || 0;
+  const next = Math.max(0, cur + delta);
+  if (next === 0) delete rsAddonItems[itemName];
+  else            rsAddonItems[itemName] = next;
+  rsRenderAddonsPanel();
+  rsAutoSave();
+}
+
+function rsToggleAddonSubcat(subcatId) {
+  if (rsAddonExpandedSubcats.has(subcatId)) rsAddonExpandedSubcats.delete(subcatId);
+  else rsAddonExpandedSubcats.add(subcatId);
+  rsRenderAddonsPanel();
+}
+
 /* ── Food cost calculator ── */
 function parsePrice(str) {
   if (!str) return 0;
@@ -2253,6 +2306,7 @@ function rsGetFormData() {
     selectedItems:    rsSelectedItems,
     bistroRows:       rsBistroRows,
     foodCostIsAuto:   rsFoodCostIsAuto,
+    addonItems:       rsAddonItems,
   };
 }
 
@@ -2277,12 +2331,14 @@ function rsLoadFormData() {
     rsSelectedItems  = d.selectedItems || {};
     rsBistroRows     = d.bistroRows    || [];
     rsFoodCostIsAuto = d.foodCostIsAuto !== false;
+    rsAddonItems     = d.addonItems    || {};
     if (d.location) rsSV('rs-location', d.location);
     rsRenderLocButtons();
     if (d.menuType) {
       rsCurrentMenuType = d.menuType;
       rsRenderFoodTypeGrid();
       rsRenderFoodPanel(d.menuType);
+      rsRenderAddonsPanel();
     }
   } catch(e) {}
 }
@@ -2291,12 +2347,15 @@ function rsClearForm() {
   if (!confirm('Clear all event details?')) return;
   ['rs-event-name','rs-date','rs-start','rs-end','rs-pax','rs-location',
    'rs-client','rs-contact','rs-food-cost','rs-prepaid','rs-notes'].forEach(id => rsSV(id, ''));
-  rsCurrentMenuType = null;
-  rsSelectedItems   = {};
-  rsBistroRows      = [];
+  rsCurrentMenuType      = null;
+  rsSelectedItems        = {};
+  rsBistroRows           = [];
+  rsAddonItems           = {};
+  rsAddonExpandedSubcats = new Set();
   rsRenderLocButtons();
   rsRenderFoodTypeGrid();
-  document.getElementById('rs-food-panel').innerHTML = '';
+  document.getElementById('rs-food-panel').innerHTML  = '';
+  document.getElementById('rs-addons-panel').innerHTML = '';
   localStorage.removeItem('rr_form');
 }
 
@@ -2364,20 +2423,11 @@ function rsBuildRunsheet() {
   const venueName = data.venue?.name || 'The Republic Bar';
   const type    = d.menuType;
   const opt     = getBookingOptions().find(o => o.key === type);
-  const pkgType = type && type !== 'misc' ? getPackageType(type) : null;
+  const pkgType = type ? getPackageType(type) : null;
 
   let foodHtml = '';
 
-  if (type === 'misc') {
-    const miscText = d.selectedItems?.['_misc'] || '';
-    foodHtml = `
-      <div class="rs-section-title">Food Selection</div>
-      <div class="rs-body-row full"><div class="rs-cell">
-        <div class="rs-food-badge">Miscellaneous</div>
-        <div style="font-size:14px;line-height:1.6;white-space:pre-wrap;font-family:var(--sans);">${esc(miscText) || '<em style="color:#aaa;">No details provided</em>'}</div>
-      </div></div>`;
-
-  } else if (type && pkgType === 'alacarte') {
+  if (type && pkgType === 'alacarte') {
     const tableRows = (d.bistroRows || []).filter(r => r.name || r.dish).map((r, i) => {
       const addOnText = (r.addOns || []).map(a => a.split(':').pop()).filter(Boolean).join(' · ');
       return `<tr>
