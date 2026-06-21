@@ -268,6 +268,7 @@
     align-items: center;
     margin-bottom: 6px;
   }
+  .mod-row.mod-item-row { grid-template-columns: 2fr 90px auto; }
   .mod-row:last-child { margin-bottom: 0; }
   .mod-row input {
     border: 1px solid var(--border);
@@ -280,6 +281,7 @@
     width: 100%;
   }
   .mod-row input:focus { border-color: var(--accent-mid); }
+  .mod-type-tag { font-size: 10px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; color: var(--text3); padding: 2px 5px; border: 1px solid var(--border); border-radius: 3px; white-space: nowrap; }
 
   .sub-foot { padding: 8px 12px; }
 
@@ -1186,7 +1188,18 @@ function addModifier(menuId, subId, itemId) {
   const item = s?.items.find(i => i.id === itemId);
   if (!item) return;
   if (!item.modifiers) item.modifiers = [];
-  item.modifiers.push({ id: genId(), group: '', options: '' });
+  item.modifiers.push({ id: genId(), type: 'group', group: '', options: '' });
+  expandedItems.add(itemId);
+  save(); renderMain();
+}
+
+function addModifierItem(menuId, subId, itemId) {
+  const m = data.menus.find(m => m.id === menuId);
+  const s = m?.subcategories.find(s => s.id === subId);
+  const item = s?.items.find(i => i.id === itemId);
+  if (!item) return;
+  if (!item.modifiers) item.modifiers = [];
+  item.modifiers.push({ id: genId(), type: 'item', name: '', price: '' });
   expandedItems.add(itemId);
   save(); renderMain();
 }
@@ -1286,13 +1299,21 @@ function renderItem(menuId, subId, item) {
   ).join('');
   const mods   = item.modifiers || [];
   const isOpen = expandedItems.has(item.id);
-  const modsHtml = mods.length ? mods.map(mod => `
-    <div class="mod-row">
+  const modsHtml = mods.length ? mods.map(mod => {
+    if (mod.type === 'item') {
+      return `<div class="mod-row mod-item-row">
+        <input type="text" value="${esc(mod.name)}"  placeholder="Item name (e.g. Extra sauce)"  oninput="updateModifier('${menuId}','${subId}','${item.id}','${mod.id}','name',this.value)">
+        <input type="text" value="${esc(mod.price)}" placeholder="$0.00"                          oninput="updateModifier('${menuId}','${subId}','${item.id}','${mod.id}','price',this.value)" style="text-align:right;">
+        <button class="btn-icon" onclick="deleteModifier('${menuId}','${subId}','${item.id}','${mod.id}')">✕</button>
+      </div>`;
+    }
+    return `<div class="mod-row">
       <input type="text" value="${esc(mod.group)}"   placeholder="Group name (e.g. Pick a side)"  oninput="updateModifier('${menuId}','${subId}','${item.id}','${mod.id}','group',this.value)">
       <input type="text" value="${esc(mod.options)}" placeholder="Options separated by commas"    oninput="updateModifier('${menuId}','${subId}','${item.id}','${mod.id}','options',this.value)">
       <button class="btn-icon" onclick="deleteModifier('${menuId}','${subId}','${item.id}','${mod.id}')">✕</button>
-    </div>`).join('')
-    : '<p style="font-size:12px;color:var(--text3);margin-bottom:6px;">No choice groups yet.</p>';
+    </div>`;
+  }).join('')
+    : '<p style="font-size:12px;color:var(--text3);margin-bottom:6px;">No choice groups or items yet.</p>';
   return `
     <div class="item-wrap">
       <div class="item-row">
@@ -1305,8 +1326,11 @@ function renderItem(menuId, subId, item) {
       </div>
       <div class="mod-panel${isOpen ? ' open' : ''}" id="mod-panel-${item.id}">
         <div class="mod-panel-head">
-          <span class="mod-label">Choice groups <span class="mod-label-note">(BOH only — not shown to customers)</span></span>
-          <button class="btn btn-add btn-sm" onclick="addModifier('${menuId}','${subId}','${item.id}')">+ Add group</button>
+          <span class="mod-label">Choice groups &amp; add-ons <span class="mod-label-note">(BOH only — not shown to customers)</span></span>
+          <div style="display:flex;gap:6px;">
+            <button class="btn btn-add btn-sm" onclick="addModifier('${menuId}','${subId}','${item.id}')">+ Add group</button>
+            <button class="btn btn-add btn-sm" onclick="addModifierItem('${menuId}','${subId}','${item.id}')">+ Add item</button>
+          </div>
         </div>
         ${modsHtml}
       </div>
