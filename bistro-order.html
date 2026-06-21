@@ -25,7 +25,6 @@
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 14px; min-height: 100vh; }
 
-  /* ── PAGE HEADER ── */
   .page-header {
     background: var(--surface);
     border-bottom: 1px solid var(--border);
@@ -34,9 +33,11 @@
   .page-title { font-size: 22px; font-weight: 700; color: var(--text); }
   .page-meta { font-size: 13px; color: var(--text3); margin-top: 4px; }
   .page-meta span { margin-right: 20px; }
+  .pkg-selector { margin-top: 10px; display: flex; align-items: center; gap: 10px; }
+  .pkg-selector label { font-size: 13px; color: var(--text2); font-weight: 500; }
+  .pkg-selector select { border: 1px solid var(--border2); border-radius: var(--radius); padding: 6px 10px; font-family: var(--sans); font-size: 13px; background: var(--surface2); color: var(--text); outline: none; cursor: pointer; }
   .header-actions { display: flex; gap: 10px; margin-top: 16px; }
 
-  /* ── BUTTONS ── */
   .btn {
     display: inline-flex; align-items: center; gap: 6px;
     padding: 8px 18px; border-radius: var(--radius);
@@ -50,15 +51,8 @@
   .btn-icon { background: none; border: none; color: var(--text3); font-size: 16px; cursor: pointer; padding: 4px 6px; line-height: 1; border-radius: 4px; }
   .btn-icon:hover { color: var(--text); background: var(--surface2); }
 
-  /* ── CONTENT ── */
   .content { max-width: 720px; margin: 32px auto; padding: 0 24px; }
 
-  .section-title {
-    font-size: 11px; font-weight: 700; text-transform: uppercase;
-    letter-spacing: 0.1em; color: var(--text3); margin-bottom: 12px;
-  }
-
-  /* ── GUEST TABLE ── */
   .guest-table { width: 100%; border-collapse: collapse; background: var(--surface); border-radius: 8px; overflow: hidden; border: 1px solid var(--border); }
   .guest-table th {
     font-size: 11px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase;
@@ -81,7 +75,6 @@
 
   .add-guest-row { margin-top: 12px; }
 
-  /* ── MEAL MODAL ── */
   .modal-overlay {
     position: fixed; inset: 0; background: rgba(0,0,0,0.4);
     z-index: 1000; display: none; align-items: center; justify-content: center;
@@ -121,7 +114,6 @@
   .item-btn.selected { border-color: var(--accent-mid); background: var(--accent-light); color: var(--accent); font-weight: 600; }
   .no-items { font-size: 13px; color: var(--text3); font-style: italic; padding: 8px 0; }
 
-  /* ── PRINT ── */
   @media print {
     body { background: #fff; font-size: 12px; }
     .no-print { display: none !important; }
@@ -132,14 +124,9 @@
     .guest-table th { background: #f0f0f0; color: #333; }
     .guest-table td, .guest-table th { border-color: #ccc; }
     .guest-name-input { border: none; background: transparent; padding: 0; }
-    .btn-icon, .btn { display: none !important; }
-    .meal-col-actions { display: none !important; }
-    .print-only { display: block !important; }
   }
-  .print-only { display: none; }
 
-  /* ── EMPTY STATE ── */
-  .empty-menu {
+  .empty-msg {
     background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
     padding: 32px; text-align: center; color: var(--text3); font-size: 14px;
   }
@@ -150,18 +137,22 @@
 <div class="page-header">
   <div class="page-title" id="headerTitle">Bistro Meal Order</div>
   <div class="page-meta" id="headerMeta"></div>
+  <div id="pkgSelectorRow" class="pkg-selector no-print" style="display:none;">
+    <label>Menu:</label>
+    <select id="pkgSelect" onchange="selectPackage(this.value)"></select>
+  </div>
   <div class="header-actions no-print">
-    <button class="btn btn-primary" onclick="window.print()">Print order</button>
+    <button class="btn btn-primary" onclick="downloadOrder()">Download order</button>
+    <button class="btn" onclick="window.print()">Print order</button>
     <button class="btn" onclick="addGuest()">+ Add guest</button>
   </div>
 </div>
 
 <div class="content">
-  <div id="noMenuMsg" class="empty-menu" style="display:none">
-    No bistro menu found. Make sure you have set up a Bistro menu in the Runsheet app on this device.
+  <div id="emptyMsg" class="empty-msg" style="display:none;">
+    No à la carte menu found. Make sure you have set up an à la carte package in the Function Manager on this device.
   </div>
-
-  <div id="guestSection">
+  <div id="guestSection" style="display:none;">
     <table class="guest-table" id="guestTable">
       <thead>
         <tr>
@@ -180,7 +171,6 @@
   </div>
 </div>
 
-<!-- Meal Selection Modal -->
 <div class="modal-overlay" id="mealModal" onclick="if(event.target===this)closeModal()">
   <div class="modal">
     <div class="modal-header">
@@ -193,69 +183,73 @@
 </div>
 
 <script>
-// ── Data ─────────────────────────────────────────────────────────────────────
-
-const DISH_CATS = [
-  { label: 'Snacks & Sharing', key: 'bistroSnacks' },
-  { label: 'Burgers',          key: 'bistroBurgers' },
-  { label: 'Pub Classics',     key: 'bistroPubClassics' },
-  { label: 'Bowls',            key: 'bistroBowls' },
-  { label: 'Mains',            key: 'bistroMains' },
-  { label: 'Sides',            key: 'bistroSides' },
-];
-
-const ADDONS = [
-  { id: 'mainSide',         label: 'Main Side',         key: 'bistroMainSides',        multi: true, max: 2 },
-  { id: 'sauce',            label: 'Sauce',             key: 'bistroSauces' },
-  { id: 'steakTemp',        label: 'Steak Temp',        key: 'bistroSteakTemp' },
-  { id: 'bowlAddOn',        label: 'Bowl Add-On',       key: 'bistroBowlAddOns' },
-  { id: 'burgerAddOn',      label: 'Burger Add-On',     key: 'bistroBurgerAddOns' },
-  { id: 'schnitzelUpgrade', label: 'Schnitzel Upgrade', key: 'bistroSchnitzelUpgrade' },
-  { id: 'extraSauce',       label: 'Extra Sauce',       key: 'bistroExtraSauce' },
-];
-
-let menuData = {};
-let guests   = [];
-let modal    = { guestIdx: -1, dish: '', addOns: {}, notes: '' };
-
-// ── Init ─────────────────────────────────────────────────────────────────────
+let vmData           = {};
+let alacartePackages = [];
+let currentPackageId = null;
+let subcats          = [];
+let guests           = [];
+let modal            = { guestIdx: -1, dish: '', addOns: [], notes: '' };
 
 function init() {
-  // Load menu from runsheet localStorage
   try {
-    const saved = localStorage.getItem('rr_menus');
-    if (saved) menuData = JSON.parse(saved);
+    const saved = localStorage.getItem('vmm_data');
+    if (saved) vmData = JSON.parse(saved);
   } catch(e) {}
 
-  // Load event info for header
+  alacartePackages = (vmData.venue?.packages || []).filter(p => p.type === 'alacarte' && p.name);
+
   try {
     const form = JSON.parse(localStorage.getItem('rr_form') || '{}');
-    if (form.eventName) {
-      document.getElementById('headerTitle').textContent = form.eventName + ' — Meal Order';
-    }
+    if (form.eventName) document.getElementById('headerTitle').textContent = form.eventName + ' — Meal Order';
     const parts = [];
     if (form.date)   parts.push(form.date);
     if (form.client) parts.push(form.client);
     if (form.pax)    parts.push(form.pax + ' guests');
-    if (parts.length) document.getElementById('headerMeta').innerHTML =
-      parts.map(p => `<span>${esc(p)}</span>`).join('');
+    if (parts.length) document.getElementById('headerMeta').innerHTML = parts.map(p => `<span>${esc(p)}</span>`).join('');
   } catch(e) {}
 
-  // Check we actually have bistro menu items
-  const hasItems = DISH_CATS.some(c => (menuData[c.key] || []).length > 0);
-  document.getElementById('noMenuMsg').style.display = hasItems ? 'none' : 'block';
-  document.getElementById('guestSection').style.display = hasItems ? 'block' : 'none';
+  if (!alacartePackages.length) {
+    document.getElementById('emptyMsg').style.display   = 'block';
+    document.getElementById('guestSection').style.display = 'none';
+    return;
+  }
 
-  if (hasItems && guests.length === 0) addGuest();
+  if (alacartePackages.length > 1) {
+    const sel = document.getElementById('pkgSelect');
+    sel.innerHTML = alacartePackages.map(p => `<option value="${esc(p.id)}">${esc(p.name)}</option>`).join('');
+    document.getElementById('pkgSelectorRow').style.display = 'flex';
+  }
+
+  document.getElementById('guestSection').style.display = 'block';
+  selectPackage(alacartePackages[0].id);
+
+  if (!guests.length) addGuest();
+}
+
+function selectPackage(pkgId) {
+  currentPackageId = pkgId;
+  const subcatIds  = (vmData.bookingOptions || {})[pkgId] || [];
+  subcats = [];
+  (vmData.menus || []).forEach(menu =>
+    (menu.subcategories || []).forEach(sub => {
+      if (subcatIds.includes(sub.id)) subcats.push({ ...sub, menuName: menu.name });
+    })
+  );
+  subcats.sort((a, b) => subcatIds.indexOf(a.id) - subcatIds.indexOf(b.id));
   renderGuests();
 }
 
-// ── Guests ───────────────────────────────────────────────────────────────────
+function getItem(name) {
+  for (const sub of subcats) {
+    const item = (sub.items || []).find(i => i.name === name);
+    if (item) return item;
+  }
+  return null;
+}
 
 function addGuest() {
-  guests.push({ name: '', dish: '', addOns: {}, notes: '' });
+  guests.push({ name: '', dish: '', addOns: [], notes: '' });
   renderGuests();
-  // Focus the new name input
   setTimeout(() => {
     const inputs = document.querySelectorAll('.guest-name-input');
     if (inputs.length) inputs[inputs.length - 1].focus();
@@ -269,20 +263,19 @@ function removeGuest(idx) {
 
 function renderGuests() {
   const tbody = document.getElementById('guestBody');
+  if (!tbody) return;
   tbody.innerHTML = guests.map((g, i) => {
-    const addonText = Object.entries(g.addOns || {})
-      .filter(([, v]) => Array.isArray(v) ? v.length : v)
-      .map(([, v]) => Array.isArray(v) ? v.map(esc).join(' & ') : esc(v))
-      .join(' · ');
+    const addOnText = (g.addOns || []).map(a =>
+      a.startsWith('_addon:') ? a.replace(/^_addon:/, '').replace(/\s*\([^)]+\)\s*$/, '').trim() : a.split(':').pop()
+    ).join(' · ');
     const mealHtml = g.dish
       ? `<div class="meal-dish">${esc(g.dish)}</div>
-         ${addonText ? `<div class="meal-addons">${addonText}</div>` : ''}
+         ${addOnText ? `<div class="meal-addons">${esc(addOnText)}</div>` : ''}
          ${g.notes   ? `<div class="meal-notes">${esc(g.notes)}</div>` : ''}`
       : `<span class="no-meal">No meal selected</span>`;
     return `<tr>
       <td class="guest-num">${i + 1}</td>
-      <td><input class="guest-name-input" type="text" value="${esc(g.name)}" placeholder="Guest name"
-          oninput="guests[${i}].name=this.value"></td>
+      <td><input class="guest-name-input" type="text" value="${esc(g.name)}" placeholder="Guest name" oninput="guests[${i}].name=this.value"></td>
       <td>${mealHtml}</td>
       <td class="no-print"><button class="btn" style="font-size:12px;padding:5px 12px" onclick="openModal(${i})">${g.dish ? 'Edit' : 'Select meal'}</button></td>
       <td class="no-print"><button class="btn-icon" onclick="removeGuest(${i})">✕</button></td>
@@ -290,13 +283,8 @@ function renderGuests() {
   }).join('');
 }
 
-// ── Modal ────────────────────────────────────────────────────────────────────
-
 function openModal(idx) {
-  modal.guestIdx = idx;
-  modal.dish   = guests[idx]?.dish  || '';
-  modal.addOns = { ...(guests[idx]?.addOns || {}) };
-  modal.notes  = guests[idx]?.notes || '';
+  modal = { guestIdx: idx, dish: guests[idx]?.dish || '', addOns: [...(guests[idx]?.addOns || [])], notes: guests[idx]?.notes || '' };
   document.getElementById('mealModal').classList.add('open');
   showStep1();
 }
@@ -308,82 +296,71 @@ function closeModal() {
 function showStep1() {
   const name = guests[modal.guestIdx]?.name || `Guest ${modal.guestIdx + 1}`;
   document.getElementById('modalTitle').textContent = `Select Meal — ${name}`;
-
   let html = '';
-  DISH_CATS.forEach(({ label, key }) => {
-    const items = (menuData[key] || []).map(i => typeof i === 'object' ? i.name : i).filter(Boolean);
+  subcats.forEach(sub => {
+    const items = (sub.items || []).filter(i => i.name);
     if (!items.length) return;
-    html += `<div class="cat-title">${esc(label)}</div><div class="item-grid">`;
-    items.forEach(name => {
-      const sel = name === modal.dish ? ' selected' : '';
-      html += `<button class="item-btn${sel}" onclick="pickDish('${escJs(name)}')">${esc(name)}</button>`;
+    html += `<div class="cat-title">${esc(sub.name)}</div><div class="item-grid">`;
+    items.forEach(item => {
+      html += `<button class="item-btn${item.name === modal.dish ? ' selected' : ''}" onclick="pickDish('${escJs(item.name)}')">${esc(item.name)}</button>`;
     });
     html += `</div>`;
   });
-
-  document.getElementById('modalBody').innerHTML = html || '<p class="no-items">No bistro items found in the menu.</p>';
+  document.getElementById('modalBody').innerHTML = html || '<p class="no-items">No items found — assign subcategories to this package in the Booking Options tab.</p>';
   document.getElementById('modalFooter').innerHTML = `<button class="btn" onclick="closeModal()">Cancel</button>`;
 }
 
-function pickDish(dishName) {
-  modal.dish   = dishName;
-  modal.addOns = {};
+function pickDish(name) {
+  modal.dish   = name;
+  modal.addOns = [];
   showStep2();
 }
 
 function showStep2() {
   document.getElementById('modalTitle').textContent = modal.dish;
-
-  const enabledAddons = (menuData.bistroItemAddons || {})[modal.dish] || [];
-  const relevant = ADDONS.filter(a => enabledAddons.includes(a.id));
+  const item   = getItem(modal.dish);
+  const groups = (item?.modifiers || []).filter(m => (!m.type || m.type === 'group') && m.group && m.options);
+  const addOns = (item?.modifiers || []).filter(m => m.type === 'item' && m.name);
 
   let html = '';
-  relevant.forEach(a => {
-    const options = (menuData[a.key] || []).map(d => typeof d === 'object' ? d.name : d).filter(Boolean);
-    if (!options.length) return;
-    if (a.multi) {
-      const current = Array.isArray(modal.addOns[a.id]) ? modal.addOns[a.id] : [];
-      const atMax   = current.length >= a.max;
-      html += `<div class="cat-title">${esc(a.label)} <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text3)">${current.length}/${a.max}</span></div><div class="item-grid">`;
-      options.forEach(n => {
-        const sel = current.includes(n);
-        const dim = !sel && atMax ? 'opacity:0.35;cursor:default;' : '';
-        html += `<button class="item-btn${sel ? ' selected' : ''}" style="${dim}" onclick="pickAddon('${escJs(a.id)}','${escJs(n)}')">${esc(n)}</button>`;
-      });
-    } else {
-      html += `<div class="cat-title">${esc(a.label)}</div><div class="item-grid">`;
-      options.forEach(n => {
-        const sel = modal.addOns[a.id] === n ? ' selected' : '';
-        html += `<button class="item-btn${sel}" onclick="pickAddon('${escJs(a.id)}','${escJs(n)}')">${esc(n)}</button>`;
-      });
-    }
+  groups.forEach(mod => {
+    const opts = mod.options.split(',').map(s => s.trim()).filter(Boolean);
+    html += `<div class="cat-title">${esc(mod.group)}</div><div class="item-grid">`;
+    opts.forEach(opt => {
+      const key = mod.group + ':' + opt;
+      html += `<button class="item-btn${modal.addOns.includes(key) ? ' selected' : ''}" onclick="toggleAddon('${escJs(key)}')">${esc(opt)}</button>`;
+    });
     html += `</div>`;
   });
 
+  if (addOns.length) {
+    html += `<div class="cat-title">Add Ons</div><div class="item-grid">`;
+    addOns.forEach(addon => {
+      const key = '_addon:' + addon.name + (addon.price ? ' (' + addon.price + ')' : '');
+      html += `<button class="item-btn${modal.addOns.includes(key) ? ' selected' : ''}" onclick="toggleAddon('${escJs(key)}')">${esc(addon.name)}${addon.price ? `<span style="font-size:11px;opacity:0.65;margin-left:5px;">${esc(addon.price)}</span>` : ''}</button>`;
+    });
+    html += `</div>`;
+  }
+
   html += `<div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border)">
     <div class="cat-title" style="margin-top:0">Notes <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text3)">optional</span></div>
-    <textarea rows="2" style="width:100%;border:1px solid var(--border);border-radius:var(--radius);padding:8px 10px;font-family:var(--sans);font-size:13px;color:var(--text);background:var(--surface2);resize:vertical;outline:none"
-      placeholder="Dietary requirements, allergies…"
-      oninput="modal.notes=this.value">${esc(modal.notes)}</textarea>
+    <textarea id="modalNotes" rows="2" style="width:100%;border:1px solid var(--border);border-radius:var(--radius);padding:8px 10px;font-family:var(--sans);font-size:13px;color:var(--text);background:var(--surface2);resize:vertical;outline:none"
+      placeholder="Dietary requirements, allergies…" oninput="modal.notes=this.value"></textarea>
   </div>`;
 
   document.getElementById('modalBody').innerHTML = html;
   document.getElementById('modalFooter').innerHTML =
     `<button class="btn" onclick="showStep1()">← Back</button>
      <button class="btn btn-primary" onclick="saveMeal()">Save</button>`;
+
+  const ta = document.getElementById('modalNotes');
+  if (ta) ta.value = modal.notes;
 }
 
-function pickAddon(addonId, value) {
-  const addon = ADDONS.find(a => a.id === addonId);
-  if (addon?.multi) {
-    const current = Array.isArray(modal.addOns[addonId]) ? [...modal.addOns[addonId]] : [];
-    const idx = current.indexOf(value);
-    if (idx > -1) current.splice(idx, 1);
-    else if (current.length < addon.max) current.push(value);
-    modal.addOns[addonId] = current;
-  } else {
-    modal.addOns[addonId] = modal.addOns[addonId] === value ? '' : value;
-  }
+function toggleAddon(key) {
+  const idx = modal.addOns.indexOf(key);
+  if (idx > -1) modal.addOns.splice(idx, 1);
+  else          modal.addOns.push(key);
   showStep2();
 }
 
@@ -391,13 +368,34 @@ function saveMeal() {
   const idx = modal.guestIdx;
   if (idx < 0 || !guests[idx]) return;
   guests[idx].dish   = modal.dish;
-  guests[idx].addOns = { ...modal.addOns };
+  guests[idx].addOns = [...modal.addOns];
   guests[idx].notes  = modal.notes;
   closeModal();
   renderGuests();
 }
 
-// ── Utils ─────────────────────────────────────────────────────────────────────
+function downloadOrder() {
+  const pkg  = alacartePackages.find(p => p.id === currentPackageId);
+  let form   = {};
+  try { form = JSON.parse(localStorage.getItem('rr_form') || '{}'); } catch(e) {}
+
+  const payload = {
+    version:     1,
+    packageId:   currentPackageId,
+    packageName: pkg?.name || '',
+    eventName:   form.eventName || '',
+    exportedAt:  new Date().toISOString(),
+    guests
+  };
+
+  const filename = (form.eventName || 'order').replace(/[^a-z0-9]/gi, '-').toLowerCase() + '-meal-order.json';
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  const a    = document.createElement('a');
+  a.href     = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
 
 function esc(str) {
   if (!str) return '';
@@ -407,7 +405,6 @@ function escJs(str) {
   return String(str).replace(/\\/g,'\\\\').replace(/'/g,"\\'");
 }
 
-// ── Start ─────────────────────────────────────────────────────────────────────
 init();
 </script>
 </body>

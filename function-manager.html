@@ -737,7 +737,13 @@
     </div>
 
     <div class="rs-card">
-      <div class="rs-card-head"><span class="rs-dot"></span>Food Selection</div>
+      <div class="rs-card-head" style="display:flex;align-items:center;justify-content:space-between;">
+        <span><span class="rs-dot"></span>Food Selection</span>
+        <label style="cursor:pointer;font-size:12px;color:var(--accent);font-family:var(--sans);font-weight:600;display:flex;align-items:center;gap:5px;">
+          ↑ Import order
+          <input type="file" accept=".json" style="display:none;" onchange="rsImportOrder(this)">
+        </label>
+      </div>
       <div class="rs-card-body">
         <div class="rs-food-type-grid" id="rs-food-type-grid"></div>
         <div id="rs-food-panel"></div>
@@ -2198,6 +2204,43 @@ function rsSaveMeal() {
   rsCloseMealModal();
   rsRenderBistroRows();
   rsAutoSave();
+}
+
+function rsImportOrder(input) {
+  const file = input.files?.[0];
+  if (!file) return;
+  input.value = '';
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const payload = JSON.parse(e.target.result);
+      if (!payload.guests || !Array.isArray(payload.guests)) throw new Error('Invalid file');
+
+      // Switch to the matching package if it exists and is alacarte
+      const pkg = (data.venue?.packages || []).find(p => p.id === payload.packageId && p.type === 'alacarte');
+      if (pkg && rsCurrentMenuType !== pkg.id) {
+        rsSelectMenuType(pkg.id);
+      } else if (!pkg) {
+        // Try to find any alacarte package as fallback
+        const fallback = (data.venue?.packages || []).find(p => p.type === 'alacarte');
+        if (fallback && rsCurrentMenuType !== fallback.id) rsSelectMenuType(fallback.id);
+      }
+
+      rsBistroRows = payload.guests.map(g => ({
+        name:   g.name   || '',
+        dish:   g.dish   || '',
+        addOns: Array.isArray(g.addOns) ? g.addOns : [],
+        notes:  g.notes  || ''
+      }));
+
+      rsRenderBistroRows();
+      rsCalcFoodCost();
+      rsAutoSave();
+    } catch(err) {
+      alert('Could not import order — make sure this is a valid meal order file.');
+    }
+  };
+  reader.readAsText(file);
 }
 
 /* ── Add Ons panel ── */
