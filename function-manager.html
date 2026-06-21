@@ -556,7 +556,7 @@
   .rs-masthead { background: var(--accent); color: #fff; padding: 24px 32px; display: flex; justify-content: space-between; align-items: flex-start; }
   .rs-venue-label { font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; opacity: 0.6; margin-bottom: 6px; font-family: var(--sans); }
   .rs-event-name { font-size: 26px; font-weight: normal; letter-spacing: 0.3px; margin-bottom: 4px; }
-  .rs-date-line { font-size: 14px; opacity: 0.75; font-family: var(--sans); }
+  .rs-date-line { font-size: 15px; opacity: 0.92; font-family: var(--sans); font-weight: 600; margin-bottom: 2px; }
   .rs-pax-badge { background: rgba(255,255,255,0.15); border-radius: 4px; padding: 6px 14px; font-family: var(--sans); font-size: 11px; letter-spacing: 1px; text-transform: uppercase; color: rgba(255,255,255,0.9); text-align: right; }
   .rs-pax-num { font-size: 28px; font-weight: 700; font-family: 'Georgia',serif; display: block; line-height: 1; margin-top: 4px; }
   .rs-body-row { display: grid; grid-template-columns: 1fr 1fr; border-bottom: 1px solid var(--border); }
@@ -2546,22 +2546,21 @@ function rsBuildRunsheet() {
   out.innerHTML = `
     <div class="rs-masthead">
       <div>
-        <div class="rs-venue-label">${esc(venueName)}</div>
-        <div class="rs-event-name">${esc(d.eventName) || 'Untitled Event'}</div>
+        <div class="rs-venue-label">${esc(venueName)}${d.location ? ' &nbsp;·&nbsp; ' + esc(d.location) : ''}</div>
         <div class="rs-date-line">${dateStr} &nbsp;·&nbsp; ${timeStr}</div>
+        <div class="rs-event-name">${esc(d.eventName) || 'Untitled Event'}</div>
       </div>
       <div class="rs-pax-badge">Guests<span class="rs-pax-num">${esc(d.pax) || '—'}</span></div>
     </div>
     <div>
       <div class="rs-body-row three">
-        <div class="rs-cell"><div class="rs-cell-label">Location</div><div class="rs-cell-value">${esc(d.location) || '—'}</div></div>
-        <div class="rs-cell"><div class="rs-cell-label">Client</div><div class="rs-cell-value large">${esc(d.client) || '—'}</div></div>
-        <div class="rs-cell"><div class="rs-cell-label">Contact</div><div class="rs-cell-value">${esc(d.contact) || '—'}</div></div>
-      </div>
-      <div class="rs-body-row three">
+        <div class="rs-cell">
+          <div class="rs-cell-label">Client</div>
+          <div class="rs-cell-value large">${esc(d.client) || '—'}</div>
+          ${d.contact ? `<div style="font-size:13px;color:var(--text3);margin-top:3px;font-family:var(--sans);">${esc(d.contact)}</div>` : ''}
+        </div>
         <div class="rs-cell"><div class="rs-cell-label">Prepaid</div><div class="rs-cell-value large">${d.prepaid ? (d.prepaid.trim().startsWith('$') ? esc(d.prepaid.trim()) : '$' + esc(d.prepaid.trim())) : '—'}</div></div>
         <div class="rs-cell"><div class="rs-cell-label">Food Cost</div><div class="rs-cell-value">${d.foodCost ? (d.foodCost.trim().startsWith('$') ? esc(d.foodCost.trim()) : '$' + esc(d.foodCost.trim())) : '—'}</div></div>
-        <div class="rs-cell"><div class="rs-cell-label">Guests</div><div class="rs-cell-value">${esc(d.pax) || '—'}</div></div>
       </div>
       ${foodHtml}
       <div class="rs-section-title">Notes &amp; Special Requirements</div>
