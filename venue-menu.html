@@ -257,6 +257,16 @@ body { font-family: var(--sans); background: var(--bg); color: var(--text); line
   text-transform: uppercase;
   color: var(--green-mid);
   background: var(--green-light);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.subcat-price-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: var(--green-mid);
+  opacity: 0.65;
 }
 .menu-items { padding: 4px 0; }
 .menu-item {
@@ -427,8 +437,9 @@ function renderPage(data) {
   let packagesHtml = '';
   if (pkgs.length) {
     const cards = pkgs.map((pkg, i) => {
-      const subcats = getPackageSubcats(data, pkg.id);
-      const menuHtml = subcats.map(sc => {
+      const subcats   = getPackageSubcats(data, pkg.id);
+      const showPrice = pkg.type === 'alacarte';
+      const menuHtml  = subcats.map(sc => {
         const items = (sc.items || []).filter(item => item.name);
         if (!items.length) return '';
         const rows = items.map(item => {
@@ -440,12 +451,15 @@ function renderPage(data) {
                 ${item.description ? `<div class="menu-item-desc">${esc(item.description)}</div>` : ''}
                 ${tags.length ? `<div class="menu-item-tags">${tags.map(t=>`<span class="diet-tag">${esc(t)}</span>`).join('')}</div>` : ''}
               </div>
-              ${item.price ? `<div class="menu-item-price">${esc(item.price)}</div>` : ''}
+              ${showPrice && item.price ? `<div class="menu-item-price">${esc(item.price)}</div>` : ''}
             </div>`;
         }).join('');
         return `
           <div class="menu-subcat">
-            <div class="menu-subcat-name">${esc(sc.name)}</div>
+            <div class="menu-subcat-name">
+              <span>${esc(sc.name)}</span>
+              ${showPrice ? `<span class="subcat-price-label">Price</span>` : ''}
+            </div>
             <div class="menu-items">${rows}</div>
           </div>`;
       }).join('');
