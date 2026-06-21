@@ -1578,7 +1578,7 @@ function updateContact(field, val) {
 }
 
 function addSpace() {
-  data.venue.spaces.push({ id: genId(), name: '', floor: '', capacity: '', description: '', features: '' });
+  data.venue.spaces.push({ id: genId(), name: '', floor: '', capacity: '', description: '', features: '', color1: '#1a3a2a', color2: '#2d6b48' });
   save(); renderSpaces();
 }
 
@@ -1589,7 +1589,13 @@ function removeSpace(id) {
 
 function updateSpace(id, field, val) {
   const s = data.venue.spaces.find(s => s.id === id);
-  if (s) { s[field] = val; save(); }
+  if (s) {
+    s[field] = val;
+    save();
+    if ((field === 'color1' || field === 'color2') && s.name && s.name === rsV('rs-location')) {
+      rsApplySpaceColours(s);
+    }
+  }
 }
 
 function renderSpaces() {
@@ -1606,6 +1612,8 @@ function renderSpaces() {
         <div class="field"><label>Name</label><input type="text" value="${esc(s.name)}" placeholder="e.g. Rooftop Bar" oninput="updateSpace('${s.id}','name',this.value)"></div>
         <div class="field"><label>Floor / Level</label><input type="text" value="${esc(s.floor)}" placeholder="e.g. Third Floor" oninput="updateSpace('${s.id}','floor',this.value)"></div>
         <div class="field"><label>Capacity</label><input type="text" value="${esc(s.capacity)}" placeholder="e.g. 75 Cocktail" oninput="updateSpace('${s.id}','capacity',this.value)"></div>
+        <div class="field"><label>Header Colour</label><input type="color" value="${s.color1 || '#1a3a2a'}" oninput="updateSpace('${s.id}','color1',this.value)" style="width:100%;height:36px;padding:2px;border:1px solid var(--border);border-radius:var(--radius);cursor:pointer;"></div>
+        <div class="field"><label>Accent Colour</label><input type="color" value="${s.color2 || '#2d6b48'}" oninput="updateSpace('${s.id}','color2',this.value)" style="width:100%;height:36px;padding:2px;border:1px solid var(--border);border-radius:var(--radius);cursor:pointer;"></div>
       </div>
       <div class="field"><label>Description</label><textarea rows="2" oninput="updateSpace('${s.id}','description',this.value)">${esc(s.description)}</textarea></div>
       <div class="field"><label>Features <span style="font-weight:400;color:var(--text3)">(one per line)</span></label><textarea rows="4" oninput="updateSpace('${s.id}','features',this.value)">${esc(s.features)}</textarea></div>
@@ -1816,6 +1824,25 @@ function rsSwitchSub(name) {
   if (name === 'preview') rsBuildRunsheet();
 }
 
+/* ── Space colour palette ── */
+function hexMixWhite(hex, amount) {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  const mix = v => Math.round(v * amount + 255 * (1 - amount)).toString(16).padStart(2, '0');
+  return '#' + mix(r) + mix(g) + mix(b);
+}
+
+function rsApplySpaceColours(space) {
+  const c1    = space?.color1 || '#1a3a2a';
+  const c2    = space?.color2 || '#2d6b48';
+  const light = hexMixWhite(c2, 0.18);
+  const root  = document.documentElement;
+  root.style.setProperty('--accent',       c1);
+  root.style.setProperty('--accent-mid',   c2);
+  root.style.setProperty('--accent-light', light);
+}
+
 /* ── Location buttons (from venue spaces or defaults) ── */
 const RS_DEFAULT_LOCS = ['Republic Bar', 'Bistro', 'Sports Bar', "Taylor's Rooftop"];
 
@@ -1836,6 +1863,8 @@ function rsSelectLocation(loc) {
   document.querySelectorAll('.rs-loc-btn').forEach(b =>
     b.classList.toggle('selected', b.textContent === loc)
   );
+  const space = (data.venue?.spaces || []).find(s => s.name === loc);
+  rsApplySpaceColours(space);
   rsAutoSave();
 }
 
@@ -2339,7 +2368,11 @@ function rsLoadFormData() {
     rsBistroRows     = d.bistroRows    || [];
     rsFoodCostIsAuto = d.foodCostIsAuto !== false;
     rsAddonItems     = d.addonItems    || {};
-    if (d.location) rsSV('rs-location', d.location);
+    if (d.location) {
+      rsSV('rs-location', d.location);
+      const space = (data.venue?.spaces || []).find(s => s.name === d.location);
+      rsApplySpaceColours(space);
+    }
     rsRenderLocButtons();
     if (d.menuType) {
       rsCurrentMenuType = d.menuType;
