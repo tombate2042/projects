@@ -1963,15 +1963,14 @@ function rsTogglePlatterItem(type, itemName) {
     const subItems = sub?.items || [];
     const subNames = subItems.map(i => i.name);
     const subQtyTotal = subNames.reduce((sum, n) => sum + (selected[n] || 0), 0);
-    if (sub) {
-      const limits = data.bookingLimits?.[type] || {};
-      const limit  = limits[sub.id];
-      if (limit && subQtyTotal >= limit * pax) {
-        alert(`${sub.name} is fully allocated. Reduce an existing item's quantity first.`);
-        return;
-      }
+    const limits   = data.bookingLimits?.[type] || {};
+    const limit    = sub ? limits[sub.id] : undefined;
+    if (limit && subQtyTotal >= limit * pax) {
+      alert(`${sub.name} is fully allocated. Reduce an existing item's quantity first.`);
+      return;
     }
-    selected[itemName] = Math.max(1, pax - subQtyTotal);
+    const remaining = limit ? (limit * pax - subQtyTotal) : pax;
+    selected[itemName] = Math.max(1, Math.min(pax, remaining));
   }
   rsRenderFoodPanel(type);
   rsAutoSave();
