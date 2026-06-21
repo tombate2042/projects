@@ -709,7 +709,7 @@
           <div class="rs-field"><label>Date</label><input type="text" id="rs-date" placeholder="dd.mm.yyyy" oninput="rsAutoSave()" onblur="rsFormatDateInput(this)"></div>
           <div class="rs-field"><label>Start</label><input type="text" id="rs-start" placeholder="e.g. 7pm" oninput="rsAutoSave()" onblur="rsFormatTimeInput(this)"></div>
           <div class="rs-field"><label>End</label><input type="text" id="rs-end" placeholder="e.g. 11pm" oninput="rsAutoSave()" onblur="rsFormatTimeInput(this)"></div>
-          <div class="rs-field"><label>Guests</label><input type="number" id="rs-pax" placeholder="e.g. 40" min="1" oninput="rsAutoSave()"></div>
+          <div class="rs-field"><label>Guests</label><input type="number" id="rs-pax" placeholder="e.g. 40" min="1" oninput="rsAutoSave();rsCalcFoodCost()"></div>
         </div>
         <div class="rs-field">
           <label>Location / Area</label>
@@ -730,7 +730,7 @@
     <div class="rs-card">
       <div class="rs-card-head"><span class="rs-dot"></span>Financials</div>
       <div class="rs-card-body rs-grid-2">
-        <div class="rs-field"><label>Food Cost</label><input type="text" id="rs-food-cost" placeholder="e.g. $1,200" oninput="rsAutoSave()"></div>
+        <div class="rs-field"><label>Food Cost</label><input type="text" id="rs-food-cost" placeholder="auto-calculated" oninput="rsFoodCostIsAuto=false;rsAutoSave()"></div>
         <div class="rs-field"><label>Prepaid Amount</label><input type="text" id="rs-prepaid" placeholder="e.g. $500" oninput="rsAutoSave()"></div>
       </div>
     </div>
@@ -1803,10 +1803,11 @@ if (gistCfg.token && gistCfg.gistId) pullFromGist();
 /* ════════════════════════════════════
    RUNSHEET
 ════════════════════════════════════ */
-let rsCurrentMenuType = null;
-let rsSelectedItems   = {};
-let rsBistroRows      = [];
-let rsMealModal       = { guestIdx: -1, dish: '', addOns: [], notes: '' };
+let rsCurrentMenuType  = null;
+let rsSelectedItems    = {};
+let rsBistroRows       = [];
+let rsMealModal        = { guestIdx: -1, dish: '', addOns: [], notes: '' };
+let rsFoodCostIsAuto   = true;
 
 function rsInit() {
   rsRenderLocButtons();
@@ -1861,6 +1862,7 @@ function rsRenderFoodTypeGrid() {
 
 function rsSelectMenuType(type) {
   rsCurrentMenuType = type;
+  rsFoodCostIsAuto  = true;
   document.querySelectorAll('.rs-food-type-btn').forEach(b =>
     b.classList.toggle('active', b.dataset.key === type)
   );
@@ -1948,6 +1950,7 @@ function rsRenderFoodPanel(type) {
     html += `</div></div>`;
   });
   panel.innerHTML = html || '<p style="font-size:13px;color:var(--text3);">No items found.</p>';
+  rsCalcFoodCost();
 }
 
 function rsTogglePlatterItem(type, itemName) {
@@ -2029,6 +2032,7 @@ function rsRenderSharedPanel(panel, type) {
     html += `</div>`;
   });
   panel.innerHTML = html || '<p style="font-size:13px;color:var(--text3);">No items found.</p>';
+  rsCalcFoodCost();
 }
 
 function rsSharedQty(type, itemName, delta) {
@@ -2073,6 +2077,7 @@ function rsRenderBistroRows(type) {
       <td><button class="btn-icon" onclick="rsRemoveBistroRow(${i})">✕</button></td>
     </tr>`;
   }).join('');
+  rsCalcFoodCost();
 }
 
 function rsOpenMealModal(guestIdx, optKey) {
@@ -2176,6 +2181,56 @@ function rsSaveMeal() {
   rsAutoSave();
 }
 
+/* ── Food cost calculator ── */
+function parsePrice(str) {
+  if (!str) return 0;
+  const n = parseFloat(String(str).replace(/[^0-9.]/g, ''));
+  return isNaN(n) ? 0 : n;
+}
+
+function rsCalcFoodCost() {
+  if (!rsFoodCostIsAuto) return;
+  const el = document.getElementById('rs-food-cost');
+  if (!el) return;
+  const type = rsCurrentMenuType;
+  if (!type) return;
+  const pkgType = getPackageType(type);
+  const pax = parseInt(rsV('rs-pax')) || 0;
+  let total = 0;
+
+  if (pkgType === 'platter') {
+    const pkg = (data.venue?.packages || []).find(p => p.id === type);
+    total = pax * parsePrice(pkg?.price || '');
+  } else if (pkgType === 'shared') {
+    const rawSel = rsSelectedItems[type];
+    if (rawSel && typeof rawSel === 'object' && !Array.isArray(rawSel)) {
+      const allItems = rsGetAllItemsForType(type);
+      Object.entries(rawSel).forEach(([name, qty]) => {
+        const item = allItems.find(i => i.name === name);
+        total += parsePrice(item?.price || '') * (qty || 0);
+      });
+    }
+  } else if (pkgType === 'alacarte') {
+    const allItems = rsGetAllItemsForType(type);
+    rsBistroRows.forEach(row => {
+      if (row.dish) {
+        const item = allItems.find(i => i.name === row.dish);
+        total += parsePrice(item?.price || '');
+        (row.addOns || []).forEach(key => {
+          if (key.startsWith('_addon:')) {
+            const m = key.split(':').pop().match(/\(([^)]+)\)\s*$/);
+            if (m) total += parsePrice(m[1]);
+          }
+        });
+      }
+    });
+  }
+
+  el.value = total > 0
+    ? '$' + (total % 1 === 0 ? total : total.toFixed(2)).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+    : '';
+}
+
 /* ── Persistence ── */
 function rsAutoSave() {
   localStorage.setItem('rr_form', JSON.stringify(rsGetFormData()));
@@ -2194,9 +2249,10 @@ function rsGetFormData() {
     foodCost:      rsV('rs-food-cost'),
     prepaid:       rsV('rs-prepaid'),
     notes:         rsV('rs-notes'),
-    menuType:      rsCurrentMenuType,
-    selectedItems: rsSelectedItems,
-    bistroRows:    rsBistroRows,
+    menuType:         rsCurrentMenuType,
+    selectedItems:    rsSelectedItems,
+    bistroRows:       rsBistroRows,
+    foodCostIsAuto:   rsFoodCostIsAuto,
   };
 }
 
@@ -2218,8 +2274,9 @@ function rsLoadFormData() {
     rsSV('rs-food-cost',  d.foodCost);
     rsSV('rs-prepaid',    d.prepaid);
     rsSV('rs-notes',      d.notes);
-    rsSelectedItems = d.selectedItems || {};
-    rsBistroRows    = d.bistroRows    || [];
+    rsSelectedItems  = d.selectedItems || {};
+    rsBistroRows     = d.bistroRows    || [];
+    rsFoodCostIsAuto = d.foodCostIsAuto !== false;
     if (d.location) rsSV('rs-location', d.location);
     rsRenderLocButtons();
     if (d.menuType) {
