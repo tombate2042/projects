@@ -2307,6 +2307,7 @@ function rsAddonQty(itemName, delta) {
   if (next === 0) delete rsAddonItems[itemName];
   else            rsAddonItems[itemName] = next;
   rsRenderAddonsPanel();
+  rsCalcFoodCost();
   rsAutoSave();
 }
 
@@ -2360,6 +2361,17 @@ function rsCalcFoodCost() {
       }
     });
   }
+
+  // Add Ons section — applies to all package types
+  const allMenuItems = (data.menus || []).flatMap(m =>
+    (m.subcategories || []).flatMap(s => s.items || [])
+  );
+  Object.entries(rsAddonItems).forEach(([name, qty]) => {
+    if (qty > 0) {
+      const item = allMenuItems.find(i => i.name === name);
+      total += parsePrice(item?.price || '') * qty;
+    }
+  });
 
   el.value = total > 0
     ? '$' + (total % 1 === 0 ? total : total.toFixed(2)).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')
