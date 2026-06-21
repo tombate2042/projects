@@ -1923,17 +1923,25 @@ function rsRenderFoodPanel(type) {
     return;
   }
 
+  const pax = parseInt(rsV('rs-pax')) || 0;
   let html = '';
   subcats.forEach(sub => {
     const items = (sub.items || []).filter(i => i.name);
     if (!items.length) return;
-    const limit = limits[sub.id];
+    const limit       = limits[sub.id];
     const subSelCount = items.filter(i => selected[i.name] !== undefined).length;
-    const countStr = limit
-      ? ` <span style="font-weight:600;color:${subSelCount >= limit ? '#c0392b' : 'var(--accent)'};">${subSelCount}/${limit}</span>`
-      : ` <span style="font-weight:600;color:${subSelCount > 0 ? 'var(--accent)' : 'var(--text3)'};">${subSelCount}</span>`;
+    const subQtyTotal = items.reduce((sum, i) => sum + (selected[i.name] || 0), 0);
+    const selCountStr = limit
+      ? `<span style="font-weight:600;color:${subSelCount >= limit ? '#c0392b' : 'var(--accent)'};">${subSelCount}/${limit}</span>`
+      : `<span style="font-weight:600;color:${subSelCount > 0 ? 'var(--accent)' : 'var(--text3)'};">${subSelCount}</span>`;
+    const allocColor  = pax > 0 && subSelCount > 0
+      ? (subQtyTotal > pax ? '#c0392b' : subQtyTotal === pax ? '#27ae60' : '#e67e22')
+      : 'var(--text3)';
+    const allocStr    = pax > 0
+      ? `<span id="rs-sub-alloc-${sub.id}" style="margin-left:auto;font-size:10px;font-weight:600;color:${allocColor};">${subQtyTotal} / ${pax} guests</span>`
+      : '';
     html += `<div style="margin-bottom:14px;">
-      <div style="font-size:11px;font-family:var(--sans);text-transform:uppercase;letter-spacing:0.05em;color:var(--text3);margin-bottom:6px;">${esc(sub.name)}${countStr}</div>
+      <div style="font-size:11px;font-family:var(--sans);text-transform:uppercase;letter-spacing:0.05em;color:var(--text3);margin-bottom:6px;display:flex;align-items:center;gap:6px;">${esc(sub.name)} ${selCountStr} ${allocStr}</div>
       <div class="rs-canape-grid">`;
     items.forEach(item => {
       const isSel = selected[item.name] !== undefined;
@@ -1971,7 +1979,11 @@ function rsTogglePlatterItem(type, itemName) {
         }
       }
     }
-    selected[itemName] = Math.max(1, parseInt(rsV('rs-pax')) || 1);
+    const pax     = Math.max(1, parseInt(rsV('rs-pax')) || 1);
+    const sub     = rsGetSubcats(type).find(s => (s.items || []).some(i => i.name === itemName));
+    const subItems = sub?.items || [];
+    const subQtyTotal = subItems.reduce((sum, i) => sum + (selected[i.name] || 0), 0);
+    selected[itemName] = Math.max(1, pax - subQtyTotal);
   }
   rsRenderFoodPanel(type);
   rsAutoSave();
@@ -1980,6 +1992,18 @@ function rsTogglePlatterItem(type, itemName) {
 function rsSetPlatterQty(type, itemName, val) {
   if (typeof rsSelectedItems[type] !== 'object' || Array.isArray(rsSelectedItems[type])) return;
   rsSelectedItems[type][itemName] = Math.max(1, parseInt(val) || 1);
+  // Update just the allocation badge for this item's subcategory — no full re-render needed
+  const sub = rsGetSubcats(type).find(s => (s.items || []).some(i => i.name === itemName));
+  if (sub) {
+    const el  = document.getElementById(`rs-sub-alloc-${sub.id}`);
+    if (el) {
+      const pax         = parseInt(rsV('rs-pax')) || 0;
+      const subItems    = (sub.items || []).filter(i => i.name);
+      const subQtyTotal = subItems.reduce((sum, i) => sum + (rsSelectedItems[type][i.name] || 0), 0);
+      el.textContent = `${subQtyTotal} / ${pax} guests`;
+      el.style.color = subQtyTotal > pax ? '#c0392b' : subQtyTotal === pax ? '#27ae60' : '#e67e22';
+    }
+  }
   rsAutoSave();
 }
 
