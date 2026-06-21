@@ -1971,7 +1971,7 @@ function rsTogglePlatterItem(type, itemName) {
         return;
       }
     }
-    selected[itemName] = pax;
+    selected[itemName] = Math.max(1, pax - subQtyTotal);
   }
   rsRenderFoodPanel(type);
   rsAutoSave();
