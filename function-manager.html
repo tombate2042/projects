@@ -76,6 +76,8 @@
   }
   .tab-btn:hover { color: rgba(255,255,255,0.85); }
   .tab-btn.active { color: #fff; border-bottom-color: #7ec49a; }
+  @keyframes pin-shake { 0%,100%{transform:translateX(0)} 20%,60%{transform:translateX(-6px)} 40%,80%{transform:translateX(6px)} }
+  .pin-shake { animation: pin-shake 0.35s ease; }
   .tab-panel { display: none; }
   .tab-panel.active { display: block; }
 
@@ -613,7 +615,7 @@
   <button class="tab-btn"        id="tab-btn-enquiries"  onclick="switchTab('enquiries')">Enquiries</button>
   <button class="tab-btn"        id="tab-btn-runsheet"   onclick="switchTab('runsheet')">Runsheet</button>
   <button class="tab-btn"        id="tab-btn-venue"      onclick="switchTab('venue')">Venue</button>
-  <button class="tab-btn"        id="tab-btn-settings"   onclick="switchTab('settings')">Settings</button>
+  <button class="tab-btn"        id="tab-btn-settings"   onclick="openSettingsAuth()" style="margin-left:auto;">⚙ Settings</button>
 </div>
 
 <!-- ── MENUS ── -->
@@ -883,6 +885,21 @@
     </div>
 
     <div class="card">
+      <div class="card-head">Change PIN</div>
+      <div class="card-body">
+        <div class="grid2" style="margin-bottom:10px;">
+          <div class="field"><label>Current PIN</label><input type="password" id="pin-current" inputmode="numeric" maxlength="8" placeholder="••••"></div>
+          <div class="field" style="grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div class="field" style="margin:0"><label>New PIN</label><input type="password" id="pin-new" inputmode="numeric" maxlength="8" placeholder="••••"></div>
+            <div class="field" style="margin:0"><label>Confirm PIN</label><input type="password" id="pin-confirm" inputmode="numeric" maxlength="8" placeholder="••••"></div>
+          </div>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="savePin()">Update PIN</button>
+        <div id="pin-msg" style="font-size:12px;margin-top:8px;min-height:16px;"></div>
+      </div>
+    </div>
+
+    <div class="card">
       <div class="card-head" style="color:var(--danger);">Danger Zone</div>
       <div class="card-body">
         <div>
@@ -892,6 +909,23 @@
       </div>
     </div>
 
+  </div>
+</div>
+
+<!-- ── SETTINGS PIN MODAL ── -->
+<div class="modal-overlay" id="pinModal" onclick="if(event.target===this)closePinModal()">
+  <div class="modal" style="width:300px;padding:28px 24px;text-align:center;">
+    <div style="font-size:20px;margin-bottom:4px;">🔒</div>
+    <div class="modal-title" style="margin-bottom:16px;">Settings</div>
+    <input id="pin-input" type="password" inputmode="numeric" maxlength="8"
+      placeholder="Enter PIN"
+      style="width:100%;padding:10px 14px;font-size:16px;letter-spacing:4px;text-align:center;border:1px solid var(--border);border-radius:var(--radius);font-family:var(--sans);outline:none;background:var(--surface);"
+      onkeydown="if(event.key==='Enter')submitPin()">
+    <div id="pin-error" style="min-height:18px;font-size:12px;color:var(--danger);margin-top:8px;"></div>
+    <div style="display:flex;gap:8px;margin-top:4px;">
+      <button class="btn btn-outline" onclick="closePinModal()" style="flex:1;">Cancel</button>
+      <button class="btn btn-primary" onclick="submitPin()" style="flex:1;">Unlock</button>
+    </div>
   </div>
 </div>
 
@@ -1069,6 +1103,7 @@ function saveEnquiries() {
    TABS
 ════════════════════════════════════ */
 function switchTab(name) {
+  if (name !== 'settings') settingsUnlocked = false;
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('tab-' + name).classList.add('active');
@@ -1715,6 +1750,59 @@ function clearAll() {
   data = { venue: { name:'', tagline:'', intro:'', spaces:[], packages:[], contact:{} }, menus:[], bookingOptions:{}, bookingLimits:{} };
   currentMenuId = null;
   save(); renderAll();
+}
+
+/* ════════════════════════════════════
+   SETTINGS PIN
+════════════════════════════════════ */
+const PIN_KEY = 'vmm_pin';
+let settingsUnlocked = false;
+
+function getPin() { return localStorage.getItem(PIN_KEY) || '1234'; }
+
+function openSettingsAuth() {
+  if (settingsUnlocked) { switchTab('settings'); return; }
+  document.getElementById('pin-input').value = '';
+  document.getElementById('pin-error').textContent = '';
+  document.getElementById('pinModal').classList.add('open');
+  setTimeout(() => document.getElementById('pin-input').focus(), 60);
+}
+
+function closePinModal() {
+  document.getElementById('pinModal').classList.remove('open');
+}
+
+function submitPin() {
+  const val = document.getElementById('pin-input').value;
+  if (val === getPin()) {
+    settingsUnlocked = true;
+    closePinModal();
+    switchTab('settings');
+  } else {
+    const inp = document.getElementById('pin-input');
+    document.getElementById('pin-error').textContent = 'Incorrect PIN';
+    inp.classList.remove('pin-shake');
+    void inp.offsetWidth;
+    inp.classList.add('pin-shake');
+    inp.value = '';
+  }
+}
+
+function savePin() {
+  const current = document.getElementById('pin-current').value;
+  const next    = document.getElementById('pin-new').value;
+  const confirm = document.getElementById('pin-confirm').value;
+  const msg     = document.getElementById('pin-msg');
+  if (current !== getPin())          { msg.style.color='var(--danger)'; msg.textContent='Current PIN is incorrect.'; return; }
+  if (!next || next.length < 4)      { msg.style.color='var(--danger)'; msg.textContent='New PIN must be at least 4 digits.'; return; }
+  if (next !== confirm)              { msg.style.color='var(--danger)'; msg.textContent='PINs do not match.'; return; }
+  localStorage.setItem(PIN_KEY, next);
+  document.getElementById('pin-current').value = '';
+  document.getElementById('pin-new').value     = '';
+  document.getElementById('pin-confirm').value = '';
+  msg.style.color = 'var(--accent-mid)';
+  msg.textContent = 'PIN updated.';
+  setTimeout(() => { msg.textContent = ''; }, 2500);
 }
 
 function publishMenuData() {
