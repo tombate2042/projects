@@ -510,6 +510,8 @@
   .rs-canape-item:hover { background: var(--surface2); }
   .rs-canape-item.selected { background: var(--accent-light); border-color: var(--accent-mid); color: var(--accent); }
   .rs-canape-item input[type=checkbox] { accent-color: var(--accent-mid); width: 14px; height: 14px; flex-shrink: 0; }
+  .rs-platter-qty { width: 52px; padding: 3px 6px; border: 1px solid var(--accent-mid); border-radius: 4px; background: var(--surface); color: var(--accent); font-size: 13px; font-weight: 600; text-align: center; outline: none; flex-shrink: 0; }
+  .rs-platter-qty::-webkit-inner-spin-button, .rs-platter-qty::-webkit-outer-spin-button { opacity: 1; }
 
   .rs-bistro-guest-table { width: 100%; border-collapse: collapse; }
   .rs-bistro-guest-table th { font-size: 11px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; color: var(--text2); padding: 6px 8px; text-align: left; border-bottom: 1px solid var(--border); }
@@ -1910,10 +1912,11 @@ function rsRenderFoodPanel(type) {
     return;
   }
 
-  /* Platter / per-person — checkbox with optional limits */
+  /* Platter / per-person — checkbox with qty and optional limits */
   const subcats = rsGetSubcats(type);
   const limits  = data.bookingLimits?.[type] || {};
-  const selected = rsSelectedItems[type] || [];
+  const rawSel  = rsSelectedItems[type];
+  const selected = (rawSel && typeof rawSel === 'object' && !Array.isArray(rawSel)) ? rawSel : {};
 
   if (!subcats.length) {
     panel.innerHTML = `<p style="font-size:13px;color:var(--text3);padding:8px 0;">No subcategories assigned to this type yet — configure them in the <strong>Booking Options</strong> tab.</p>`;
@@ -1925,16 +1928,20 @@ function rsRenderFoodPanel(type) {
     const items = (sub.items || []).filter(i => i.name);
     if (!items.length) return;
     const limit = limits[sub.id];
-    const subSel = items.filter(i => selected.includes(i.name));
-    const countStr = limit ? ` <span style="font-weight:600;color:var(--accent);">${subSel.length}/${limit}</span>` : '';
+    const subSelCount = items.filter(i => selected[i.name] !== undefined).length;
+    const countStr = limit
+      ? ` <span style="font-weight:600;color:${subSelCount >= limit ? '#c0392b' : 'var(--accent)'};">${subSelCount}/${limit}</span>`
+      : ` <span style="font-weight:600;color:${subSelCount > 0 ? 'var(--accent)' : 'var(--text3)'};">${subSelCount}</span>`;
     html += `<div style="margin-bottom:14px;">
       <div style="font-size:11px;font-family:var(--sans);text-transform:uppercase;letter-spacing:0.05em;color:var(--text3);margin-bottom:6px;">${esc(sub.name)}${countStr}</div>
       <div class="rs-canape-grid">`;
     items.forEach(item => {
-      const sel = selected.includes(item.name);
-      html += `<div class="rs-canape-item${sel ? ' selected' : ''}" onclick="rsToggleItem('${rsEscJs(type)}','${rsEscJs(item.name)}',this)">
-        <input type="checkbox" ${sel ? 'checked' : ''} onclick="event.stopPropagation();rsToggleItem('${rsEscJs(type)}','${rsEscJs(item.name)}',this.parentElement)" style="accent-color:var(--accent-mid);width:14px;height:14px;flex-shrink:0;">
-        <span>${esc(item.name)}</span>
+      const isSel = selected[item.name] !== undefined;
+      const qty   = selected[item.name] || 1;
+      html += `<div class="rs-canape-item${isSel ? ' selected' : ''}" onclick="rsTogglePlatterItem('${rsEscJs(type)}','${rsEscJs(item.name)}')">
+        <input type="checkbox" ${isSel ? 'checked' : ''} onclick="event.stopPropagation();rsTogglePlatterItem('${rsEscJs(type)}','${rsEscJs(item.name)}')" style="accent-color:var(--accent-mid);width:14px;height:14px;flex-shrink:0;">
+        <span style="flex:1;">${esc(item.name)}</span>
+        ${isSel ? `<input type="number" class="rs-platter-qty" value="${qty}" min="1" onclick="event.stopPropagation()" oninput="event.stopPropagation();rsSetPlatterQty('${rsEscJs(type)}','${rsEscJs(item.name)}',this.value)">` : ''}
       </div>`;
     });
     html += `</div></div>`;
@@ -1942,37 +1949,37 @@ function rsRenderFoodPanel(type) {
   panel.innerHTML = html || '<p style="font-size:13px;color:var(--text3);">No items found.</p>';
 }
 
-function rsToggleItem(optKey, itemName, el) {
-  if (!rsSelectedItems[optKey]) rsSelectedItems[optKey] = [];
-  const selected = rsSelectedItems[optKey];
-  const idx = selected.indexOf(itemName);
-
-  if (idx > -1) {
-    selected.splice(idx, 1);
-    el.classList.remove('selected');
-    const cb = el.querySelector('input[type=checkbox]');
-    if (cb) cb.checked = false;
+function rsTogglePlatterItem(type, itemName) {
+  if (typeof rsSelectedItems[type] !== 'object' || Array.isArray(rsSelectedItems[type])) {
+    rsSelectedItems[type] = {};
+  }
+  const selected = rsSelectedItems[type];
+  if (selected[itemName] !== undefined) {
+    delete selected[itemName];
   } else {
-    const limits = data.bookingLimits?.[optKey] || {};
+    const limits = data.bookingLimits?.[type] || {};
     if (Object.keys(limits).length) {
-      const sub = rsGetSubcats(optKey).find(s => (s.items || []).some(i => i.name === itemName));
+      const sub = rsGetSubcats(type).find(s => (s.items || []).some(i => i.name === itemName));
       if (sub) {
         const limit = limits[sub.id];
         if (limit) {
           const subNames = (sub.items || []).map(i => i.name);
-          if (selected.filter(n => subNames.includes(n)).length >= limit) {
+          if (Object.keys(selected).filter(n => subNames.includes(n)).length >= limit) {
             alert(`${sub.name} limit is ${limit}. Deselect one first.`);
             return;
           }
         }
       }
     }
-    selected.push(itemName);
-    el.classList.add('selected');
-    const cb = el.querySelector('input[type=checkbox]');
-    if (cb) cb.checked = true;
+    selected[itemName] = Math.max(1, parseInt(rsV('rs-pax')) || 1);
   }
-  rsSelectedItems[optKey] = selected;
+  rsRenderFoodPanel(type);
+  rsAutoSave();
+}
+
+function rsSetPlatterQty(type, itemName, val) {
+  if (typeof rsSelectedItems[type] !== 'object' || Array.isArray(rsSelectedItems[type])) return;
+  rsSelectedItems[type][itemName] = Math.max(1, parseInt(val) || 1);
   rsAutoSave();
 }
 
@@ -2352,12 +2359,22 @@ function rsBuildRunsheet() {
       </div></div>`;
 
   } else if (type) {
-    const subcats  = rsGetSubcats(type);
-    const selected = Array.isArray(d.selectedItems?.[type]) ? d.selectedItems[type] : [];
+    /* Platter — selected is { itemName: qty } */
+    const subcats = rsGetSubcats(type);
+    const rawSel  = d.selectedItems?.[type];
+    const selected = (rawSel && typeof rawSel === 'object' && !Array.isArray(rawSel))
+      ? rawSel
+      : (Array.isArray(rawSel) ? Object.fromEntries(rawSel.map(n => [n, null])) : {});
     const itemsHtml = subcats.flatMap(sub =>
       (sub.items || [])
-        .filter(i => i.name && selected.includes(i.name))
-        .map(i => `<div class="rs-item-row"><span class="rs-item-name">${esc(i.name)}</span>${i.description ? `<span class="rs-item-desc">${esc(i.description)}</span>` : ''}</div>`)
+        .filter(i => i.name && selected[i.name] !== undefined)
+        .map(i => {
+          const qty = selected[i.name];
+          return `<div class="rs-item-row">
+            <span class="rs-item-name">${esc(i.name)}</span>
+            <span class="rs-item-desc">${qty ? `<strong style="color:var(--accent);">× ${qty}</strong>` : ''}${i.description ? ` ${esc(i.description)}` : ''}</span>
+          </div>`;
+        })
     ).join('') || '<em style="color:#aaa;font-size:13px;font-family:var(--sans);">No items selected</em>';
     foodHtml = `
       <div class="rs-section-title">Food Selection</div>
