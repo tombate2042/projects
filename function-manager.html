@@ -707,7 +707,7 @@
           <input type="text" id="rs-event-name" placeholder="e.g. Smith Birthday Party" oninput="rsAutoSave()">
         </div>
         <div class="rs-grid-4">
-          <div class="rs-field"><label>Date</label><input type="text" id="rs-date" placeholder="dd.mm.yyyy" oninput="rsAutoSave()" onblur="rsFormatDateInput(this)"></div>
+          <div class="rs-field"><label>Date</label><input type="date" id="rs-date" oninput="rsAutoSave()"></div>
           <div class="rs-field"><label>Start</label><input type="text" id="rs-start" placeholder="e.g. 7pm" oninput="rsAutoSave()" onblur="rsFormatTimeInput(this)"></div>
           <div class="rs-field"><label>End</label><input type="text" id="rs-end" placeholder="e.g. 11pm" oninput="rsAutoSave()" onblur="rsFormatTimeInput(this)"></div>
           <div class="rs-field"><label>Guests</label><input type="number" id="rs-pax" placeholder="e.g. 40" min="1" oninput="rsAutoSave();rsCalcFoodCost()"></div>
@@ -2358,7 +2358,14 @@ function rsLoadFormData() {
     if (!saved) return;
     const d = JSON.parse(saved);
     rsSV('rs-event-name', d.eventName);
-    rsSV('rs-date',       d.date);
+    rsSV('rs-date', (() => {
+      if (!d.date) return '';
+      if (/^\d{2}\.\d{2}\.\d{4}$/.test(d.date)) {
+        const [dd, mm, yyyy] = d.date.split('.');
+        return `${yyyy}-${mm}-${dd}`;
+      }
+      return d.date;
+    })());
     rsSV('rs-start',      d.start);
     rsSV('rs-end',        d.end);
     rsSV('rs-pax',        d.pax);
