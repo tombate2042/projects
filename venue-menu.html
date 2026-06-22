@@ -472,7 +472,7 @@ function renderPage(data) {
               ${pkg.description ? `<div class="pkg-subdesc">${esc(pkg.description)}</div>` : ''}
             </div>
             <div class="pkg-right">
-              ${pkg.price ? `<div class="pkg-price">${esc(pkg.price)}</div>` : ''}
+              ${pkg.price ? `<div class="pkg-price">${esc(pkg.type !== 'alacarte' && !pkg.price.toLowerCase().includes('pp') ? pkg.price + 'pp' : pkg.price)}</div>` : ''}
               ${menuHtml  ? `<div class="pkg-chevron">▼</div>` : ''}
             </div>
           </div>
