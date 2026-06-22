@@ -438,7 +438,7 @@ function renderPage(data) {
   if (pkgs.length) {
     const cards = pkgs.map((pkg, i) => {
       const subcats   = getPackageSubcats(data, pkg.id);
-      const showPrice = pkg.type === 'alacarte';
+      const showPrice = pkg.type === 'alacarte' || pkg.type === 'shared';
       const menuHtml  = subcats.map(sc => {
         const items = (sc.items || []).filter(item => item.name);
         if (!items.length) return '';
