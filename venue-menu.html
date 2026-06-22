@@ -281,17 +281,6 @@ body { font-family: var(--sans); background: var(--bg); color: var(--text); line
 .menu-item-left { flex: 1; min-width: 0; }
 .menu-item-name { font-size: 14px; font-weight: 600; color: var(--text); }
 .menu-item-desc { font-size: 12px; color: var(--text2); margin-top: 2px; line-height: 1.5; }
-.menu-item-tags { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 5px; }
-.diet-tag {
-  font-size: 10px;
-  font-weight: 700;
-  color: var(--green-mid);
-  background: var(--green-light);
-  border-radius: 3px;
-  padding: 1px 5px;
-  border: 1px solid #b8d4c4;
-  letter-spacing: 0.3px;
-}
 .menu-item-price {
   font-size: 13px;
   font-weight: 600;
@@ -329,11 +318,56 @@ body { font-family: var(--sans); background: var(--bg); color: var(--text); line
   background: var(--green);
   color: rgba(255,255,255,0.4);
   text-align: center;
-  padding: 22px 24px;
+  padding: 22px 24px 96px;
   font-size: 12px;
   font-weight: 500;
   letter-spacing: 0.3px;
 }
+
+/* ── DIETARY FILTER BAR ── */
+.diet-bar {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(20, 46, 33, 0.93);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  padding: 10px 18px;
+  border-radius: 99px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.3);
+  z-index: 300;
+  white-space: nowrap;
+}
+.diet-bar-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.4);
+  letter-spacing: 0.5px;
+  margin-right: 2px;
+}
+.diet-bubble {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 5px 13px;
+  border-radius: 99px;
+  border: 1.5px solid rgba(255,255,255,0.25);
+  color: rgba(255,255,255,0.65);
+  background: transparent;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+  letter-spacing: 0.5px;
+  font-family: var(--sans);
+}
+.diet-bubble:hover { border-color: rgba(255,255,255,0.55); color: #fff; }
+.diet-bubble.active { background: #fff; border-color: #fff; color: var(--green); }
+
+/* ── FADING ── */
+.menu-item { transition: background 0.1s, opacity 0.25s; }
+.menu-item.faded { opacity: 0.12; }
 
 /* ── ERROR / LOADING ── */
 .state-placeholder {
@@ -443,13 +477,12 @@ function renderPage(data) {
         const items = (sc.items || []).filter(item => item.name);
         if (!items.length) return '';
         const rows = items.map(item => {
-          const tags = (item.dietaries || []);
+          const dietAttr = (item.dietaries || []).join(' ');
           return `
-            <div class="menu-item">
+            <div class="menu-item" data-dietaries="${esc(dietAttr)}">
               <div class="menu-item-left">
                 <div class="menu-item-name">${esc(item.name)}</div>
                 ${item.description ? `<div class="menu-item-desc">${esc(item.description)}</div>` : ''}
-                ${tags.length ? `<div class="menu-item-tags">${tags.map(t=>`<span class="diet-tag">${esc(t)}</span>`).join('')}</div>` : ''}
               </div>
               ${showPrice && item.price ? `<div class="menu-item-price">${esc(item.price)}</div>` : ''}
             </div>`;
@@ -559,9 +592,43 @@ function togglePkg(id) {
   document.getElementById(id).classList.toggle('open');
 }
 
+const DIET_ORDER    = ['V', 'VG', 'GF', 'DF', 'NF'];
+let   activeFilters = new Set();
+
+function buildDietBar(data) {
+  const found = new Set();
+  for (const pkg of (data.venue?.packages || [])) {
+    for (const sc of getPackageSubcats(data, pkg.id)) {
+      for (const item of sc.items || []) {
+        for (const t of item.dietaries || []) found.add(t);
+      }
+    }
+  }
+  const tags = DIET_ORDER.filter(t => found.has(t));
+  if (!tags.length) return;
+
+  const bar = document.createElement('div');
+  bar.className = 'diet-bar';
+  bar.innerHTML = `<span class="diet-bar-label">Filter</span>` +
+    tags.map(t => `<button class="diet-bubble" data-tag="${t}" onclick="toggleDietFilter('${t}')">${t}</button>`).join('');
+  document.body.appendChild(bar);
+}
+
+function toggleDietFilter(tag) {
+  activeFilters.has(tag) ? activeFilters.delete(tag) : activeFilters.add(tag);
+  document.querySelectorAll('.diet-bubble').forEach(b =>
+    b.classList.toggle('active', activeFilters.has(b.dataset.tag))
+  );
+  document.querySelectorAll('.menu-item').forEach(el => {
+    if (!activeFilters.size) { el.classList.remove('faded'); return; }
+    const itemTags = (el.dataset.dietaries || '').split(' ').filter(Boolean);
+    el.classList.toggle('faded', ![...activeFilters].every(t => itemTags.includes(t)));
+  });
+}
+
 fetch('./menu-data.json')
   .then(r => { if (!r.ok) throw new Error(); return r.json(); })
-  .then(renderPage)
+  .then(data => { renderPage(data); buildDietBar(data); })
   .catch(() => {
     document.getElementById('root').innerHTML = `
       <div class="state-placeholder">
