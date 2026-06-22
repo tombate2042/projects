@@ -454,11 +454,14 @@ function renderPage(data) {
               ${showPrice && item.price ? `<div class="menu-item-price">${esc(item.price)}</div>` : ''}
             </div>`;
         }).join('');
+        const headerRight = sc.priceNote
+          ? `<span class="subcat-price-label">${esc(sc.priceNote)}</span>`
+          : (showPrice ? `<span class="subcat-price-label">Price</span>` : '');
         return `
           <div class="menu-subcat">
             <div class="menu-subcat-name">
               <span>${esc(sc.name)}</span>
-              ${showPrice ? `<span class="subcat-price-label">Price</span>` : ''}
+              ${headerRight}
             </div>
             <div class="menu-items">${rows}</div>
           </div>`;
