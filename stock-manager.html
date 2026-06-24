@@ -91,22 +91,23 @@
   .stat-lbl { font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text3); margin-top: 1px; }
 
   /* PRODUCTS TABLE */
-  .category-section { border-bottom: 1px solid var(--border); }
-  .category-header { display: flex; align-items: center; gap: 10px; padding: 10px 24px; cursor: pointer; background: rgba(0,0,0,0.02); user-select: none; }
-  .category-header:hover { background: rgba(0,0,0,0.04); }
   .category-name { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text2); }
-  .category-count { font-size: 11px; color: var(--text3); }
+  .category-count { font-size: 11px; color: var(--text3); margin-left: 6px; }
   .category-toggle { color: var(--text3); transition: transform 0.2s; flex-shrink: 0; margin-left: auto; }
   .category-toggle.collapsed { transform: rotate(-90deg); }
   .table-wrap { overflow-x: auto; }
-  table { width: 100%; border-collapse: collapse; min-width: 820px; }
-  thead th { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text3); background: var(--surface); border-bottom: 1px solid var(--border); padding: 8px 10px; white-space: nowrap; text-align: left; }
+  table { width: 100%; border-collapse: collapse; }
+  #productsContent table { min-width: 820px; table-layout: fixed; }
+  thead th { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text3); background: var(--surface); border-bottom: 1px solid var(--border); padding: 8px 10px; white-space: nowrap; text-align: left; position: sticky; top: 90px; z-index: 10; }
   thead th:first-child { padding-left: 24px; }
   thead th.r { text-align: right; }
   tbody tr { border-bottom: 1px solid rgba(0,0,0,0.04); transition: background 0.1s; }
   tbody tr:hover { background: rgba(0,0,0,0.02); }
-  tbody td { padding: 7px 10px; vertical-align: middle; }
+  tbody td { padding: 7px 10px; vertical-align: middle; overflow: hidden; text-overflow: ellipsis; }
   tbody td:first-child { padding-left: 24px; }
+  tbody tr.category-row { cursor: pointer; user-select: none; }
+  tbody tr.category-row td { padding: 10px 24px; background: rgba(0,0,0,0.02); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
+  tbody tr.category-row:hover td { background: rgba(0,0,0,0.04); }
   .item-name { font-size: 13px; font-weight: 500; }
   .item-sub { font-size: 11px; color: var(--text3); margin-top: 1px; }
   .mono { font-family: var(--mono); }
@@ -115,7 +116,7 @@
   tbody tr.in-deal td:first-child { border-left: 3px solid var(--deal-colour, #888); padding-left: 21px; }
 
   /* INLINE INPUTS */
-  .cell-input { background: transparent; border: 1px solid transparent; border-radius: 4px; color: var(--text); font-family: var(--sans); font-size: 13px; padding: 3px 6px; outline: none; transition: border-color 0.15s, background 0.15s; }
+  .cell-input { background: transparent; border: 1px solid transparent; border-radius: 4px; color: var(--text); font-family: var(--sans); font-size: 13px; padding: 3px 6px; outline: none; transition: border-color 0.15s, background 0.15s; max-width: 100%; }
   .cell-input:hover { border-color: var(--border2); background: var(--surface); }
   .cell-input:focus { border-color: var(--accent); background: var(--surface2); }
   .cell-input.num { text-align: right; width: 80px; font-family: var(--mono); }
@@ -128,14 +129,8 @@
   .gp-low  { color: var(--red); }
   .gp-na   { color: var(--text3); }
 
-  /* STATUS SELECT (products table cell) */
-  .status-select { background: transparent; border: 1px solid transparent; border-radius: 4px; color: var(--text3); font-family: var(--sans); font-size: 12px; padding: 3px 6px; outline: none; cursor: pointer; transition: border-color 0.15s, background 0.15s; appearance: none; -webkit-appearance: none; }
-  .status-select:hover { border-color: var(--border2); background: var(--surface); }
-  .status-select[data-status="Locked"]      { color: var(--accent); }
-  .status-select[data-status="New"]         { color: #2a7ac4; }
-  .status-select[data-status="Remove"]      { color: var(--red); }
-  .status-select[data-status="Slow Moving"] { color: var(--amber); }
-  .status-select[data-status="Order Issue"] { color: #c4682e; }
+  /* PLU INPUT */
+  .plu-input { width: 80px; font-family: var(--mono); font-size: 12px; }
 
   /* DEAL PILLS (summary bar) */
   .sum-deal-pill { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 500; border: 1px solid; white-space: nowrap; }
@@ -320,9 +315,6 @@
     .pr-table td { padding: 5px 6px; border-bottom: 1px solid #eee; vertical-align: middle; }
     .pr-table td.r { text-align: right; font-variant-numeric: tabular-nums; }
     .pr-cat-row td { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #333; border-top: 2px solid #333; border-bottom: 1px solid #aaa; padding: 7px 6px 4px; }
-    .pr-s-remove td { color: #cc2200; }
-    .pr-s-new td { color: #007a3d; }
-    .pr-s-order-issue td { color: #c26000; }
   }
 </style>
 </head>
@@ -362,14 +354,6 @@
     </div>
     <select class="filter-select" id="brandOwnerFilter" onchange="setBrandOwnerFilter(this.value)">
       <option value="all">All Brand Owners</option>
-    </select>
-    <select class="filter-select" id="statusFilter" onchange="setStatusFilter(this.value)">
-      <option value="all">All Statuses</option>
-      <option value="Locked">Locked</option>
-      <option value="New">New</option>
-      <option value="Remove">Remove</option>
-      <option value="Slow Moving">Slow Moving</option>
-      <option value="Order Issue">Order Issue</option>
     </select>
     <div style="flex:1"></div>
     <button class="btn btn-sm btn-primary" onclick="openAddItemModal()">
@@ -660,7 +644,6 @@ const DEAL_COLOURS = [
 let state = loadState();
 let searchQ = '';
 let activeBrandOwner = 'all';
-let activeStatus = 'all';
 let activeTab = 'products';
 
 // item picker working state
@@ -781,11 +764,6 @@ function setBrandOwnerFilter(val) {
   applyFilters();
 }
 
-function setStatusFilter(val) {
-  activeStatus = val;
-  applyFilters();
-}
-
 function applyFilters() {
   getAllItems().forEach(m => {
     const row = document.getElementById('smrow-' + m.id);
@@ -793,7 +771,6 @@ function applyFilters() {
     let show = true;
     if (searchQ) show = m.item.toLowerCase().includes(searchQ) || (m.supplier||'').toLowerCase().includes(searchQ) || (m.brand_owner||'').toLowerCase().includes(searchQ);
     if (show && activeBrandOwner !== 'all') show = (m.brand_owner||'') === activeBrandOwner;
-    if (show && activeStatus !== 'all') show = (m.itemStatus||'') === activeStatus;
     row.classList.toggle('hidden-row', !show);
   });
   updateCatCounts();
@@ -808,8 +785,8 @@ function updateCatCounts() {
     const vis = allItems.filter(m => m.category === cat && !document.getElementById('smrow-' + m.id)?.classList.contains('hidden-row')).length;
     const el = document.getElementById('smcount-' + key);
     if (el) el.textContent = vis + ' items';
-    const body = document.getElementById('smbody-' + key);
-    if (body) body.closest('.category-section').style.display = vis === 0 ? 'none' : '';
+    const catRow = document.getElementById('smcatrow-' + key);
+    if (catRow) catRow.style.display = vis === 0 ? 'none' : '';
   });
 }
 
@@ -881,50 +858,37 @@ function renderProducts() {
     return;
   }
 
+  let html = `<div class="table-wrap"><table>
+    <thead><tr>
+      <th style="width:28%">Item</th>
+      <th style="width:9%">Size</th>
+      <th style="width:12%">Supplier</th>
+      <th class="r" style="width:9%">Cost</th>
+      <th class="r" style="width:9%">Sell</th>
+      <th class="r" style="width:8%" title="Spirits: per 30ml serve. Others: per unit.">GP%</th>
+      <th style="width:15%">Brand Owner</th>
+      <th style="width:10%">PLU</th>
+    </tr></thead><tbody>`;
+
   cats.forEach(cat => {
     const items = allItems.filter(m => m.category === cat).sort((a, b) => (a.position||99) - (b.position||99) || a.item.localeCompare(b.item));
     const key = catKey(cat);
-    const section = document.createElement('div');
-    section.className = 'category-section';
-    section.innerHTML = `
-      <div class="category-header" onclick="toggleCat('${key}')">
-        <div class="category-name">${cat}</div>
-        <div class="category-count" id="smcount-${key}">${items.length} items</div>
+    html += `<tr class="category-row" id="smcatrow-${key}" onclick="toggleCat('${key}')">
+      <td colspan="8">
+        <span class="category-name">${cat}</span>
+        <span class="category-count" id="smcount-${key}">${items.length} items</span>
         <svg class="category-toggle" id="smtoggle-${key}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="6 9 12 15 18 9"/></svg>
-      </div>
-      <div class="table-wrap" id="smbody-${key}">
-        <table>
-          <thead><tr>
-            <th style="width:220px">Item</th>
-            <th style="width:80px">Size</th>
-            <th style="width:110px">Supplier</th>
-            <th class="r" style="width:88px">Cost</th>
-            <th class="r" style="width:88px">Sell</th>
-            <th class="r" style="width:72px" title="Spirits: per 30ml serve. Others: per unit.">GP%</th>
-            <th style="width:150px">Brand Owner</th>
-            <th style="width:140px">Status</th>
-          </tr></thead>
-          <tbody id="smtbody-${key}"></tbody>
-        </table>
-      </div>`;
-    content.appendChild(section);
-
-    const tbody = document.getElementById('smtbody-' + key);
+      </td>
+    </tr>`;
     items.forEach(m => {
       const gp = calcGP(m);
       const cls = gpClass(gp);
       const deal = getDealForItem(m.id);
-      const tr = document.createElement('tr');
-      tr.id = 'smrow-' + m.id;
-      if (deal) {
-        tr.classList.add('in-deal');
-        tr.style.setProperty('--deal-colour', deal.colour);
-        tr.style.background = deal.colour + '12';
-      }
-      tr.innerHTML = `
+      const dealClass = deal ? ' in-deal' : '';
+      const dealStyle = deal ? ` style="--deal-colour:${deal.colour};background:${deal.colour}12"` : '';
+      html += `<tr class="item-row cat-row-${key}${dealClass}" id="smrow-${m.id}"${dealStyle}>
         <td>
           <div class="item-name">${esc(m.item)}</div>
-          ${m.size ? `<div class="item-sub">${esc(m.size)}</div>` : ''}
         </td>
         <td style="color:var(--text3);font-size:12px">${esc(m.size||'')}</td>
         <td style="color:var(--text2);font-size:12px">${esc(m.supplier||'')}</td>
@@ -948,34 +912,28 @@ function renderProducts() {
             oninput="this.classList.add('changed')">
         </td>
         <td>
-          <select class="status-select" data-status="${esc(m.itemStatus||'')}"
-            onchange="setItemStatus('${m.id}',this.value,this)">
-            <option value="">-</option>
-            <option value="Locked"${m.itemStatus==='Locked'?' selected':''}>Locked</option>
-            <option value="New"${m.itemStatus==='New'?' selected':''}>New</option>
-            <option value="Remove"${m.itemStatus==='Remove'?' selected':''}>Remove</option>
-            <option value="Slow Moving"${m.itemStatus==='Slow Moving'?' selected':''}>Slow Moving</option>
-            <option value="Order Issue"${m.itemStatus==='Order Issue'?' selected':''}>Order Issue</option>
-          </select>
-        </td>`;
-      tbody.appendChild(tr);
+          <input class="cell-input plu-input" type="text"
+            value="${esc(m.plu||'')}" placeholder="—"
+            onchange="fieldChanged('${m.id}','plu',this)"
+            oninput="this.classList.add('changed')">
+        </td>
+      </tr>`;
     });
   });
 
+  html += '</tbody></table></div>';
+  content.innerHTML = html;
   updateSummary();
 }
 
 function toggleCat(key) {
-  const body = document.getElementById('smbody-' + key);
-  const tog  = document.getElementById('smtoggle-' + key);
-  const hidden = body.style.display === 'none';
-  body.style.display = hidden ? '' : 'none';
-  tog.classList.toggle('collapsed', !hidden);
-}
-
-function setItemStatus(id, value, selectEl) {
-  setField(id, 'itemStatus', value);
-  selectEl.setAttribute('data-status', value);
+  const catRow = document.getElementById('smcatrow-' + key);
+  const isCollapsed = catRow.classList.toggle('collapsed');
+  document.querySelectorAll('.cat-row-' + key).forEach(row => {
+    row.style.display = isCollapsed ? 'none' : '';
+  });
+  const tog = document.getElementById('smtoggle-' + key);
+  tog.classList.toggle('collapsed', isCollapsed);
 }
 
 function fieldChanged(id, field, input) {
@@ -1859,8 +1817,7 @@ function doPrint() {
     tableBody += `<tr class="pr-cat-row"><td colspan="8">${esc(cat)}</td></tr>`;
     items.forEach(m => {
       const gp = calcGP(m);
-      const statusClass = { Remove: 'pr-s-remove', New: 'pr-s-new', 'Order Issue': 'pr-s-order-issue' }[m.itemStatus || ''] || '';
-      tableBody += `<tr${statusClass ? ` class="${statusClass}"` : ''}>
+      tableBody += `<tr>
         <td>${esc(m.item)}</td>
         <td>${esc(m.size || '')}</td>
         <td>${esc(m.supplier || '')}</td>
@@ -1868,7 +1825,7 @@ function doPrint() {
         <td class="r">${m.sell ? '$' + Number(m.sell).toFixed(2) : '—'}</td>
         <td class="r">${fmtPct(gp)}</td>
         <td>${esc(m.brand_owner || '')}</td>
-        <td>${esc(m.itemStatus || '')}</td>
+        <td>${esc(m.plu || '')}</td>
       </tr>`;
     });
   });
@@ -1878,7 +1835,7 @@ function doPrint() {
         <thead><tr>
           <th>Item</th><th>Size</th><th>Supplier</th>
           <th class="r">Cost</th><th class="r">Sell</th><th class="r">GP%</th>
-          <th>Brand Owner</th><th>Status</th>
+          <th>Brand Owner</th><th>PLU</th>
         </tr></thead>
         <tbody>${tableBody}</tbody>
       </table>
