@@ -755,10 +755,14 @@
 
     <div class="rs-card">
       <div class="rs-card-head"><span class="rs-dot"></span>Notes &amp; Special Requirements</div>
-      <div class="rs-card-body">
+      <div class="rs-card-body rs-grid-2">
         <div class="rs-field">
-          <label>Notes</label>
-          <textarea id="rs-notes" rows="4" placeholder="Decorations, AV requirements, dietary needs, run-of-show details…" oninput="rsAutoSave()"></textarea>
+          <label>Notes (Left Column)</label>
+          <textarea id="rs-notes" rows="4" placeholder="Decorations, AV requirements, dietary needs…" oninput="rsAutoSave()"></textarea>
+        </div>
+        <div class="rs-field">
+          <label>Notes (Right Column)</label>
+          <textarea id="rs-notes2" rows="4" placeholder="Run-of-show details, setup instructions…" oninput="rsAutoSave()"></textarea>
         </div>
       </div>
     </div>
@@ -2508,6 +2512,7 @@ function rsGetFormData() {
     foodCost:      rsV('rs-food-cost'),
     prepaid:       rsV('rs-prepaid'),
     notes:         rsV('rs-notes'),
+    notes2:        rsV('rs-notes2'),
     menuType:         rsCurrentMenuType,
     selectedItems:    rsSelectedItems,
     bistroRows:       rsBistroRows,
@@ -2541,6 +2546,7 @@ function rsLoadFormData() {
     rsSV('rs-food-cost',  d.foodCost);
     rsSV('rs-prepaid',    d.prepaid);
     rsSV('rs-notes',      d.notes);
+    rsSV('rs-notes2',     d.notes2);
     rsSelectedItems  = d.selectedItems || {};
     rsBistroRows     = d.bistroRows    || [];
     rsFoodCostIsAuto = d.foodCostIsAuto !== false;
@@ -2563,7 +2569,7 @@ function rsLoadFormData() {
 function rsClearForm() {
   if (!confirm('Clear all event details?')) return;
   ['rs-event-name','rs-date','rs-start','rs-end','rs-pax','rs-location',
-   'rs-client','rs-contact','rs-food-cost','rs-prepaid','rs-notes'].forEach(id => rsSV(id, ''));
+   'rs-client','rs-contact','rs-food-cost','rs-prepaid','rs-notes','rs-notes2'].forEach(id => rsSV(id, ''));
   rsCurrentMenuType      = null;
   rsSelectedItems        = {};
   rsBistroRows           = [];
@@ -2796,7 +2802,10 @@ function rsBuildRunsheet() {
         </div>`;
       })()}
       <div class="rs-section-title">Notes &amp; Special Requirements</div>
-      <div class="rs-notes-cell">${esc(d.notes) || '<em style="color:#aaa;">No notes</em>'}</div>
+      <div class="rs-body-row">
+        <div class="rs-notes-cell">${esc(d.notes) || '<em style="color:#aaa;">No notes</em>'}</div>
+        <div class="rs-notes-cell" style="border-left:1px solid var(--border);">${esc(d.notes2) || '<em style="color:#aaa;">No notes</em>'}</div>
+      </div>
       <div class="rs-footer">
         <span>Generated ${new Date().toLocaleDateString('en-AU', {day:'numeric',month:'long',year:'numeric'})}</span>
         <span>${esc(venueName)} — Confidential Event Runsheet</span>
