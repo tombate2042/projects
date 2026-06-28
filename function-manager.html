@@ -586,13 +586,208 @@
   .rs-notes-cell { padding: 16px 24px; font-size: 14px; line-height: 1.6; color: var(--text); min-height: 60px; white-space: pre-wrap; font-family: var(--sans); }
   .rs-footer { background: var(--surface2); border-top: 1px solid var(--border); padding: 10px 24px; font-family: var(--sans); font-size: 11px; color: var(--text3); display: flex; justify-content: space-between; align-items: center; }
 
+  /* ── INVOICE TAB ── */
+  .inv-line-row {
+    display: grid;
+    grid-template-columns: 3fr 80px 110px 110px auto;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+  .inv-line-row input {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 7px 9px;
+    font-family: var(--sans);
+    font-size: 13px;
+    color: var(--text);
+    background: var(--surface);
+    outline: none;
+    width: 100%;
+  }
+  .inv-line-row input:focus { border-color: var(--accent-mid); }
+  .inv-line-row .inv-line-val {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    text-align: right;
+    padding: 7px 9px;
+    background: var(--surface2);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    font-variant-numeric: tabular-nums;
+  }
+  .inv-totals-form {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+  }
+  .inv-totals-form .inv-total-row {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    font-size: 13px;
+  }
+  .inv-totals-form .inv-total-label { color: var(--text2); min-width: 120px; text-align: right; }
+  .inv-totals-form .inv-total-val { font-weight: 600; min-width: 100px; text-align: right; font-variant-numeric: tabular-nums; }
+  .inv-line-head {
+    display: grid;
+    grid-template-columns: 3fr 80px 110px 110px auto;
+    gap: 8px;
+    padding: 0 0 6px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--text3);
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 8px;
+  }
+
+  /* Invoice preview output */
+  .inv-output {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    font-family: 'Montserrat', var(--sans);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  }
+  .inv-header {
+    background: var(--accent);
+    color: #fff;
+    padding: 28px 32px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+  .inv-header-left .inv-venue-name {
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    margin-bottom: 2px;
+  }
+  .inv-header-right {
+    text-align: right;
+    font-size: 12px;
+    line-height: 1.7;
+    opacity: 0.85;
+  }
+  .inv-title {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    padding: 20px 32px 14px;
+    color: var(--text);
+    border-bottom: 1px solid var(--border);
+  }
+  .inv-meta {
+    display: flex;
+    justify-content: space-between;
+    padding: 18px 32px;
+    border-bottom: 1px solid var(--border);
+  }
+  .inv-meta-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text3); margin-bottom: 3px; }
+  .inv-meta-value { font-size: 14px; color: var(--text); line-height: 1.5; }
+  .inv-booking-line {
+    padding: 12px 32px;
+    border-bottom: 1px solid var(--border);
+    font-size: 14px;
+    color: var(--text);
+  }
+  .inv-booking-line .inv-meta-label { margin-bottom: 2px; }
+  .inv-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: var(--sans);
+  }
+  .inv-table thead th {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text3);
+    padding: 10px 16px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface2);
+  }
+  .inv-table thead th.r { text-align: right; }
+  .inv-table tbody td {
+    padding: 10px 16px;
+    font-size: 13px;
+    color: var(--text);
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+  .inv-table tbody td.r { text-align: right; font-variant-numeric: tabular-nums; }
+  .inv-table tbody tr:last-child td { border-bottom: none; }
+  .inv-totals-block {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    padding: 16px 32px;
+    border-top: 1px solid var(--border);
+    gap: 6px;
+  }
+  .inv-totals-block .inv-tr { display: flex; gap: 24px; font-size: 14px; }
+  .inv-totals-block .inv-tr-label { min-width: 180px; text-align: right; color: var(--text2); }
+  .inv-totals-block .inv-tr-val { min-width: 110px; text-align: right; font-variant-numeric: tabular-nums; color: var(--text); }
+  .inv-totals-block .inv-tr-total { font-weight: 700; font-size: 16px; }
+  .inv-totals-block .inv-tr-total .inv-tr-label,
+  .inv-totals-block .inv-tr-total .inv-tr-val { color: var(--text); }
+  .inv-notes-block {
+    padding: 16px 32px;
+    border-top: 1px solid var(--border);
+    font-size: 13px;
+    color: var(--text2);
+    font-style: italic;
+    line-height: 1.6;
+  }
+  .inv-bank {
+    padding: 18px 32px;
+    border-top: 1px solid var(--border);
+    background: var(--surface2);
+  }
+  .inv-bank-title {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text2);
+    margin-bottom: 8px;
+  }
+  .inv-bank-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 10px;
+  }
+  .inv-bank-item-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text3); margin-bottom: 2px; }
+  .inv-bank-item-value { font-size: 13px; color: var(--text); font-weight: 600; }
+  .inv-footer {
+    padding: 10px 32px;
+    border-top: 1px solid var(--border);
+    font-size: 11px;
+    color: var(--text3);
+    display: flex;
+    justify-content: space-between;
+  }
+
   @media print {
-    .app-header, .tabs, .rs-subnav, .rs-preview-actions, #rs-panel-form { display: none !important; }
-    #tab-runsheet { display: block !important; }
-    .rs-panel { display: none !important; }
-    #rs-panel-preview { display: block !important; }
-    .rs-preview-wrap { padding: 0; max-width: 100%; }
-    .rs-output { border: none; border-radius: 0; box-shadow: none; }
+    .app-header, .tabs { display: none !important; }
+    .rs-subnav, .rs-preview-actions, #rs-panel-form { display: none !important; }
+    .inv-subnav, .inv-preview-actions, #inv-panel-form { display: none !important; }
+    .tab-panel:not(.active) { display: none !important; }
+    #tab-runsheet.active .rs-panel { display: none !important; }
+    #tab-runsheet.active #rs-panel-preview { display: block !important; }
+    #tab-invoice.active .inv-panel { display: none !important; }
+    #tab-invoice.active #inv-panel-preview { display: block !important; }
+    .rs-preview-wrap, .inv-preview-wrap { padding: 0; max-width: 100%; }
+    .rs-output, .inv-output { border: none; border-radius: 0; box-shadow: none; }
   }
 </style>
 </head>
@@ -614,6 +809,7 @@
   <button class="tab-btn"        id="tab-btn-options"    onclick="switchTab('options')">Booking Options</button>
   <button class="tab-btn"        id="tab-btn-enquiries"  onclick="switchTab('enquiries')">Enquiries</button>
   <button class="tab-btn"        id="tab-btn-runsheet"   onclick="switchTab('runsheet')">Runsheet</button>
+  <button class="tab-btn"        id="tab-btn-invoice"    onclick="switchTab('invoice')">Invoice</button>
   <button class="tab-btn"        id="tab-btn-venue"      onclick="switchTab('venue')">Venue</button>
   <button class="tab-btn"        id="tab-btn-settings"   onclick="openSettingsAuth()" style="margin-left:auto;">⚙ Settings</button>
 </div>
@@ -799,6 +995,120 @@
       <div class="rs-meal-modal-body" id="rs-meal-modal-body"></div>
       <div class="rs-meal-modal-footer" id="rs-meal-modal-footer"></div>
     </div>
+  </div>
+
+</div>
+
+<!-- ── INVOICE ── -->
+<div id="tab-invoice" class="tab-panel">
+
+  <div class="rs-subnav inv-subnav">
+    <button class="rs-subbtn active" id="inv-subbtn-form"    onclick="invSwitchSub('form')">Invoice Details</button>
+    <button class="rs-subbtn"        id="inv-subbtn-preview" onclick="invSwitchSub('preview')">Preview &amp; Print</button>
+  </div>
+
+  <!-- Invoice Form -->
+  <div id="inv-panel-form" class="rs-panel inv-panel active">
+  <div class="rs-container">
+
+    <div class="rs-card">
+      <div class="rs-card-head"><span class="rs-dot"></span>Client Details</div>
+      <div class="rs-card-body">
+        <div class="rs-field" style="margin-bottom:12px;">
+          <label>Client / Company Name</label>
+          <input type="text" id="inv-client" placeholder="e.g. Taylor Corporation Pty Ltd" oninput="invAutoSave()">
+        </div>
+        <div class="rs-grid-2">
+          <div class="rs-field"><label>Address Line 1</label><input type="text" id="inv-addr1" placeholder="e.g. Level 4, 123 George St" oninput="invAutoSave()"></div>
+          <div class="rs-field"><label>Address Line 2</label><input type="text" id="inv-addr2" placeholder="e.g. Sydney NSW 2000" oninput="invAutoSave()"></div>
+        </div>
+        <div class="rs-field">
+          <label>Contact Name</label>
+          <input type="text" id="inv-contact" placeholder="e.g. Sarah Johnson" oninput="invAutoSave()">
+        </div>
+      </div>
+    </div>
+
+    <div class="rs-card">
+      <div class="rs-card-head"><span class="rs-dot"></span>Event / Booking Reference</div>
+      <div class="rs-card-body rs-grid-2">
+        <div class="rs-field"><label>Booking Description</label><input type="text" id="inv-booking-desc" placeholder="e.g. Taylors Rooftop - Casual Space Booking 9/7/2026" oninput="invAutoSave()"></div>
+        <div class="rs-field"><label>Reference Number</label><input type="text" id="inv-ref" placeholder="e.g. FS90726" oninput="invAutoSave()"></div>
+      </div>
+    </div>
+
+    <div class="rs-card">
+      <div class="rs-card-head"><span class="rs-dot"></span>Invoice Details</div>
+      <div class="rs-card-body rs-grid-2">
+        <div class="rs-field"><label>Invoice Date</label><input type="date" id="inv-date" oninput="invAutoSave()"></div>
+        <div class="rs-field"><label>Due Date</label><input type="date" id="inv-due-date" oninput="invAutoSave()"></div>
+      </div>
+    </div>
+
+    <div class="rs-card">
+      <div class="rs-card-head"><span class="rs-dot"></span>Line Items</div>
+      <div class="rs-card-body">
+        <div class="inv-line-head">
+          <span>Description</span><span>Qty</span><span>Unit Price</span><span>Inv Value</span><span></span>
+        </div>
+        <div id="inv-lines-list"></div>
+        <button class="btn btn-add btn-sm" style="margin-top:8px;" onclick="invAddLine()">+ Add Line Item</button>
+        <div class="inv-totals-form" id="inv-totals-form"></div>
+      </div>
+    </div>
+
+    <div class="rs-card">
+      <div class="rs-card-head"><span class="rs-dot"></span>Payment &amp; Notes</div>
+      <div class="rs-card-body">
+        <div class="rs-field" style="margin-bottom:12px;">
+          <label>Less Payment / Deposit Received</label>
+          <input type="number" id="inv-payment" step="0.01" min="0" placeholder="0.00" oninput="invCalcTotals();invAutoSave()">
+        </div>
+        <div class="rs-field" style="margin-bottom:12px;">
+          <label>Note Line 1</label>
+          <input type="text" id="inv-note1" oninput="invAutoSave()">
+        </div>
+        <div class="rs-field">
+          <label>Note Line 2</label>
+          <input type="text" id="inv-note2" oninput="invAutoSave()">
+        </div>
+      </div>
+    </div>
+
+    <div class="rs-card">
+      <div class="rs-card-head"><span class="rs-dot"></span>Bank Details</div>
+      <div class="rs-card-body">
+        <div class="rs-grid-2" style="margin-bottom:12px;">
+          <div class="rs-field"><label>Account Name</label><input type="text" id="inv-bank-name" placeholder="e.g. TH Investments (Republic)" oninput="invAutoSave()"></div>
+          <div class="rs-field"><label>BSB</label><input type="text" id="inv-bank-bsb" placeholder="e.g. 012003" oninput="invAutoSave()"></div>
+        </div>
+        <div class="rs-field">
+          <label>Account Number</label>
+          <input type="text" id="inv-bank-acc" placeholder="e.g. 8386 43309" oninput="invAutoSave()">
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:10px;justify-content:flex-end;padding-bottom:2rem;">
+      <button class="btn btn-outline" onclick="invClearForm()">Clear Form</button>
+      <button class="btn btn-primary" onclick="invSwitchSub('preview')">Preview Invoice →</button>
+    </div>
+
+  </div>
+  </div>
+
+  <!-- Invoice Preview -->
+  <div id="inv-panel-preview" class="rs-panel inv-panel">
+  <div class="rs-preview-wrap inv-preview-wrap">
+    <div class="rs-preview-actions inv-preview-actions">
+      <span style="flex:1;font-size:13px;color:var(--text3);">Review your invoice, then print or save as PDF.<br><strong style="color:var(--text2);">Go to more settings &amp; select Background graphics</strong></span>
+      <button class="btn btn-outline" onclick="invSwitchSub('form')">← Edit Details</button>
+      <button class="btn btn-primary" onclick="window.print()">Print / Save PDF</button>
+    </div>
+    <div class="inv-output" id="inv-output">
+      <div style="padding:40px;text-align:center;color:var(--text3);font-size:14px;">Fill in invoice details and click "Preview Invoice" to generate.</div>
+    </div>
+  </div>
   </div>
 
 </div>
@@ -1115,6 +1425,7 @@ function switchTab(name) {
   if (name === 'options')    renderOptionsTab();
   if (name === 'enquiries')  renderEnquiries();
   if (name === 'runsheet')   rsInit();
+  if (name === 'invoice')    invInit();
 }
 
 /* ════════════════════════════════════
@@ -2812,6 +3123,286 @@ function rsBuildRunsheet() {
       </div>
     </div>`;
   rsFitEventName();
+}
+
+/* ════════════════════════════════════
+   INVOICE
+════════════════════════════════════ */
+let invLines = [];
+const INV_STORAGE_KEY = 'inv_form';
+const INV_DEFAULTS = {
+  note1: 'Full deposit amount will be converted to a bar tab on the evening and can be used across all food & beverages',
+  note2: 'Booking is not confirmed until deposit has been received',
+  bankName: 'TH Investments (Republic)',
+  bankBsb: '012003',
+  bankAcc: '8386 43309',
+  abn: '37 680 531 168',
+};
+
+function invInit() {
+  invLoadForm();
+  invRenderLines();
+  invCalcTotals();
+}
+
+function invSwitchSub(sub) {
+  document.querySelectorAll('#tab-invoice .inv-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('#tab-invoice .rs-subbtn').forEach(b => b.classList.remove('active'));
+  document.getElementById('inv-panel-' + sub).classList.add('active');
+  document.getElementById('inv-subbtn-' + sub).classList.add('active');
+  if (sub === 'preview') invRenderPreview();
+}
+
+function invAddLine() {
+  invLines.push({ desc: '', qty: 1, price: 0 });
+  invRenderLines();
+  invCalcTotals();
+  invAutoSave();
+}
+
+function invRemoveLine(idx) {
+  invLines.splice(idx, 1);
+  invRenderLines();
+  invCalcTotals();
+  invAutoSave();
+}
+
+function invRenderLines() {
+  const list = document.getElementById('inv-lines-list');
+  if (!list) return;
+  if (!invLines.length) {
+    list.innerHTML = '<div style="padding:8px 0;font-size:13px;color:var(--text3);">No line items. Click "+ Add Line Item" to begin.</div>';
+    return;
+  }
+  list.innerHTML = invLines.map((line, i) => {
+    const val = (line.qty || 0) * (line.price || 0);
+    return `<div class="inv-line-row">
+      <input type="text" value="${esc(line.desc)}" placeholder="Description" oninput="invLines[${i}].desc=this.value;invAutoSave()">
+      <input type="number" value="${line.qty}" min="0" step="1" oninput="invLines[${i}].qty=parseFloat(this.value)||0;invCalcTotals();invAutoSave()">
+      <input type="number" value="${line.price}" min="0" step="0.01" oninput="invLines[${i}].price=parseFloat(this.value)||0;invCalcTotals();invAutoSave()">
+      <div class="inv-line-val">${invFmtCurrency(val)}</div>
+      <button class="btn-icon" onclick="invRemoveLine(${i})">✕</button>
+    </div>`;
+  }).join('');
+}
+
+function invCalcTotals() {
+  const subtotal = invLines.reduce((s, l) => s + (l.qty || 0) * (l.price || 0), 0);
+  const payment = parseFloat(document.getElementById('inv-payment')?.value) || 0;
+  const due = subtotal - payment;
+
+  const el = document.getElementById('inv-totals-form');
+  if (!el) return;
+  el.innerHTML = `
+    <div class="inv-total-row"><span class="inv-total-label">Total Taxable Supplies</span><span class="inv-total-val">${invFmtCurrency(subtotal)}</span></div>
+    ${payment > 0 ? `<div class="inv-total-row"><span class="inv-total-label">Less Payment</span><span class="inv-total-val">-${invFmtCurrency(payment)}</span></div>` : ''}
+    <div class="inv-total-row" style="font-size:16px;padding-top:6px;border-top:1px solid var(--border);"><span class="inv-total-label" style="font-weight:700;">Total Due</span><span class="inv-total-val" style="font-weight:700;color:${due > 0 ? '#8a5200' : 'var(--text)'};">${invFmtCurrency(due)}</span></div>
+  `;
+}
+
+function invFmtCurrency(n) {
+  return n.toLocaleString('en-AU', { style: 'currency', currency: 'AUD' });
+}
+
+function invFmtDateAU(isoStr) {
+  if (!isoStr) return '';
+  const d = new Date(isoStr + 'T00:00:00');
+  if (isNaN(d.getTime())) return isoStr;
+  return d.toLocaleDateString('en-AU', { day: '2-digit', month: '2-digit', year: 'numeric' });
+}
+
+function invAutoSave() {
+  const formData = {
+    client:      document.getElementById('inv-client')?.value || '',
+    addr1:       document.getElementById('inv-addr1')?.value || '',
+    addr2:       document.getElementById('inv-addr2')?.value || '',
+    contact:     document.getElementById('inv-contact')?.value || '',
+    bookingDesc: document.getElementById('inv-booking-desc')?.value || '',
+    ref:         document.getElementById('inv-ref')?.value || '',
+    date:        document.getElementById('inv-date')?.value || '',
+    dueDate:     document.getElementById('inv-due-date')?.value || '',
+    lines:       invLines,
+    payment:     parseFloat(document.getElementById('inv-payment')?.value) || 0,
+    note1:       document.getElementById('inv-note1')?.value || '',
+    note2:       document.getElementById('inv-note2')?.value || '',
+    bankName:    document.getElementById('inv-bank-name')?.value || '',
+    bankBsb:     document.getElementById('inv-bank-bsb')?.value || '',
+    bankAcc:     document.getElementById('inv-bank-acc')?.value || '',
+  };
+  localStorage.setItem(INV_STORAGE_KEY, JSON.stringify(formData));
+}
+
+function invLoadForm() {
+  let d;
+  try {
+    const saved = localStorage.getItem(INV_STORAGE_KEY);
+    d = saved ? JSON.parse(saved) : null;
+  } catch(e) { d = null; }
+
+  const today = new Date();
+  const todayISO = today.toISOString().split('T')[0];
+  const dueDate = new Date(today);
+  dueDate.setDate(dueDate.getDate() + 7);
+  const dueISO = dueDate.toISOString().split('T')[0];
+
+  document.getElementById('inv-client').value       = d?.client      || '';
+  document.getElementById('inv-addr1').value        = d?.addr1       || '';
+  document.getElementById('inv-addr2').value        = d?.addr2       || '';
+  document.getElementById('inv-contact').value      = d?.contact     || '';
+  document.getElementById('inv-booking-desc').value = d?.bookingDesc || '';
+  document.getElementById('inv-ref').value          = d?.ref         || '';
+  document.getElementById('inv-date').value         = d?.date        || todayISO;
+  document.getElementById('inv-due-date').value     = d?.dueDate     || dueISO;
+  invLines = d?.lines && d.lines.length ? d.lines : [{ desc: '', qty: 1, price: 0 }];
+  document.getElementById('inv-payment').value      = d?.payment     || '';
+  document.getElementById('inv-note1').value        = d?.note1 !== undefined ? d.note1 : INV_DEFAULTS.note1;
+  document.getElementById('inv-note2').value        = d?.note2 !== undefined ? d.note2 : INV_DEFAULTS.note2;
+  document.getElementById('inv-bank-name').value    = d?.bankName    || INV_DEFAULTS.bankName;
+  document.getElementById('inv-bank-bsb').value     = d?.bankBsb     || INV_DEFAULTS.bankBsb;
+  document.getElementById('inv-bank-acc').value     = d?.bankAcc     || INV_DEFAULTS.bankAcc;
+}
+
+function invClearForm() {
+  if (!confirm('Clear all invoice details?')) return;
+  localStorage.removeItem(INV_STORAGE_KEY);
+  invLines = [{ desc: '', qty: 1, price: 0 }];
+  const today = new Date();
+  const todayISO = today.toISOString().split('T')[0];
+  const dueDate = new Date(today);
+  dueDate.setDate(dueDate.getDate() + 7);
+  const dueISO = dueDate.toISOString().split('T')[0];
+
+  document.getElementById('inv-client').value       = '';
+  document.getElementById('inv-addr1').value        = '';
+  document.getElementById('inv-addr2').value        = '';
+  document.getElementById('inv-contact').value      = '';
+  document.getElementById('inv-booking-desc').value = '';
+  document.getElementById('inv-ref').value          = '';
+  document.getElementById('inv-date').value         = todayISO;
+  document.getElementById('inv-due-date').value     = dueISO;
+  document.getElementById('inv-payment').value      = '';
+  document.getElementById('inv-note1').value        = INV_DEFAULTS.note1;
+  document.getElementById('inv-note2').value        = INV_DEFAULTS.note2;
+  document.getElementById('inv-bank-name').value    = INV_DEFAULTS.bankName;
+  document.getElementById('inv-bank-bsb').value     = INV_DEFAULTS.bankBsb;
+  document.getElementById('inv-bank-acc').value     = INV_DEFAULTS.bankAcc;
+  invRenderLines();
+  invCalcTotals();
+}
+
+function invRenderPreview() {
+  const out = document.getElementById('inv-output');
+  const d = {
+    client:      document.getElementById('inv-client')?.value || '',
+    addr1:       document.getElementById('inv-addr1')?.value || '',
+    addr2:       document.getElementById('inv-addr2')?.value || '',
+    contact:     document.getElementById('inv-contact')?.value || '',
+    bookingDesc: document.getElementById('inv-booking-desc')?.value || '',
+    ref:         document.getElementById('inv-ref')?.value || '',
+    date:        document.getElementById('inv-date')?.value || '',
+    dueDate:     document.getElementById('inv-due-date')?.value || '',
+    payment:     parseFloat(document.getElementById('inv-payment')?.value) || 0,
+    note1:       document.getElementById('inv-note1')?.value || '',
+    note2:       document.getElementById('inv-note2')?.value || '',
+    bankName:    document.getElementById('inv-bank-name')?.value || '',
+    bankBsb:     document.getElementById('inv-bank-bsb')?.value || '',
+    bankAcc:     document.getElementById('inv-bank-acc')?.value || '',
+  };
+
+  if (!d.client && !invLines.some(l => l.desc)) {
+    out.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text3);font-size:14px;">Fill in invoice details to generate a preview.</div>';
+    return;
+  }
+
+  const venueName = data.venue?.name || 'The Republic Hotel';
+  const venueAddr = data.venue?.contact?.address || '69-73 Pitt St, Sydney, NSW 2000';
+  const venuePhone = data.venue?.contact?.phone || '';
+  const venueEmail = data.venue?.contact?.email || '';
+  const abn = INV_DEFAULTS.abn;
+
+  const subtotal = invLines.reduce((s, l) => s + (l.qty || 0) * (l.price || 0), 0);
+  const due = subtotal - d.payment;
+
+  const lineRows = invLines.filter(l => l.desc || l.price).map(l => {
+    const val = (l.qty || 0) * (l.price || 0);
+    return `<tr>
+      <td>${esc(l.desc)}</td>
+      <td class="r">${l.qty || 0}</td>
+      <td class="r">${invFmtCurrency(l.price || 0)}</td>
+      <td class="r">${invFmtCurrency(val)}</td>
+    </tr>`;
+  }).join('');
+
+  const notesHtml = [d.note1, d.note2].filter(Boolean).map(n => `<div>${esc(n)}</div>`).join('');
+
+  out.innerHTML = `
+    <div class="inv-header">
+      <div class="inv-header-left">
+        <div class="inv-venue-name">${esc(venueName)}</div>
+      </div>
+      <div class="inv-header-right">
+        ${venueAddr ? `<div>${esc(venueAddr)}</div>` : ''}
+        ${venuePhone ? `<div>${esc(venuePhone)}</div>` : ''}
+        ${venueEmail ? `<div>${esc(venueEmail)}</div>` : ''}
+        <div>ABN: ${esc(abn)}</div>
+      </div>
+    </div>
+    <div class="inv-title">Tax Invoice</div>
+    <div class="inv-meta">
+      <div>
+        <div class="inv-meta-label">Bill To</div>
+        <div class="inv-meta-value" style="font-weight:600;">${esc(d.client)}</div>
+        ${d.addr1 ? `<div class="inv-meta-value">${esc(d.addr1)}</div>` : ''}
+        ${d.addr2 ? `<div class="inv-meta-value">${esc(d.addr2)}</div>` : ''}
+        ${d.contact ? `<div class="inv-meta-value" style="margin-top:4px;">Attn: ${esc(d.contact)}</div>` : ''}
+      </div>
+      <div style="text-align:right;">
+        <div style="margin-bottom:8px;">
+          <div class="inv-meta-label">Invoice Date</div>
+          <div class="inv-meta-value">${invFmtDateAU(d.date)}</div>
+        </div>
+        <div>
+          <div class="inv-meta-label">Due Date</div>
+          <div class="inv-meta-value" style="font-weight:600;">${invFmtDateAU(d.dueDate)}</div>
+        </div>
+        ${d.ref ? `<div style="margin-top:8px;"><div class="inv-meta-label">Reference</div><div class="inv-meta-value">${esc(d.ref)}</div></div>` : ''}
+      </div>
+    </div>
+    ${d.bookingDesc ? `<div class="inv-booking-line"><div class="inv-meta-label">Booking</div><div class="inv-meta-value">${esc(d.bookingDesc)}</div></div>` : ''}
+    <div style="padding:0 32px;">
+      <table class="inv-table">
+        <thead>
+          <tr>
+            <th>Product Description</th>
+            <th class="r">Qty</th>
+            <th class="r">Unit Price</th>
+            <th class="r">Inv Value</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${lineRows || '<tr><td colspan="4" style="text-align:center;color:var(--text3);padding:16px;">No line items</td></tr>'}
+        </tbody>
+      </table>
+    </div>
+    <div class="inv-totals-block">
+      <div class="inv-tr"><span class="inv-tr-label">Total Taxable Supplies</span><span class="inv-tr-val">${invFmtCurrency(subtotal)}</span></div>
+      ${d.payment > 0 ? `<div class="inv-tr"><span class="inv-tr-label">Less Payment</span><span class="inv-tr-val">-${invFmtCurrency(d.payment)}</span></div>` : ''}
+      <div class="inv-tr inv-tr-total"><span class="inv-tr-label">Total Due</span><span class="inv-tr-val">${invFmtCurrency(due)}</span></div>
+    </div>
+    ${notesHtml ? `<div class="inv-notes-block">${notesHtml}</div>` : ''}
+    <div class="inv-bank">
+      <div class="inv-bank-title">Bank Account Details</div>
+      <div class="inv-bank-grid">
+        <div><div class="inv-bank-item-label">Account Name</div><div class="inv-bank-item-value">${esc(d.bankName)}</div></div>
+        <div><div class="inv-bank-item-label">BSB</div><div class="inv-bank-item-value">${esc(d.bankBsb)}</div></div>
+        <div><div class="inv-bank-item-label">Account Number</div><div class="inv-bank-item-value">${esc(d.bankAcc)}</div></div>
+        ${d.ref ? `<div><div class="inv-bank-item-label">Reference</div><div class="inv-bank-item-value">${esc(d.ref)}</div></div>` : ''}
+      </div>
+    </div>
+    <div class="inv-footer">
+      <span>Generated ${new Date().toLocaleDateString('en-AU', {day:'numeric',month:'long',year:'numeric'})}</span>
+      <span>${esc(venueName)} — Tax Invoice</span>
+    </div>`;
 }
 </script>
 </body>
