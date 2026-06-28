@@ -1125,6 +1125,18 @@
           <div class="field"><label>Tagline</label><input type="text" id="v-tagline" placeholder="e.g. Four Levels, One Republic" oninput="updateVenue('tagline',this.value)"></div>
         </div>
         <div class="field"><label>Intro / description</label><textarea id="v-intro" rows="3" placeholder="A short description shown on the customer page…" oninput="updateVenue('intro',this.value)"></textarea></div>
+        <div class="field">
+          <label>Logo</label>
+          <div id="v-logo-preview" style="margin-bottom:8px;"></div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <label class="btn btn-add btn-sm" style="cursor:pointer;">
+              Upload Logo
+              <input type="file" accept="image/*" style="display:none;" onchange="uploadLogo(this)">
+            </label>
+            <button class="btn btn-outline btn-sm" id="v-logo-remove" onclick="removeLogo()" style="display:none;">Remove</button>
+            <span style="font-size:11px;color:var(--text3);">PNG or JPG, used on invoices &amp; runsheets</span>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -1944,6 +1956,38 @@ function updateContact(field, val) {
   save();
 }
 
+function uploadLogo(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    data.venue.logo = e.target.result;
+    save();
+    renderLogoPreview();
+  };
+  reader.readAsDataURL(file);
+  input.value = '';
+}
+
+function removeLogo() {
+  if (!confirm('Remove the logo?')) return;
+  delete data.venue.logo;
+  save();
+  renderLogoPreview();
+}
+
+function renderLogoPreview() {
+  const el = document.getElementById('v-logo-preview');
+  const btn = document.getElementById('v-logo-remove');
+  if (data.venue.logo) {
+    el.innerHTML = `<img src="${data.venue.logo}" style="max-height:60px;max-width:280px;border:1px solid var(--border);border-radius:var(--radius);padding:6px;background:#fff;">`;
+    btn.style.display = '';
+  } else {
+    el.innerHTML = '';
+    btn.style.display = 'none';
+  }
+}
+
 function addSpace() {
   data.venue.spaces.push({ id: genId(), name: '', floor: '', capacity: '', description: '', features: '', color1: '#1a3a2a', color2: '#2d6b48' });
   save(); renderSpaces();
@@ -2040,6 +2084,7 @@ function renderVenuePanel() {
   document.getElementById('v-phone').value   = c.phone   || '';
   document.getElementById('v-website').value = c.website || '';
   document.getElementById('v-address').value = c.address || '';
+  renderLogoPreview();
   renderSpaces();
   renderPackages();
 }
@@ -3338,6 +3383,7 @@ function invRenderPreview() {
   out.innerHTML = `
     <div class="inv-header">
       <div class="inv-header-left">
+        ${data.venue?.logo ? `<img src="${data.venue.logo}" style="max-height:50px;max-width:260px;margin-bottom:6px;">` : ''}
         <div class="inv-venue-name">${esc(venueName)}</div>
       </div>
       <div class="inv-header-right">
