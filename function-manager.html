@@ -772,6 +772,7 @@
   }
 
   @media print {
+    html, body { background: #fff !important; }
     .app-header, .tabs { display: none !important; }
     .rs-subnav, .rs-preview-actions, #rs-panel-form { display: none !important; }
     .inv-subnav, .inv-preview-actions, #inv-panel-form { display: none !important; }
@@ -780,7 +781,7 @@
     #tab-runsheet.active #rs-panel-preview { display: block !important; }
     #tab-invoice.active .inv-panel { display: none !important; }
     #tab-invoice.active #inv-panel-preview { display: block !important; }
-    .rs-preview-wrap, .inv-preview-wrap { padding: 0; max-width: 100%; }
+    .rs-preview-wrap, .inv-preview-wrap { padding: 0; max-width: 100%; background: #fff !important; }
     .rs-output, .inv-output { border: none; border-radius: 0; box-shadow: none; }
   }
 </style>
@@ -3160,7 +3161,6 @@ function rsBuildRunsheet() {
         <span>Generated ${new Date().toLocaleDateString('en-AU', {day:'numeric',month:'long',year:'numeric'})}</span>
         <span>${esc(venueName)} — Confidential Event Runsheet</span>
       </div>
-      <div style="min-height:120px;background:#fff;"></div>
     </div>`;
   rsFitEventName();
 }
@@ -3442,8 +3442,7 @@ function invRenderPreview() {
     <div class="inv-footer">
       <span>Generated ${new Date().toLocaleDateString('en-AU', {day:'numeric',month:'long',year:'numeric'})}</span>
       <span>${esc(venueName)} — Tax Invoice</span>
-    </div>
-    <div style="min-height:120px;background:#fff;"></div>`;
+    </div>`;
 }
 </script>
 </body>
