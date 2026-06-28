@@ -1993,6 +1993,24 @@ function removeSpace(id) {
   save(); renderSpaces();
 }
 
+function uploadSpaceImage(id, input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    updateSpace(id, 'image', e.target.result);
+    renderSpaces();
+  };
+  reader.readAsDataURL(file);
+  input.value = '';
+}
+
+function removeSpaceImage(id) {
+  if (!confirm('Remove this image?')) return;
+  const s = data.venue.spaces.find(s => s.id === id);
+  if (s) { delete s.image; save(); renderSpaces(); }
+}
+
 function updateSpace(id, field, val) {
   const s = data.venue.spaces.find(s => s.id === id);
   if (s) {
@@ -2023,6 +2041,14 @@ function renderSpaces() {
       </div>
       <div class="field"><label>Description</label><textarea rows="2" oninput="updateSpace('${s.id}','description',this.value)">${esc(s.description)}</textarea></div>
       <div class="field"><label>Features <span style="font-weight:400;color:var(--text3)">(one per line)</span></label><textarea rows="4" oninput="updateSpace('${s.id}','features',this.value)">${esc(s.features)}</textarea></div>
+      <div class="field">
+        <label>Image</label>
+        <div id="space-img-${s.id}" style="margin-bottom:6px;">${s.image ? `<img src="${s.image}" style="max-height:80px;max-width:100%;border:1px solid var(--border);border-radius:var(--radius);object-fit:cover;">` : ''}</div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <label class="btn btn-add btn-sm" style="cursor:pointer;">Upload Image<input type="file" accept="image/*" style="display:none;" onchange="uploadSpaceImage('${s.id}',this)"></label>
+          ${s.image ? `<button class="btn btn-outline btn-sm" onclick="removeSpaceImage('${s.id}')">Remove</button>` : ''}
+        </div>
+      </div>
     </div>`).join('');
 }
 
