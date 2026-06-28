@@ -658,18 +658,12 @@
     box-shadow: 0 2px 12px rgba(0,0,0,0.06);
   }
   .inv-header {
-    background: var(--accent);
+    background: #1a3a2a;
     color: #fff;
     padding: 28px 32px;
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-  }
-  .inv-header-left .inv-venue-name {
-    font-size: 26px;
-    font-weight: 700;
-    letter-spacing: 0.3px;
-    margin-bottom: 2px;
   }
   .inv-header-right {
     text-align: right;
@@ -3166,6 +3160,7 @@ function rsBuildRunsheet() {
         <span>Generated ${new Date().toLocaleDateString('en-AU', {day:'numeric',month:'long',year:'numeric'})}</span>
         <span>${esc(venueName)} — Confidential Event Runsheet</span>
       </div>
+      <div style="min-height:120px;background:#fff;"></div>
     </div>`;
   rsFitEventName();
 }
@@ -3383,8 +3378,7 @@ function invRenderPreview() {
   out.innerHTML = `
     <div class="inv-header">
       <div class="inv-header-left">
-        ${data.venue?.logo ? `<img src="${data.venue.logo}" style="max-height:50px;max-width:260px;margin-bottom:6px;">` : ''}
-        <div class="inv-venue-name">${esc(venueName)}</div>
+        ${data.venue?.logo ? `<img src="${data.venue.logo}" style="max-height:50px;max-width:260px;">` : `<div style="font-size:26px;font-weight:700;letter-spacing:0.3px;">${esc(venueName)}</div>`}
       </div>
       <div class="inv-header-right">
         ${venueAddr ? `<div>${esc(venueAddr)}</div>` : ''}
@@ -3448,7 +3442,8 @@ function invRenderPreview() {
     <div class="inv-footer">
       <span>Generated ${new Date().toLocaleDateString('en-AU', {day:'numeric',month:'long',year:'numeric'})}</span>
       <span>${esc(venueName)} — Tax Invoice</span>
-    </div>`;
+    </div>
+    <div style="min-height:120px;background:#fff;"></div>`;
 }
 </script>
 </body>
