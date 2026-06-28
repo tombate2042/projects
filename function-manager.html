@@ -18,9 +18,9 @@
     --text:        #1a1916;
     --text2:       #5a5750;
     --text3:       #9a968e;
-    --accent:      #1a3a2a;
-    --accent-light:#e8f0eb;
-    --accent-mid:  #2d6b48;
+    --accent:      #748575;
+    --accent-light:#e8ede9;
+    --accent-mid:  #8a9b8b;
     --danger:      #8b2e2e;
     --danger-light:#fdf0f0;
     --sans:        'Helvetica Neue', Arial, sans-serif;
@@ -658,7 +658,7 @@
     box-shadow: 0 2px 12px rgba(0,0,0,0.06);
   }
   .inv-header {
-    background: #1a3a2a;
+    background: #748575;
     color: #fff;
     padding: 28px 32px;
     display: flex;
@@ -1983,7 +1983,7 @@ function renderLogoPreview() {
 }
 
 function addSpace() {
-  data.venue.spaces.push({ id: genId(), name: '', floor: '', capacity: '', description: '', features: '', color1: '#1a3a2a', color2: '#2d6b48' });
+  data.venue.spaces.push({ id: genId(), name: '', floor: '', capacity: '', description: '', features: '', color1: '#748575', color2: '#8a9b8b' });
   save(); renderSpaces();
 }
 
@@ -2017,8 +2017,8 @@ function renderSpaces() {
         <div class="field"><label>Name</label><input type="text" value="${esc(s.name)}" placeholder="e.g. Rooftop Bar" oninput="updateSpace('${s.id}','name',this.value)"></div>
         <div class="field"><label>Floor / Level</label><input type="text" value="${esc(s.floor)}" placeholder="e.g. Third Floor" oninput="updateSpace('${s.id}','floor',this.value)"></div>
         <div class="field"><label>Capacity</label><input type="text" value="${esc(s.capacity)}" placeholder="e.g. 75 Cocktail" oninput="updateSpace('${s.id}','capacity',this.value)"></div>
-        <div class="field"><label>Header Colour</label><input type="color" value="${s.color1 || '#1a3a2a'}" oninput="updateSpace('${s.id}','color1',this.value)" style="width:100%;height:36px;padding:2px;border:1px solid var(--border);border-radius:var(--radius);cursor:pointer;"></div>
-        <div class="field"><label>Accent Colour</label><input type="color" value="${s.color2 || '#2d6b48'}" oninput="updateSpace('${s.id}','color2',this.value)" style="width:100%;height:36px;padding:2px;border:1px solid var(--border);border-radius:var(--radius);cursor:pointer;"></div>
+        <div class="field"><label>Header Colour</label><input type="color" value="${s.color1 || '#748575'}" oninput="updateSpace('${s.id}','color1',this.value)" style="width:100%;height:36px;padding:2px;border:1px solid var(--border);border-radius:var(--radius);cursor:pointer;"></div>
+        <div class="field"><label>Accent Colour</label><input type="color" value="${s.color2 || '#8a9b8b'}" oninput="updateSpace('${s.id}','color2',this.value)" style="width:100%;height:36px;padding:2px;border:1px solid var(--border);border-radius:var(--radius);cursor:pointer;"></div>
       </div>
       <div class="field"><label>Description</label><textarea rows="2" oninput="updateSpace('${s.id}','description',this.value)">${esc(s.description)}</textarea></div>
       <div class="field"><label>Features <span style="font-weight:400;color:var(--text3)">(one per line)</span></label><textarea rows="4" oninput="updateSpace('${s.id}','features',this.value)">${esc(s.features)}</textarea></div>
@@ -2309,8 +2309,8 @@ function hexMixWhite(hex, amount) {
 }
 
 function rsApplySpaceColours(space) {
-  const c1    = space?.color1 || '#1a3a2a';
-  const c2    = space?.color2 || '#2d6b48';
+  const c1    = space?.color1 || '#748575';
+  const c2    = space?.color2 || '#8a9b8b';
   const light = hexMixWhite(c2, 0.18);
   const root  = document.documentElement;
   root.style.setProperty('--accent',       c1);
