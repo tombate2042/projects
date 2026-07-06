@@ -416,6 +416,17 @@ function selectSpace(idx) {
   document.querySelectorAll('.space-detail').forEach((p, i) => p.classList.toggle('active', i === idx));
 }
 
+function spaceImgFallback(img, idx) {
+  const srcs = JSON.parse(img.dataset.srcs);
+  const tried = parseInt(img.dataset.try) + 1;
+  if (tried < srcs.length) {
+    img.dataset.try = tried;
+    img.src = srcs[tried];
+  } else {
+    img.style.display = 'none';
+  }
+}
+
 function renderPage(data) {
   const v       = data.venue  || {};
   const contact = v.contact   || {};
@@ -454,11 +465,17 @@ function renderPage(data) {
     const tabs = spaces.map((s, i) =>
       `<button class="space-tab${i === 0 ? ' active' : ''}" onclick="selectSpace(${i})">${esc(s.name)}</button>`
     ).join('');
+    const spaceImageMap = {
+      "Taylor's Rooftop": "Rooftop"
+    };
+    const IMG_FOLDER = 'venue-menue_images';
+    const IMG_EXTS = ['jpg', 'jpeg', 'png', 'webp'];
+
     const panels = spaces.map((s, i) => {
       const features = (s.features || '').split('\n').map(f => f.trim()).filter(Boolean);
-      const imgHtml = s.image
-        ? `<img class="space-detail-img" src="${s.image}" alt="${esc(s.name)}">`
-        : `<div class="space-detail-img" style="display:flex;align-items:center;justify-content:center;color:var(--text3);font-size:13px;">No image</div>`;
+      const imgName = spaceImageMap[s.name] || s.name;
+      const imgSrcset = IMG_EXTS.map(ext => `${IMG_FOLDER}/${imgName}.${ext}`);
+      const imgHtml = `<img class="space-detail-img" src="${imgSrcset[0]}" alt="${esc(s.name)}" onerror="spaceImgFallback(this, ${i})" data-try="0" data-srcs='${JSON.stringify(imgSrcset)}'>`;
       return `
         <div class="space-detail${i === 0 ? ' active' : ''}" id="space-panel-${i}">
           ${imgHtml}
