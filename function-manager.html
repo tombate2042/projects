@@ -587,7 +587,7 @@
   .rs-guest-table th, .rs-guest-table td { border: 1px solid var(--border); }
   .rs-guest-table th { background: var(--surface2); }
   .rs-guest-table .meal-cell { border-left: 3px solid var(--accent-mid); vertical-align: middle; }
-  .rs-guest-table .group-start td { border-top: 2px solid var(--border); }
+  .rs-guest-table .group-start td { border-top: 2px solid var(--accent-mid); }
   .rs-notes-cell { padding: 16px 24px; font-size: 14px; line-height: 1.6; color: var(--text); min-height: 60px; white-space: pre-wrap; font-family: var(--sans); }
   .rs-footer { background: var(--surface2); border-top: 1px solid var(--border); padding: 10px 24px; font-family: var(--sans); font-size: 11px; color: var(--text3); display: flex; justify-content: space-between; align-items: center; }
 
@@ -3100,6 +3100,10 @@ function rsBuildRunsheet() {
           <thead><tr><th style="width:32px;">#</th><th>Guest Name</th><th>Meal</th></tr></thead>
           <tbody>${guestRows}</tbody>
         </table>
+      </div>
+      <div class="rs-footer">
+        <span>Generated ${new Date().toLocaleDateString('en-AU', {day:'numeric',month:'long',year:'numeric'})}</span>
+        <span>${esc(venueName)} — Confidential Event Runsheet</span>
       </div>`;
     foodHtml = `
       <div class="rs-section-title">Food Selection <div class="rs-food-badge">${esc(opt?.label || type)}</div></div>
