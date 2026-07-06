@@ -587,7 +587,7 @@
   .rs-guest-table th, .rs-guest-table td { border: 1px solid var(--border); }
   .rs-guest-table th { background: var(--surface2); }
   .rs-guest-table .meal-cell { border-left: 3px solid var(--accent-mid); vertical-align: middle; }
-  .rs-guest-table .group-start td { border-top: 2px solid var(--accent-mid); }
+  .rs-guest-table .group-start td { border-top: 2px solid var(--border); }
   .rs-notes-cell { padding: 16px 24px; font-size: 14px; line-height: 1.6; color: var(--text); min-height: 60px; white-space: pre-wrap; font-family: var(--sans); }
   .rs-footer { background: var(--surface2); border-top: 1px solid var(--border); padding: 10px 24px; font-family: var(--sans); font-size: 11px; color: var(--text3); display: flex; justify-content: space-between; align-items: center; }
   .rs-page-break { display: flex; align-items: center; gap: 12px; padding: 16px 24px; background: var(--bg); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); font-family: var(--sans); font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text3); }
@@ -3044,6 +3044,15 @@ function rsBuildRunsheet() {
       .map(a => a.split(':').pop().replace(/\s*\([^)]*\)/g, '').trim())
       .filter(Boolean).join(' · ');
 
+    // build dish order from subcategory item layout
+    const menuItemOrder = {};
+    rsGetSubcats(type).forEach(sub =>
+      (sub.items || []).forEach((item, i) => {
+        if (item.name && !(item.name in menuItemOrder)) menuItemOrder[item.name] = Object.keys(menuItemOrder).length;
+      })
+    );
+    const dishSortVal = dish => menuItemOrder[dish] ?? 9999;
+
     // plain-text key for grouping (dish + addons + notes)
     const getMealKey = r => [r.dish || '—', cleanAddOns(r), r.notes || ''].filter(Boolean).join('\x00');
 
@@ -3056,22 +3065,25 @@ function rsBuildRunsheet() {
       return html;
     };
 
+    // sort comparator: menu order first, fallback to alphabetical
+    const mealSort = (a, b) => (dishSortVal(a.dish) - dishSortVal(b.dish)) || getMealKey(a).localeCompare(getMealKey(b));
+
     // ── Grouped summary (no names) ──
     const mealSummary = {};
     validRows.forEach(r => {
       const key = getMealKey(r);
-      if (!mealSummary[key]) mealSummary[key] = { qty: 0, display: getMealDisplay(r) };
+      if (!mealSummary[key]) mealSummary[key] = { qty: 0, display: getMealDisplay(r), dish: r.dish || '—' };
       mealSummary[key].qty++;
     });
-    const groupedRows = Object.entries(mealSummary)
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([, { qty, display }]) => `<tr>
+    const groupedRows = Object.values(mealSummary)
+      .sort((a, b) => dishSortVal(a.dish) - dishSortVal(b.dish) || a.dish.localeCompare(b.dish))
+      .map(({ qty, display }) => `<tr>
         <td style="width:52px;text-align:center;font-weight:700;color:var(--accent);font-size:15px;">${qty}x</td>
         <td>${display}</td>
       </tr>`).join('') || '<tr><td colspan="2" style="text-align:center;color:#aaa;padding:16px;font-family:var(--sans);font-size:13px;">No meals added</td></tr>';
 
     // ── Per-guest detail (new page) — sorted & grouped by meal ──
-    const sortedGuests = [...validRows].sort((a, b) => getMealKey(a).localeCompare(getMealKey(b)));
+    const sortedGuests = [...validRows].sort(mealSort);
     const mealGroups = [];
     sortedGuests.forEach(r => {
       const key = getMealKey(r);
