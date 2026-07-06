@@ -3026,6 +3026,7 @@ function rsBuildRunsheet() {
   const pkgType = type ? getPackageType(type) : null;
 
   let foodHtml = '';
+  let guestMealsSection = '';
 
   if (type && pkgType === 'alacarte') {
     const validRows = (d.bistroRows || []).filter(r => r.name || r.dish);
@@ -3054,20 +3055,21 @@ function rsBuildRunsheet() {
       </tr>`;
     }).join('') || '<tr><td colspan="3" style="text-align:center;color:#aaa;padding:16px;font-family:var(--sans);font-size:13px;">No guests added</td></tr>';
 
-    foodHtml = `
-      <div class="rs-section-title">Food Selection <div class="rs-food-badge">${esc(opt?.label || type)}</div></div>
-      <div class="rs-body-row full" style="padding:0;">
-        <table class="rs-print-table">
-          <thead><tr><th style="width:52px;">Qty</th><th>Meal</th></tr></thead>
-          <tbody>${groupedRows}</tbody>
-        </table>
-      </div>
+    guestMealsSection = `
       <div style="page-break-before:always;"></div>
       <div class="rs-section-title">Guest Meals <div class="rs-food-badge">${esc(opt?.label || type)}</div></div>
       <div class="rs-body-row full" style="padding:0;">
         <table class="rs-print-table">
           <thead><tr><th style="width:32px;">#</th><th>Guest Name</th><th>Meal</th></tr></thead>
           <tbody>${guestRows}</tbody>
+        </table>
+      </div>`;
+    foodHtml = `
+      <div class="rs-section-title">Food Selection <div class="rs-food-badge">${esc(opt?.label || type)}</div></div>
+      <div class="rs-body-row full" style="padding:0;">
+        <table class="rs-print-table">
+          <thead><tr><th style="width:52px;">Qty</th><th>Meal</th></tr></thead>
+          <tbody>${groupedRows}</tbody>
         </table>
       </div>`;
 
@@ -3187,6 +3189,7 @@ function rsBuildRunsheet() {
         <span>Generated ${new Date().toLocaleDateString('en-AU', {day:'numeric',month:'long',year:'numeric'})}</span>
         <span>${esc(venueName)} — Confidential Event Runsheet</span>
       </div>
+      ${guestMealsSection}
     </div>`;
   rsFitEventName();
 }
