@@ -584,6 +584,11 @@
   .rs-print-table td { padding: 9px 16px; font-size: 13px; color: var(--text); border-bottom: 1px solid var(--border); }
   .rs-print-table tr { page-break-inside: avoid; }
   .rs-print-table tr:last-child td { border-bottom: none; }
+  .rs-guest-table th, .rs-guest-table td { border: 1px solid var(--border); }
+  .rs-guest-table th { background: var(--surface2); }
+  .rs-guest-table .meal-cell { background: var(--surface2); border-left: 3px solid var(--accent-mid); vertical-align: middle; }
+  .rs-guest-table .inner-row td { border-top: 1px dashed rgba(0,0,0,0.1); border-bottom: 1px dashed rgba(0,0,0,0.1); }
+  .rs-guest-table .group-start td { border-top: 2px solid var(--border); }
   .rs-notes-cell { padding: 16px 24px; font-size: 14px; line-height: 1.6; color: var(--text); min-height: 60px; white-space: pre-wrap; font-family: var(--sans); }
   .rs-footer { background: var(--surface2); border-top: 1px solid var(--border); padding: 10px 24px; font-family: var(--sans); font-size: 11px; color: var(--text3); display: flex; justify-content: space-between; align-items: center; }
 
@@ -3074,15 +3079,15 @@ function rsBuildRunsheet() {
     });
     let guestRows = '';
     let guestNum = 1;
-    const groupBorder = 'border-top:2px solid var(--border);';
     mealGroups.forEach((group, gi) => {
       group.guests.forEach((r, i) => {
         const isFirst = i === 0;
-        const topBorder = (gi > 0 && isFirst) ? groupBorder : '';
-        guestRows += `<tr>
-          <td style="width:32px;text-align:center;color:var(--text3);font-size:11px;${topBorder}">${guestNum++}</td>
-          <td style="${topBorder}">${esc(r.name) || '—'}</td>
-          ${isFirst ? `<td rowspan="${group.guests.length}" style="vertical-align:middle;${topBorder}">${group.display}</td>` : ''}
+        const isInner = !isFirst;
+        const rowClass = gi > 0 && isFirst ? 'group-start' : isInner ? 'inner-row' : '';
+        guestRows += `<tr${rowClass ? ` class="${rowClass}"` : ''}>
+          <td style="width:32px;text-align:center;color:var(--text3);font-size:11px;">${guestNum++}</td>
+          <td>${esc(r.name) || '—'}</td>
+          ${isFirst ? `<td rowspan="${group.guests.length}" class="meal-cell">${group.display}</td>` : ''}
         </tr>`;
       });
     });
@@ -3092,7 +3097,7 @@ function rsBuildRunsheet() {
       <div style="page-break-before:always;"></div>
       <div class="rs-section-title">Guest Meals <div class="rs-food-badge">${esc(opt?.label || type)}</div></div>
       <div class="rs-body-row full" style="padding:0;">
-        <table class="rs-print-table" style="margin-bottom:48px;">
+        <table class="rs-print-table rs-guest-table" style="margin-bottom:48px;">
           <thead><tr><th style="width:32px;">#</th><th>Guest Name</th><th>Meal</th></tr></thead>
           <tbody>${guestRows}</tbody>
         </table>
