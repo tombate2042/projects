@@ -3108,8 +3108,8 @@ function rsBuildRunsheet() {
     if (!guestRows) guestRows = '<tr><td colspan="3" style="text-align:center;color:#aaa;padding:16px;font-family:var(--sans);font-size:13px;">No guests added</td></tr>';
 
     guestMealsSection = `
-      <div class="rs-page-break" style="page-break-before:always;">Page 2</div>
-      <div class="rs-section-title">Guest Meals <div class="rs-food-badge">${esc(opt?.label || type)}</div></div>
+      <div class="rs-page-break">Page 2</div>
+      <div class="rs-section-title" style="page-break-before:always;">Guest Meals <div class="rs-food-badge">${esc(opt?.label || type)}</div></div>
       <div class="rs-body-row full" style="padding:0;">
         <table class="rs-print-table rs-guest-table">
           <thead><tr><th style="width:32px;">#</th><th>Guest Name</th><th>Meal</th></tr></thead>
