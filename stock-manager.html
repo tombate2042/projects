@@ -108,15 +108,29 @@
     user-select: none;
   }
   .category-header:hover { background: var(--surface); }
-  .category-header.collapsed + .table-wrap { display: none; }
+  .category-header.collapsed ~ .col-header { display: none; }
+  .category-header.collapsed ~ .table-wrap { display: none; }
   .category-name { font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text); }
   .category-count { font-size: 11px; color: var(--text3); }
+  .col-header {
+    position: sticky;
+    z-index: 8;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    display: grid;
+    grid-template-columns: 28% 9% 12% 9% 9% 8% 15% 10%;
+    min-width: 820px;
+  }
+  .col-header > span {
+    font-size: 10px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.07em; color: var(--text3);
+    padding: 8px 10px; white-space: nowrap;
+  }
+  .col-header > span:first-child { padding-left: 24px; }
+  .col-header > span.r { text-align: right; }
   .table-wrap { overflow-x: auto; }
   table { width: 100%; border-collapse: collapse; }
   #productsContent table { min-width: 820px; table-layout: fixed; }
-  thead th { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text3); background: var(--surface); border-bottom: 1px solid var(--border); padding: 8px 10px; white-space: nowrap; text-align: left; }
-  thead th:first-child { padding-left: 24px; }
-  thead th.r { text-align: right; }
   tbody tr { border-bottom: 1px solid rgba(0,0,0,0.04); transition: background 0.1s; }
   tbody tr:hover { background: rgba(0,0,0,0.02); }
   tbody td { padding: 7px 10px; vertical-align: middle; overflow: hidden; text-overflow: ellipsis; }
@@ -871,16 +885,16 @@ function renderProducts() {
     return;
   }
 
-  const colHead = `<thead><tr>
-    <th style="width:28%">Item</th>
-    <th style="width:9%">Size</th>
-    <th style="width:12%">Supplier</th>
-    <th class="r" style="width:9%">Cost</th>
-    <th class="r" style="width:9%">Sell</th>
-    <th class="r" style="width:8%" title="Spirits: per 30ml serve. Others: per unit.">GP%</th>
-    <th style="width:15%">Brand Owner</th>
-    <th style="width:10%">PLU</th>
-  </tr></thead>`;
+  const colHead = `<div class="col-header">
+    <span>Item</span>
+    <span>Size</span>
+    <span>Supplier</span>
+    <span class="r">Cost</span>
+    <span class="r">Sell</span>
+    <span class="r" title="Spirits: per 30ml serve. Others: per unit.">GP%</span>
+    <span>Brand Owner</span>
+    <span>PLU</span>
+  </div>`;
 
   let html = '';
   cats.forEach(cat => {
@@ -930,8 +944,9 @@ function renderProducts() {
         <span class="category-count" id="smcount-${key}">${items.length} items</span>
         <svg class="category-toggle" id="smtoggle-${key}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="6 9 12 15 18 9"/></svg>
       </div>
+      ${colHead}
       <div class="table-wrap" id="smbody-${key}">
-        <table>${colHead}<tbody>${rows}</tbody></table>
+        <table><tbody>${rows}</tbody></table>
       </div>
     </div>`;
   });
@@ -949,8 +964,11 @@ function toggleCat(key) {
 
 function setStickyTops() {
   const navH = document.getElementById('stickyTop')?.offsetHeight || 0;
-  document.querySelectorAll('.category-header').forEach(el => {
-    el.style.top = navH + 'px';
+  const headers = document.querySelectorAll('.category-header');
+  headers.forEach(el => el.style.top = navH + 'px');
+  const catH = headers[0]?.offsetHeight || 0;
+  document.querySelectorAll('.col-header').forEach(el => {
+    el.style.top = (navH + catH) + 'px';
   });
 }
 
