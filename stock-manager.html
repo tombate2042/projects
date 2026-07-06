@@ -106,7 +106,8 @@
   tbody td { padding: 7px 10px; vertical-align: middle; overflow: hidden; text-overflow: ellipsis; }
   tbody td:first-child { padding-left: 24px; }
   tbody tr.category-row { cursor: pointer; user-select: none; }
-  tbody tr.category-row td { padding: 10px 24px; background: rgba(0,0,0,0.02); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
+  tbody tr.category-row td { padding: 0; background: rgba(0,0,0,0.02); border-bottom: 1px solid var(--border); }
+  tbody tr.category-row td > div { display: flex; align-items: center; gap: 10px; padding: 10px 24px; }
   tbody tr.category-row:hover td { background: rgba(0,0,0,0.04); }
   .item-name { font-size: 13px; font-weight: 500; }
   .item-sub { font-size: 11px; color: var(--text3); margin-top: 1px; }
@@ -874,11 +875,11 @@ function renderProducts() {
     const items = allItems.filter(m => m.category === cat).sort((a, b) => (a.position||99) - (b.position||99) || a.item.localeCompare(b.item));
     const key = catKey(cat);
     html += `<tr class="category-row" id="smcatrow-${key}" onclick="toggleCat('${key}')">
-      <td colspan="8">
+      <td colspan="8"><div>
         <span class="category-name">${cat}</span>
         <span class="category-count" id="smcount-${key}">${items.length} items</span>
         <svg class="category-toggle" id="smtoggle-${key}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="6 9 12 15 18 9"/></svg>
-      </td>
+      </div></td>
     </tr>`;
     items.forEach(m => {
       const gp = calcGP(m);
