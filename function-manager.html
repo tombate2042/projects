@@ -790,7 +790,7 @@
     #tab-invoice.active .inv-panel { display: none !important; }
     #tab-invoice.active #inv-panel-preview { display: block !important; }
     .rs-preview-wrap, .inv-preview-wrap { padding: 0; max-width: 100%; background: #fff !important; }
-    .rs-output, .inv-output { border: none; border-radius: 0; box-shadow: none; overflow: visible; }
+    .rs-output, .inv-output, #rs-output-p2 { border: none; border-radius: 0; box-shadow: none; overflow: visible; }
   }
 </style>
 </head>
@@ -3245,8 +3245,24 @@ function rsBuildRunsheet() {
         <span>Generated ${new Date().toLocaleDateString('en-AU', {day:'numeric',month:'long',year:'numeric'})}</span>
         <span>${esc(venueName)} — Confidential Event Runsheet</span>
       </div>
-      ${guestMealsSection}
     </div>`;
+
+  if (guestMealsSection) {
+    const p2 = document.createElement('div');
+    p2.id = 'rs-output-p2';
+    p2.className = 'rs-output';
+    p2.style.marginTop = '0';
+    p2.style.borderTop = 'none';
+    p2.style.borderRadius = '0 0 var(--radius-lg) var(--radius-lg)';
+    p2.innerHTML = guestMealsSection;
+    const existing = document.getElementById('rs-output-p2');
+    if (existing) existing.remove();
+    out.insertAdjacentElement('afterend', p2);
+  } else {
+    const existing = document.getElementById('rs-output-p2');
+    if (existing) existing.remove();
+  }
+
   rsFitEventName();
 }
 
