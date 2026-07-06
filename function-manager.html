@@ -3032,32 +3032,45 @@ function rsBuildRunsheet() {
   if (type && pkgType === 'alacarte') {
     const validRows = (d.bistroRows || []).filter(r => r.name || r.dish);
 
+    // strip prices in brackets and return clean addon text
+    const cleanAddOns = r => (r.addOns || [])
+      .map(a => a.split(':').pop().replace(/\s*\([^)]*\)/g, '').trim())
+      .filter(Boolean).join(' · ');
+
+    // plain-text key for grouping (dish + addons + notes)
+    const getMealKey = r => [r.dish || '—', cleanAddOns(r), r.notes || ''].filter(Boolean).join('\x00');
+
+    // HTML display for meal cell — addons & notes italic, no prices
+    const getMealDisplay = r => {
+      const addOns = cleanAddOns(r);
+      let html = esc(r.dish) || '—';
+      if (addOns) html += `<br><em style="font-size:12px;color:#888;">${esc(addOns)}</em>`;
+      if (r.notes) html += `<br><em style="font-size:12px;color:#888;">${esc(r.notes)}</em>`;
+      return html;
+    };
+
     // ── Grouped summary (no names) ──
-    const counts = {};
+    const mealSummary = {};
     validRows.forEach(r => {
-      const addOnText = (r.addOns || []).map(a => a.split(':').pop()).filter(Boolean).join(' · ');
-      const key = [esc(r.dish) || '—', addOnText].filter(Boolean).join(' · ');
-      counts[key] = (counts[key] || 0) + 1;
+      const key = getMealKey(r);
+      if (!mealSummary[key]) mealSummary[key] = { qty: 0, display: getMealDisplay(r) };
+      mealSummary[key].qty++;
     });
-    const groupedRows = Object.entries(counts).sort(([a],[b]) => a.localeCompare(b)).map(([label, qty]) =>
-      `<tr>
-        <td style="width:52px;text-align:center;font-weight:700;color:var(--accent);font-size:15px;">${qty}</td>
-        <td style="font-weight:600;">${label}</td>
-      </tr>`
-    ).join('') || '<tr><td colspan="2" style="text-align:center;color:#aaa;padding:16px;font-family:var(--sans);font-size:13px;">No meals added</td></tr>';
+    const groupedRows = Object.entries(mealSummary)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([, { qty, display }]) => `<tr>
+        <td style="width:52px;text-align:center;font-weight:700;color:var(--accent);font-size:15px;">${qty}x</td>
+        <td>${display}</td>
+      </tr>`).join('') || '<tr><td colspan="2" style="text-align:center;color:#aaa;padding:16px;font-family:var(--sans);font-size:13px;">No meals added</td></tr>';
 
     // ── Per-guest detail (new page) — sorted & grouped by meal ──
-    const getMealKey = r => {
-      const addOnText = (r.addOns || []).map(a => a.split(':').pop()).filter(Boolean).join(' · ');
-      return [esc(r.dish) || '—', addOnText].filter(Boolean).join(' · ');
-    };
     const sortedGuests = [...validRows].sort((a, b) => getMealKey(a).localeCompare(getMealKey(b)));
     const mealGroups = [];
     sortedGuests.forEach(r => {
       const key = getMealKey(r);
       const last = mealGroups[mealGroups.length - 1];
       if (last && last.key === key) { last.guests.push(r); }
-      else { mealGroups.push({ key, guests: [r] }); }
+      else { mealGroups.push({ key, display: getMealDisplay(r), guests: [r] }); }
     });
     let guestRows = '';
     let guestNum = 1;
@@ -3068,8 +3081,8 @@ function rsBuildRunsheet() {
         const topBorder = (gi > 0 && isFirst) ? groupBorder : '';
         guestRows += `<tr>
           <td style="width:32px;text-align:center;color:var(--text3);font-size:11px;${topBorder}">${guestNum++}</td>
-          <td style="${topBorder}">${esc(r.name) || '—'}${r.notes ? `<div style="font-size:12px;color:#888;font-style:italic;margin-top:2px;">${esc(r.notes)}</div>` : ''}</td>
-          ${isFirst ? `<td rowspan="${group.guests.length}" style="vertical-align:middle;${topBorder}">${group.key}</td>` : ''}
+          <td style="${topBorder}">${esc(r.name) || '—'}</td>
+          ${isFirst ? `<td rowspan="${group.guests.length}" style="vertical-align:middle;${topBorder}">${group.display}</td>` : ''}
         </tr>`;
       });
     });
