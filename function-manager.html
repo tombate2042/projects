@@ -3037,7 +3037,7 @@ function rsBuildRunsheet() {
       const key = [esc(r.dish) || '—', addOnText].filter(Boolean).join(' · ');
       counts[key] = (counts[key] || 0) + 1;
     });
-    const groupedRows = Object.entries(counts).map(([label, qty]) =>
+    const groupedRows = Object.entries(counts).sort(([a],[b]) => a.localeCompare(b)).map(([label, qty]) =>
       `<tr>
         <td style="width:52px;text-align:center;font-weight:700;color:var(--accent);font-size:15px;">${qty}</td>
         <td style="font-weight:600;">${label}</td>
