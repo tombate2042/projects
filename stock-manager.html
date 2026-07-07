@@ -85,7 +85,7 @@
   .filter-select:focus { border-color: var(--border2); color: var(--text); }
 
   /* SUMMARY BAR */
-  .summary-bar { padding: 8px 24px; background: var(--surface); border-bottom: 1px solid var(--border); display: flex; gap: 28px; align-items: center; }
+  .summary-bar { padding: 8px 24px; background: var(--surface); display: flex; gap: 28px; align-items: center; flex-wrap: wrap; }
   .stat { display: flex; flex-direction: column; }
   .stat-val { font-family: var(--mono); font-size: 15px; font-weight: 500; }
   .stat-lbl { font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text3); margin-top: 1px; }
@@ -95,23 +95,28 @@
   .category-toggle.collapsed { transform: rotate(-90deg); }
   .category-name { font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text); }
   .category-count { font-size: 11px; color: var(--text3); }
-  #productsContent { overflow-x: auto; }
+  #productsContent { overflow-x: auto; padding-bottom: 16px; }
+  #productsContent table { border-collapse: separate; border-spacing: 0 2px; }
   table { width: 100%; border-collapse: collapse; min-width: 820px; table-layout: fixed; }
   thead th { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text3); background: var(--surface); border-bottom: 1px solid var(--border); padding: 8px 10px; white-space: nowrap; text-align: left; position: sticky; z-index: 8; }
   thead th:first-child { padding-left: 24px; }
   thead th.r { text-align: right; }
-  tbody tr { border-bottom: 1px solid rgba(0,0,0,0.04); transition: background 0.1s; }
-  tbody tr:hover { background: rgba(0,0,0,0.02); }
+  tbody tr { transition: background 0.1s; }
   tbody td { padding: 7px 10px; vertical-align: middle; overflow: hidden; text-overflow: ellipsis; }
   tbody td:first-child { padding-left: 24px; }
   tbody tr.category-row td { background: var(--surface2); border-top: 2px solid var(--border2); border-bottom: 1px solid var(--border); padding: 9px 24px; cursor: pointer; user-select: none; }
   tbody tr.category-row:hover td { background: var(--surface); }
   tbody tr.category-row td > div { display: flex; align-items: center; gap: 8px; }
+
+  /* ITEM ROW PILLS */
+  #productsContent tbody tr.item-row td { background: var(--deal-bg, var(--surface)); padding: 5px 8px; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+  #productsContent tbody tr.item-row td:first-child { border-left: 1px solid var(--border); border-radius: 6px 0 0 6px; padding-left: 14px; }
+  #productsContent tbody tr.item-row td:last-child { border-right: 1px solid var(--border); border-radius: 0 6px 6px 0; }
+  #productsContent tbody tr.item-row:hover td { filter: brightness(0.97); }
+  #productsContent tbody tr.item-row.in-deal td:first-child { border-left: 3px solid var(--deal-colour, #888); padding-left: 11px; border-radius: 6px 0 0 6px; }
+
   .item-name { font-size: 13px; font-weight: 500; }
   .mono { font-family: var(--mono); }
-
-  /* DEAL ROW HIGHLIGHT */
-  tbody tr.in-deal td:first-child { border-left: 3px solid var(--deal-colour, #888); padding-left: 21px; }
 
   /* INLINE INPUTS */
   .cell-input { background: transparent; border: 1px solid transparent; border-radius: 4px; color: var(--text); font-family: var(--sans); font-size: 13px; padding: 3px 6px; outline: none; transition: border-color 0.15s, background 0.15s; max-width: 100%; }
@@ -872,7 +877,7 @@ function renderProducts() {
       const cls = gpClass(gp);
       const deal = getDealForItem(m.id);
       const dealClass = deal ? ' in-deal' : '';
-      const dealStyle = deal ? ` style="--deal-colour:${deal.colour};background:${deal.colour}12"` : '';
+      const dealStyle = deal ? ` style="--deal-colour:${deal.colour};--deal-bg:${deal.colour}12"` : '';
       tbody += `<tr class="item-row cat-${key}${dealClass}" id="smrow-${m.id}"${dealStyle}>
         <td><div class="item-name">${esc(m.item)}</div></td>
         <td style="color:var(--text3);font-size:12px">${esc(m.size||'')}</td>
@@ -1152,11 +1157,11 @@ function refreshDealBadgesInProducts() {
     if (deal) {
       row.classList.add('in-deal');
       row.style.setProperty('--deal-colour', deal.colour);
-      row.style.background = deal.colour + '12';
+      row.style.setProperty('--deal-bg', deal.colour + '12');
     } else {
       row.classList.remove('in-deal');
       row.style.removeProperty('--deal-colour');
-      row.style.background = '';
+      row.style.removeProperty('--deal-bg');
     }
   });
 }
