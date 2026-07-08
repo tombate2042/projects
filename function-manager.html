@@ -1966,9 +1966,24 @@ function uploadLogo(input) {
   if (!file) return;
   const reader = new FileReader();
   reader.onload = function(e) {
-    data.venue.logo = e.target.result;
-    save();
-    renderLogoPreview();
+    const img = new Image();
+    img.onload = function() {
+      const MAX_W = 600, MAX_H = 240;
+      let w = img.width, h = img.height;
+      if (w > MAX_W || h > MAX_H) {
+        const scale = Math.min(MAX_W / w, MAX_H / h);
+        w = Math.round(w * scale);
+        h = Math.round(h * scale);
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      // PNG preserves transparency; stays well under Gist's 1 MB file limit after resize
+      data.venue.logo = canvas.toDataURL('image/png');
+      save();
+      renderLogoPreview();
+    };
+    img.src = e.target.result;
   };
   reader.readAsDataURL(file);
   input.value = '';
@@ -2252,7 +2267,16 @@ async function pullFromGist() {
     });
     if (res.ok) {
       const json    = await res.json();
-      const content = json.files?.['vmm_data.json']?.content;
+      const fileObj = json.files?.['vmm_data.json'];
+      if (!fileObj) { logSync('No vmm_data.json found in Gist'); updateSyncStatus('idle'); return; }
+      // GitHub truncates files > 1 MB in the API response — fetch raw URL in that case
+      let content = fileObj.content;
+      if (fileObj.truncated) {
+        logSync('File truncated by GitHub — fetching raw…');
+        const raw = await fetch(fileObj.raw_url, { headers: { Authorization: `token ${gistCfg.token}` } });
+        if (!raw.ok) { updateSyncStatus('error'); logSync('Raw fetch failed: HTTP ' + raw.status); return; }
+        content = await raw.text();
+      }
       if (content) {
         data = JSON.parse(content);
         if (!data.venue)           data.venue           = {};
@@ -2265,7 +2289,7 @@ async function pullFromGist() {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
         renderAll();
         updateSyncStatus('ok'); logSync('Pulled successfully');
-      } else { logSync('No vmm_data.json found in Gist'); updateSyncStatus('idle'); }
+      }
     } else { updateSyncStatus('error'); logSync('Pull failed: HTTP ' + res.status); }
   } catch(e) { updateSyncStatus('error'); logSync('Pull error: ' + e.message); }
 }
