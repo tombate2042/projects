@@ -3082,12 +3082,12 @@ function rsBuildRunsheet() {
     // plain-text key for grouping (dish + addons + notes)
     const getMealKey = r => [r.dish || '—', cleanAddOns(r), r.notes || ''].filter(Boolean).join('\x00');
 
-    // HTML display for meal cell — addons italic inline, notes bold inline
+    // HTML display for meal cell — addons black bold inline, notes red bold inline
     const getMealDisplay = r => {
       const addOns = cleanAddOns(r);
       let html = esc(r.dish) || '—';
-      if (addOns) html += ` <em style="color:#888;">· ${esc(addOns)}</em>`;
-      if (r.notes) html += ` <strong>· ${esc(r.notes)}</strong>`;
+      if (addOns) html += ` <strong style="color:#000;">· ${esc(addOns)}</strong>`;
+      if (r.notes) html += ` <strong style="color:#d00000;">· ${esc(r.notes)}</strong>`;
       return html;
     };
 
