@@ -2314,7 +2314,7 @@ if (gistCfg.token && gistCfg.gistId) pullFromGist();
 let rsCurrentMenuType      = null;
 let rsSelectedItems        = {};
 let rsBistroRows           = [];
-let rsMealModal            = { guestIdx: -1, dish: '', addOns: [], notes: '' };
+let rsMealModal            = { guestIdx: -1, mealIdx: -1, dish: '', addOns: [], notes: '' };
 let rsFoodCostIsAuto       = true;
 let rsAddonItems           = {};
 let rsAddonExpandedSubcats = new Set();
@@ -2574,7 +2574,7 @@ function rsSharedQty(type, itemName, delta) {
 }
 
 function rsAddBistroRow() {
-  rsBistroRows.push({ name: '', dish: '', addOns: [], notes: '' });
+  rsBistroRows.push({ name: '', meals: [] });
   rsRenderBistroRows();
   rsAutoSave();
 }
@@ -2590,8 +2590,11 @@ function rsRenderBistroRows(type) {
   if (!tbody) return;
   const pkgType = type || rsCurrentMenuType;
   tbody.innerHTML = rsBistroRows.map((row, i) => {
-    const mealHtml = row.dish
-      ? `<div style="font-size:13px;font-weight:500;">${esc(row.dish)}</div>${row.addOns?.length ? `<div style="font-size:12px;color:var(--text3);">${row.addOns.map(a => a.split(':').pop()).join(' · ')}</div>` : ''}${row.notes ? `<div style="font-size:12px;color:var(--text3);font-style:italic;">${esc(row.notes)}</div>` : ''}`
+    const meals = row.meals || [];
+    const mealHtml = meals.length
+      ? meals.map(m => `<div style="margin-bottom:4px;">
+          <div style="font-size:13px;font-weight:500;">${esc(m.dish)}</div>${m.addOns?.length ? `<div style="font-size:12px;color:var(--text3);">${m.addOns.map(a => a.split(':').pop()).join(' · ')}</div>` : ''}${m.notes ? `<div style="font-size:12px;color:var(--text3);font-style:italic;">${esc(m.notes)}</div>` : ''}
+        </div>`).join('')
       : `<span style="font-size:13px;color:var(--text3);font-style:italic;">No meal selected</span>`;
     return `<tr>
       <td style="color:var(--text3);font-size:12px;text-align:center;width:32px;">${i + 1}</td>
@@ -2599,7 +2602,7 @@ function rsRenderBistroRows(type) {
         style="border:1px solid var(--border);border-radius:var(--radius);padding:6px 8px;font-family:var(--sans);font-size:13px;width:100%;background:var(--surface);color:var(--text);outline:none;"
         oninput="rsBistroRows[${i}].name=this.value;rsAutoSave()"></td>
       <td>${mealHtml}</td>
-      <td><button class="btn btn-outline btn-sm" onclick="rsOpenMealModal(${i},'${rsEscJs(pkgType)}')">${row.dish ? 'Edit' : 'Select Meal'}</button></td>
+      <td><button class="btn btn-outline btn-sm" onclick="rsOpenMealModal(${i},'${rsEscJs(pkgType)}')">${meals.length ? 'Edit' : 'Select Meal'}</button></td>
       <td><button class="btn-icon" onclick="rsRemoveBistroRow(${i})">✕</button></td>
     </tr>`;
   }).join('');
@@ -2607,19 +2610,68 @@ function rsRenderBistroRows(type) {
 }
 
 function rsOpenMealModal(guestIdx, optKey) {
-  rsMealModal = {
-    guestIdx,
-    optKey: optKey || rsCurrentMenuType,
-    dish:   rsBistroRows[guestIdx]?.dish   || '',
-    addOns: [...(rsBistroRows[guestIdx]?.addOns || [])],
-    notes:  rsBistroRows[guestIdx]?.notes  || ''
-  };
+  rsMealModal = { guestIdx, mealIdx: -1, optKey: optKey || rsCurrentMenuType, dish: '', addOns: [], notes: '' };
+  if (!rsBistroRows[guestIdx].meals) rsBistroRows[guestIdx].meals = [];
   document.getElementById('rs-meal-modal-overlay').style.display = 'flex';
-  rsShowMealStep1();
+  rsShowMealList();
 }
 
 function rsCloseMealModal() {
   document.getElementById('rs-meal-modal-overlay').style.display = 'none';
+  rsRenderBistroRows();
+  rsAutoSave();
+}
+
+function rsShowMealList() {
+  const guestIdx = rsMealModal.guestIdx;
+  const guestName = rsBistroRows[guestIdx]?.name || `Guest ${guestIdx + 1}`;
+  const meals = rsBistroRows[guestIdx]?.meals || [];
+  document.getElementById('rs-meal-modal-title').textContent = `Meals — ${guestName}`;
+
+  let html = '';
+  if (meals.length) {
+    meals.forEach((m, mi) => {
+      const addOnText = (m.addOns || []).map(a => a.split(':').pop()).join(' · ');
+      html += `<div class="rs-shared-item">
+        <div style="flex:1;">
+          <div style="font-size:13px;font-weight:600;color:var(--text);">${esc(m.dish)}</div>
+          ${addOnText ? `<div style="font-size:12px;color:var(--text3);">${esc(addOnText)}</div>` : ''}
+          ${m.notes ? `<div style="font-size:12px;color:var(--text3);font-style:italic;">${esc(m.notes)}</div>` : ''}
+        </div>
+        <button class="btn btn-outline btn-sm" onclick="rsEditMeal(${mi})">Edit</button>
+        <button class="btn-icon" onclick="rsRemoveMeal(${mi})">✕</button>
+      </div>`;
+    });
+  } else {
+    html += '<p style="color:var(--text3);font-size:13px;">No meals added yet — e.g. add an entrée, then a main.</p>';
+  }
+
+  document.getElementById('rs-meal-modal-body').innerHTML = html;
+  document.getElementById('rs-meal-modal-footer').innerHTML =
+    `<button class="btn btn-outline" onclick="rsAddAnotherMeal()">+ Add Meal</button>
+     <button class="btn btn-primary" onclick="rsCloseMealModal()">Done</button>`;
+}
+
+function rsAddAnotherMeal() {
+  rsMealModal.mealIdx = -1;
+  rsMealModal.dish    = '';
+  rsMealModal.addOns  = [];
+  rsMealModal.notes   = '';
+  rsShowMealStep1();
+}
+
+function rsEditMeal(mealIdx) {
+  const m = rsBistroRows[rsMealModal.guestIdx].meals[mealIdx];
+  rsMealModal.mealIdx = mealIdx;
+  rsMealModal.dish    = m.dish   || '';
+  rsMealModal.addOns  = [...(m.addOns || [])];
+  rsMealModal.notes   = m.notes  || '';
+  rsShowMealStep2();
+}
+
+function rsRemoveMeal(mealIdx) {
+  rsBistroRows[rsMealModal.guestIdx].meals.splice(mealIdx, 1);
+  rsShowMealList();
 }
 
 function rsShowMealStep1() {
@@ -2640,7 +2692,7 @@ function rsShowMealStep1() {
   document.getElementById('rs-meal-modal-body').innerHTML = html ||
     '<p style="color:var(--text3);font-size:13px;">No items found — assign subcategories to this package in the Booking Options tab.</p>';
   document.getElementById('rs-meal-modal-footer').innerHTML =
-    `<button class="btn btn-outline" onclick="rsCloseMealModal()">Cancel</button>`;
+    `<button class="btn btn-outline" onclick="rsShowMealList()">← Back</button>`;
 }
 
 function rsPickMealDish(dishName) {
@@ -2699,12 +2751,11 @@ function rsToggleMealAddon(key) {
 function rsSaveMeal() {
   const i = rsMealModal.guestIdx;
   if (i < 0 || !rsBistroRows[i]) return;
-  rsBistroRows[i].dish   = rsMealModal.dish;
-  rsBistroRows[i].addOns = [...rsMealModal.addOns];
-  rsBistroRows[i].notes  = rsMealModal.notes;
-  rsCloseMealModal();
-  rsRenderBistroRows();
-  rsAutoSave();
+  if (!rsBistroRows[i].meals) rsBistroRows[i].meals = [];
+  const meal = { dish: rsMealModal.dish, addOns: [...rsMealModal.addOns], notes: rsMealModal.notes };
+  if (rsMealModal.mealIdx > -1) rsBistroRows[i].meals[rsMealModal.mealIdx] = meal;
+  else                          rsBistroRows[i].meals.push(meal);
+  rsShowMealList();
 }
 
 function rsImportOrder(input) {
@@ -2728,10 +2779,10 @@ function rsImportOrder(input) {
       }
 
       rsBistroRows = payload.guests.map(g => ({
-        name:   g.name   || '',
-        dish:   g.dish   || '',
-        addOns: Array.isArray(g.addOns) ? g.addOns : [],
-        notes:  g.notes  || ''
+        name:  g.name || '',
+        meals: Array.isArray(g.meals)
+          ? g.meals.map(m => ({ dish: m.dish || '', addOns: Array.isArray(m.addOns) ? m.addOns : [], notes: m.notes || '' }))
+          : (g.dish ? [{ dish: g.dish, addOns: Array.isArray(g.addOns) ? g.addOns : [], notes: g.notes || '' }] : [])
       }));
 
       rsRenderBistroRows();
@@ -2850,16 +2901,17 @@ function rsCalcFoodCost() {
   } else if (pkgType === 'alacarte') {
     const allItems = rsGetAllItemsForType(type);
     rsBistroRows.forEach(row => {
-      if (row.dish) {
-        const item = allItems.find(i => i.name === row.dish);
+      (row.meals || []).forEach(meal => {
+        if (!meal.dish) return;
+        const item = allItems.find(i => i.name === meal.dish);
         total += parsePrice(item?.price || '');
-        (row.addOns || []).forEach(key => {
+        (meal.addOns || []).forEach(key => {
           if (key.startsWith('_addon:')) {
             const m = key.split(':').pop().match(/\(([^)]+)\)\s*$/);
             if (m) total += parsePrice(m[1]);
           }
         });
-      }
+      });
     });
   }
 
@@ -2933,7 +2985,10 @@ function rsLoadFormData() {
     rsSV('rs-notes',      d.notes);
     rsSV('rs-notes2',     d.notes2);
     rsSelectedItems  = d.selectedItems || {};
-    rsBistroRows     = d.bistroRows    || [];
+    rsBistroRows     = (d.bistroRows || []).map(row => row.meals ? row : {
+      name:  row.name || '',
+      meals: row.dish ? [{ dish: row.dish, addOns: Array.isArray(row.addOns) ? row.addOns : [], notes: row.notes || '' }] : []
+    });
     rsFoodCostIsAuto = d.foodCostIsAuto !== false;
     rsAddonItems     = d.addonItems    || {};
     if (d.location) {
@@ -3063,10 +3118,10 @@ function rsBuildRunsheet() {
   let guestMealsSection = '';
 
   if (type && pkgType === 'alacarte') {
-    const validRows = (d.bistroRows || []).filter(r => r.name || r.dish);
+    const validRows = (d.bistroRows || []).filter(r => r.name || (r.meals || []).some(m => m.dish));
 
     // strip prices in brackets and return clean addon text
-    const cleanAddOns = r => (r.addOns || [])
+    const cleanAddOns = m => (m.addOns || [])
       .map(a => a.split(':').pop().replace(/\s*\([^)]*\)/g, '').trim())
       .filter(Boolean).join(' · ');
 
@@ -3079,27 +3134,36 @@ function rsBuildRunsheet() {
     );
     const dishSortVal = dish => menuItemOrder[dish] ?? 9999;
 
-    // plain-text key for grouping (dish + addons + notes)
-    const getMealKey = r => [r.dish || '—', cleanAddOns(r), r.notes || ''].filter(Boolean).join('\x00');
+    // plain-text key for a single meal (dish + addons + notes)
+    const getMealKey = m => [m.dish || '—', cleanAddOns(m), m.notes || ''].filter(Boolean).join('\x00');
 
-    // HTML display for meal cell — addons black bold inline, notes red bold inline
-    const getMealDisplay = r => {
-      const addOns = cleanAddOns(r);
-      let html = esc(r.dish) || '—';
+    // HTML display for a single meal — addons black bold inline, notes red bold inline
+    const getMealDisplay = m => {
+      const addOns = cleanAddOns(m);
+      let html = esc(m.dish) || '—';
       if (addOns) html += ` <strong style="color:#000;">· ${esc(addOns)}</strong>`;
-      if (r.notes) html += ` <strong style="color:#d00000;">· ${esc(r.notes)}</strong>`;
+      if (m.notes) html += ` <strong style="color:#d00000;">· ${esc(m.notes)}</strong>`;
       return html;
     };
 
-    // sort comparator: menu order first, fallback to alphabetical
-    const mealSort = (a, b) => (dishSortVal(a.dish) - dishSortVal(b.dish)) || getMealKey(a).localeCompare(getMealKey(b));
+    // HTML display for a guest's full meal cell — one or more meals stacked
+    const getGuestMealsDisplay = r => (r.meals || []).filter(m => m.dish).map(getMealDisplay).join('<div style="height:4px;"></div>') || '—';
 
-    // ── Grouped summary (no names) ──
+    // plain-text key for a guest's full combo of meals, for grouping/sorting the guest table
+    const getGuestKey = r => (r.meals || []).filter(m => m.dish).map(getMealKey).join('\x01');
+
+    // sort comparator: menu order of first meal, fallback to alphabetical combo
+    const mealSort = (a, b) => (dishSortVal(a.meals?.[0]?.dish) - dishSortVal(b.meals?.[0]?.dish)) || getGuestKey(a).localeCompare(getGuestKey(b));
+
+    // ── Grouped kitchen summary (no names) — every meal, from every guest, counted individually ──
     const mealSummary = {};
     validRows.forEach(r => {
-      const key = getMealKey(r);
-      if (!mealSummary[key]) mealSummary[key] = { qty: 0, display: getMealDisplay(r), dish: r.dish || '—' };
-      mealSummary[key].qty++;
+      (r.meals || []).forEach(m => {
+        if (!m.dish) return;
+        const key = getMealKey(m);
+        if (!mealSummary[key]) mealSummary[key] = { qty: 0, display: getMealDisplay(m), dish: m.dish };
+        mealSummary[key].qty++;
+      });
     });
     const groupedRows = Object.values(mealSummary)
       .sort((a, b) => dishSortVal(a.dish) - dishSortVal(b.dish) || a.dish.localeCompare(b.dish))
@@ -3108,14 +3172,14 @@ function rsBuildRunsheet() {
         <td>${display}</td>
       </tr>`).join('') || '<tr><td colspan="2" style="text-align:center;color:#aaa;padding:16px;font-family:var(--sans);font-size:13px;">No meals added</td></tr>';
 
-    // ── Per-guest detail (new page) — sorted & grouped by meal ──
+    // ── Per-guest detail (new page) — sorted & grouped by full meal combo ──
     const sortedGuests = [...validRows].sort(mealSort);
     const mealGroups = [];
     sortedGuests.forEach(r => {
-      const key = getMealKey(r);
+      const key = getGuestKey(r);
       const last = mealGroups[mealGroups.length - 1];
       if (last && last.key === key) { last.guests.push(r); }
-      else { mealGroups.push({ key, display: getMealDisplay(r), guests: [r] }); }
+      else { mealGroups.push({ key, display: getGuestMealsDisplay(r), guests: [r] }); }
     });
     let guestRows = '';
     let guestNum = 1;
