@@ -2598,15 +2598,30 @@ function rsRenderBistroRows(type) {
       : `<span style="font-size:13px;color:var(--text3);font-style:italic;">No meal selected</span>`;
     return `<tr>
       <td style="color:var(--text3);font-size:12px;text-align:center;width:32px;">${i + 1}</td>
-      <td><input type="text" value="${esc(row.name)}" placeholder="Guest name"
+      <td><input type="text" class="rs-guest-name-input" data-idx="${i}" value="${esc(row.name)}" placeholder="Guest name"
         style="border:1px solid var(--border);border-radius:var(--radius);padding:6px 8px;font-family:var(--sans);font-size:13px;width:100%;background:var(--surface);color:var(--text);outline:none;"
-        oninput="rsBistroRows[${i}].name=this.value;rsAutoSave()"></td>
+        oninput="rsBistroRows[${i}].name=this.value;rsAutoSave();rsUpdateDupNames()"></td>
       <td>${mealHtml}</td>
       <td><button class="btn btn-outline btn-sm" onclick="rsOpenMealModal(${i},'${rsEscJs(pkgType)}')">${meals.length ? 'Edit' : 'Select Meal'}</button></td>
       <td><button class="btn-icon" onclick="rsRemoveBistroRow(${i})">✕</button></td>
     </tr>`;
   }).join('');
   rsCalcFoodCost();
+  rsUpdateDupNames();
+}
+
+function rsUpdateDupNames() {
+  const counts = {};
+  rsBistroRows.forEach(row => {
+    const n = (row.name || '').trim().toLowerCase();
+    if (n) counts[n] = (counts[n] || 0) + 1;
+  });
+  document.querySelectorAll('#rs-bistro-rows .rs-guest-name-input').forEach(inp => {
+    const idx = parseInt(inp.dataset.idx, 10);
+    const n = (rsBistroRows[idx]?.name || '').trim().toLowerCase();
+    const isDup = n && counts[n] > 1;
+    inp.style.borderColor = isDup ? '#d00000' : 'var(--border)';
+  });
 }
 
 function rsOpenMealModal(guestIdx, optKey) {
