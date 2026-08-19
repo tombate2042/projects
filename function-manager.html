@@ -530,6 +530,8 @@
   .rs-shared-item span { font-size: 13px; color: var(--text); flex: 1; }
   .rs-shared-item .rs-qty { display: flex; align-items: center; gap: 8px; }
   .rs-shared-item .rs-qty-num { font-size: 14px; font-weight: 600; color: var(--text); min-width: 20px; text-align: center; }
+  .rs-shared-item .rs-qty-input { width: 44px; padding: 3px 4px; border: 1px solid var(--border); border-radius: 4px; background: var(--surface); color: var(--text); font-size: 14px; font-weight: 600; text-align: center; outline: none; }
+  .rs-shared-item .rs-qty-input:focus { border-color: var(--accent-mid); }
   .rs-shared-item .rs-qty-btn { border: 1px solid var(--border); background: var(--bg); color: var(--text); border-radius: 4px; width: 26px; height: 26px; font-size: 15px; line-height: 1; cursor: pointer; display: flex; align-items: center; justify-content: center; }
   .rs-shared-item .rs-qty-btn:hover { border-color: var(--accent-mid); color: var(--accent); }
   .rs-shared-item.has-qty { border-color: var(--accent-mid); background: var(--accent-light); }
@@ -590,6 +592,7 @@
   .rs-guest-table .meal-cell { border-left: 3px solid var(--accent-mid); vertical-align: middle; }
   .rs-guest-table .group-start td { border-top: 2px solid var(--border); }
   .rs-notes-cell { padding: 16px 24px; font-size: 14px; line-height: 1.6; color: var(--text); min-height: 60px; white-space: pre-wrap; font-family: var(--sans); }
+  .rs-notes-block { page-break-inside: avoid; break-inside: avoid; }
   .rs-footer { background: var(--surface2); border-top: 1px solid var(--border); padding: 10px 24px; font-family: var(--sans); font-size: 11px; color: var(--text3); display: flex; justify-content: space-between; align-items: center; }
   .rs-page-break { display: flex; align-items: center; gap: 12px; padding: 16px 24px; background: var(--bg); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); font-family: var(--sans); font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text3); }
   .rs-page-break::before, .rs-page-break::after { content: ''; flex: 1; height: 1px; background: var(--border); }
@@ -750,6 +753,8 @@
     color: var(--text2);
     font-style: italic;
     line-height: 1.6;
+    page-break-inside: avoid;
+    break-inside: avoid;
   }
   .inv-bank {
     padding: 18px 32px;
@@ -2550,7 +2555,7 @@ function rsRenderSharedPanel(panel, type) {
         <span>${esc(item.name)}</span>
         <div class="rs-qty">
           <button class="rs-qty-btn" onclick="rsSharedQty('${rsEscJs(type)}','${rsEscJs(item.name)}',-1)">−</button>
-          <span class="rs-qty-num">${qty}</span>
+          <input type="number" class="rs-qty-input" value="${qty}" min="0" onclick="event.stopPropagation()" oninput="event.stopPropagation();rsSetSharedQty('${rsEscJs(type)}','${rsEscJs(item.name)}',this.value)">
           <button class="rs-qty-btn" onclick="rsSharedQty('${rsEscJs(type)}','${rsEscJs(item.name)}',1)">+</button>
         </div>
       </div>`;
@@ -2570,6 +2575,17 @@ function rsSharedQty(type, itemName, delta) {
   if (next === 0) delete rsSelectedItems[type][itemName];
   else            rsSelectedItems[type][itemName] = next;
   rsRenderFoodPanel(type);
+  rsAutoSave();
+}
+
+function rsSetSharedQty(type, itemName, val) {
+  if (typeof rsSelectedItems[type] !== 'object' || Array.isArray(rsSelectedItems[type])) {
+    rsSelectedItems[type] = {};
+  }
+  const next = Math.max(0, parseInt(val) || 0);
+  if (next === 0) delete rsSelectedItems[type][itemName];
+  else            rsSelectedItems[type][itemName] = next;
+  rsCalcFoodCost();
   rsAutoSave();
 }
 
@@ -3341,10 +3357,12 @@ function rsBuildRunsheet() {
           </table>
         </div>`;
       })()}
-      <div class="rs-section-title">Notes &amp; Special Requirements</div>
-      <div class="rs-body-row">
-        <div class="rs-notes-cell">${esc(d.notes) || '<em style="color:#aaa;">No notes</em>'}</div>
-        <div class="rs-notes-cell" style="border-left:1px solid var(--border);">${esc(d.notes2) || '<em style="color:#aaa;">No notes</em>'}</div>
+      <div class="rs-notes-block">
+        <div class="rs-section-title">Notes &amp; Special Requirements</div>
+        <div class="rs-body-row">
+          <div class="rs-notes-cell">${esc(d.notes) || '<em style="color:#aaa;">No notes</em>'}</div>
+          <div class="rs-notes-cell" style="border-left:1px solid var(--border);">${esc(d.notes2) || '<em style="color:#aaa;">No notes</em>'}</div>
+        </div>
       </div>
       <div class="rs-footer">
         <span>Generated ${new Date().toLocaleDateString('en-AU', {day:'numeric',month:'long',year:'numeric'})}</span>
