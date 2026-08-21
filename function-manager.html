@@ -943,6 +943,8 @@
       <div class="rs-card-body rs-grid-2">
         <div class="rs-field"><label>Food Cost</label><input type="text" id="rs-food-cost" placeholder="auto-calculated" oninput="rsFoodCostIsAuto=false;rsAutoSave()"></div>
         <div class="rs-field"><label>Prepaid Amount</label><input type="text" id="rs-prepaid" placeholder="e.g. $500" oninput="rsAutoSave()"></div>
+        <div class="rs-field"><label>Extra Cost Title</label><input type="text" id="rs-extra-cost-title" placeholder="e.g. AV Hire" oninput="rsAutoSave()"></div>
+        <div class="rs-field"><label>Extra Cost Amount</label><input type="text" id="rs-extra-cost" placeholder="e.g. $150" oninput="rsAutoSave()"></div>
       </div>
     </div>
 
@@ -2981,6 +2983,8 @@ function rsGetFormData() {
     contact:       rsV('rs-contact'),
     foodCost:      rsV('rs-food-cost'),
     prepaid:       rsV('rs-prepaid'),
+    extraCostTitle: rsV('rs-extra-cost-title'),
+    extraCost:      rsV('rs-extra-cost'),
     notes:         rsV('rs-notes'),
     notes2:        rsV('rs-notes2'),
     menuType:         rsCurrentMenuType,
@@ -3015,6 +3019,8 @@ function rsLoadFormData() {
     rsSV('rs-contact',    d.contact);
     rsSV('rs-food-cost',  d.foodCost);
     rsSV('rs-prepaid',    d.prepaid);
+    rsSV('rs-extra-cost-title', d.extraCostTitle);
+    rsSV('rs-extra-cost',       d.extraCost);
     rsSV('rs-notes',      d.notes);
     rsSV('rs-notes2',     d.notes2);
     rsSelectedItems  = d.selectedItems || {};
@@ -3042,7 +3048,7 @@ function rsLoadFormData() {
 function rsClearForm() {
   if (!confirm('Clear all event details?')) return;
   ['rs-event-name','rs-date','rs-start','rs-end','rs-pax','rs-location',
-   'rs-client','rs-contact','rs-food-cost','rs-prepaid','rs-notes','rs-notes2'].forEach(id => rsSV(id, ''));
+   'rs-client','rs-contact','rs-food-cost','rs-prepaid','rs-extra-cost-title','rs-extra-cost','rs-notes','rs-notes2'].forEach(id => rsSV(id, ''));
   rsCurrentMenuType      = null;
   rsSelectedItems        = {};
   rsBistroRows           = [];
@@ -3322,7 +3328,7 @@ function rsBuildRunsheet() {
       </div>
     </div>
     <div>
-      <div class="rs-body-row three">
+      <div class="rs-body-row three" style="grid-template-columns:1fr 1fr 0.4fr;">
         <div class="rs-cell">
           <div class="rs-cell-label">Client</div>
           <div class="rs-cell-value large">${esc(d.client) || '—'}</div>
@@ -3334,8 +3340,20 @@ function rsBuildRunsheet() {
             <div class="rs-cell-value large">${d.prepaid ? (d.prepaid.trim().startsWith('$') ? esc(d.prepaid.trim()) : '$' + esc(d.prepaid.trim())) : '—'}</div>
           </div>
           <div style="flex:1;padding:14px 16px;">
-            <div class="rs-cell-label">Food Cost</div>
-            <div class="rs-cell-value">${d.foodCost ? (d.foodCost.trim().startsWith('$') ? esc(d.foodCost.trim()) : '$' + esc(d.foodCost.trim())) : '—'}</div>
+            <div class="rs-cell-label">Costs</div>
+            ${(() => {
+              const foodCost   = parsePrice(d.foodCost);
+              const extraCost  = parsePrice(d.extraCost);
+              const extraTitle = (d.extraCostTitle || '').trim() || 'Extra Cost';
+              if (!d.foodCost && !extraCost) return `<div class="rs-cell-value">—</div>`;
+              if (!extraCost) return `<div class="rs-cell-value">${d.foodCost ? (d.foodCost.trim().startsWith('$') ? esc(d.foodCost.trim()) : '$' + esc(d.foodCost.trim())) : '—'}</div>`;
+              const fmt = n => '$' + (n % 1 === 0 ? n : n.toFixed(2)).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+              return `<div style="font-size:13px;line-height:1.6;">
+                <div style="display:flex;justify-content:space-between;gap:8px;"><span>Food Cost</span><span>${fmt(foodCost)}</span></div>
+                <div style="display:flex;justify-content:space-between;gap:8px;"><span>${esc(extraTitle)}</span><span>${fmt(extraCost)}</span></div>
+                <div style="display:flex;justify-content:space-between;gap:8px;font-weight:700;border-top:1px solid var(--border);margin-top:2px;padding-top:2px;"><span>Total</span><span>${fmt(foodCost + extraCost)}</span></div>
+              </div>`;
+            })()}
           </div>
         </div>
         <div class="rs-cell">
