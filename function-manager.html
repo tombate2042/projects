@@ -487,6 +487,22 @@
   }
   .rs-field input:focus, .rs-field select:focus, .rs-field textarea:focus { border-color: var(--accent-mid); }
   .rs-field textarea { resize: vertical; min-height: 80px; }
+  .rs-rte-toolbar { display: flex; gap: 4px; margin-bottom: 2px; }
+  .rs-rte-toolbar button {
+    width: 26px; height: 26px; border: 1px solid var(--border); border-radius: 4px;
+    background: var(--bg); color: var(--text); font-size: 12px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; font-family: var(--sans);
+  }
+  .rs-rte-toolbar button:hover { border-color: var(--accent-mid); color: var(--accent); }
+  .rs-rte {
+    border: 1px solid var(--border); border-radius: var(--radius); padding: 8px 10px;
+    font-family: var(--sans); font-size: 13px; color: var(--text);
+    background: var(--surface); outline: none; width: 100%;
+    min-height: 80px; resize: vertical; overflow: auto; line-height: 1.5;
+  }
+  .rs-rte:focus { border-color: var(--accent-mid); }
+  .rs-rte:empty:before { content: attr(data-placeholder); color: var(--text3); }
+  .rs-rte ul { margin: 4px 0 4px 20px; padding: 0; }
   .rs-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
   .rs-grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 12px; margin-bottom: 12px; }
 
@@ -593,7 +609,8 @@
   .rs-guest-table th { background: var(--surface2); }
   .rs-guest-table .meal-cell { border-left: 3px solid var(--accent-mid); vertical-align: middle; }
   .rs-guest-table .group-start td { border-top: 2px solid var(--border); }
-  .rs-notes-cell { padding: 16px 24px; font-size: 14px; line-height: 1.6; color: var(--text); min-height: 60px; white-space: pre-wrap; font-family: var(--sans); }
+  .rs-notes-cell { padding: 16px 24px; font-size: 14px; line-height: 1.6; color: var(--text); min-height: 60px; font-family: var(--sans); }
+  .rs-notes-cell ul { margin: 4px 0 4px 20px; padding: 0; }
   .rs-notes-block { page-break-inside: avoid; break-inside: avoid; }
   .rs-footer { background: var(--surface2); border-top: 1px solid var(--border); padding: 10px 24px; font-family: var(--sans); font-size: 11px; color: var(--text3); display: flex; justify-content: space-between; align-items: center; }
   .rs-page-break { display: flex; align-items: center; gap: 12px; padding: 16px 24px; background: var(--bg); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); font-family: var(--sans); font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text3); }
@@ -968,11 +985,23 @@
       <div class="rs-card-body rs-grid-2">
         <div class="rs-field">
           <label>Notes (Left Column)</label>
-          <textarea id="rs-notes" rows="4" placeholder="Decorations, AV requirements, dietary needs…" oninput="rsAutoSave()"></textarea>
+          <div class="rs-rte-toolbar">
+            <button type="button" onmousedown="event.preventDefault()" onclick="rsRTECmd('rs-notes','bold')"><b>B</b></button>
+            <button type="button" onmousedown="event.preventDefault()" onclick="rsRTECmd('rs-notes','italic')"><i>I</i></button>
+            <button type="button" onmousedown="event.preventDefault()" onclick="rsRTECmd('rs-notes','underline')"><u>U</u></button>
+            <button type="button" onmousedown="event.preventDefault()" onclick="rsRTECmd('rs-notes','insertUnorderedList')">&bull;</button>
+          </div>
+          <div class="rs-rte" id="rs-notes" contenteditable="true" data-placeholder="Decorations, AV requirements, dietary needs…" oninput="rsAutoSave()"></div>
         </div>
         <div class="rs-field">
           <label>Notes (Right Column)</label>
-          <textarea id="rs-notes2" rows="4" placeholder="Run-of-show details, setup instructions…" oninput="rsAutoSave()"></textarea>
+          <div class="rs-rte-toolbar">
+            <button type="button" onmousedown="event.preventDefault()" onclick="rsRTECmd('rs-notes2','bold')"><b>B</b></button>
+            <button type="button" onmousedown="event.preventDefault()" onclick="rsRTECmd('rs-notes2','italic')"><i>I</i></button>
+            <button type="button" onmousedown="event.preventDefault()" onclick="rsRTECmd('rs-notes2','underline')"><u>U</u></button>
+            <button type="button" onmousedown="event.preventDefault()" onclick="rsRTECmd('rs-notes2','insertUnorderedList')">&bull;</button>
+          </div>
+          <div class="rs-rte" id="rs-notes2" contenteditable="true" data-placeholder="Run-of-show details, setup instructions…" oninput="rsAutoSave()"></div>
         </div>
       </div>
     </div>
@@ -2985,8 +3014,8 @@ function rsGetFormData() {
     prepaid:       rsV('rs-prepaid'),
     extraCostTitle: rsV('rs-extra-cost-title'),
     extraCost:      rsV('rs-extra-cost'),
-    notes:         rsV('rs-notes'),
-    notes2:        rsV('rs-notes2'),
+    notes:         rsRTEGet('rs-notes'),
+    notes2:        rsRTEGet('rs-notes2'),
     menuType:         rsCurrentMenuType,
     selectedItems:    rsSelectedItems,
     bistroRows:       rsBistroRows,
@@ -2997,6 +3026,15 @@ function rsGetFormData() {
 
 function rsV(id)        { const el = document.getElementById(id); return el ? el.value : ''; }
 function rsSV(id, val)  { const el = document.getElementById(id); if (el && val != null) el.value = val; }
+
+function rsRTECmd(id, cmd) {
+  document.getElementById(id)?.focus();
+  document.execCommand(cmd, false, null);
+  rsAutoSave();
+}
+function rsRTEGet(id)       { const el = document.getElementById(id); return el ? el.innerHTML : ''; }
+function rsRTESet(id, html) { const el = document.getElementById(id); if (el) el.innerHTML = html || ''; }
+function rsRTEEmpty(html)   { return !html || !html.replace(/<br\s*\/?>/gi, '').replace(/<[^>]+>/g, '').trim(); }
 
 function rsLoadFormData() {
   try {
@@ -3021,8 +3059,8 @@ function rsLoadFormData() {
     rsSV('rs-prepaid',    d.prepaid);
     rsSV('rs-extra-cost-title', d.extraCostTitle);
     rsSV('rs-extra-cost',       d.extraCost);
-    rsSV('rs-notes',      d.notes);
-    rsSV('rs-notes2',     d.notes2);
+    rsRTESet('rs-notes',  d.notes);
+    rsRTESet('rs-notes2', d.notes2);
     rsSelectedItems  = d.selectedItems || {};
     rsBistroRows     = (d.bistroRows || []).map(row => row.meals ? row : {
       name:  row.name || '',
@@ -3048,7 +3086,9 @@ function rsLoadFormData() {
 function rsClearForm() {
   if (!confirm('Clear all event details?')) return;
   ['rs-event-name','rs-date','rs-start','rs-end','rs-pax','rs-location',
-   'rs-client','rs-contact','rs-food-cost','rs-prepaid','rs-extra-cost-title','rs-extra-cost','rs-notes','rs-notes2'].forEach(id => rsSV(id, ''));
+   'rs-client','rs-contact','rs-food-cost','rs-prepaid','rs-extra-cost-title','rs-extra-cost'].forEach(id => rsSV(id, ''));
+  rsRTESet('rs-notes',  '');
+  rsRTESet('rs-notes2', '');
   rsCurrentMenuType      = null;
   rsSelectedItems        = {};
   rsBistroRows           = [];
@@ -3380,8 +3420,8 @@ function rsBuildRunsheet() {
       <div class="rs-notes-block">
         <div class="rs-section-title">Notes &amp; Special Requirements</div>
         <div class="rs-body-row">
-          <div class="rs-notes-cell">${esc(d.notes) || '<em style="color:#aaa;">No notes</em>'}</div>
-          <div class="rs-notes-cell" style="border-left:1px solid var(--border);">${esc(d.notes2) || '<em style="color:#aaa;">No notes</em>'}</div>
+          <div class="rs-notes-cell">${!rsRTEEmpty(d.notes) ? d.notes : '<em style="color:#aaa;">No notes</em>'}</div>
+          <div class="rs-notes-cell" style="border-left:1px solid var(--border);">${!rsRTEEmpty(d.notes2) ? d.notes2 : '<em style="color:#aaa;">No notes</em>'}</div>
         </div>
       </div>
       <div class="rs-footer">
