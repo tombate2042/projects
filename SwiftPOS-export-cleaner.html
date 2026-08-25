@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Venue Export Cleaner</title>
+<style>
+  :root {
+    --paper: #F6F4EF;
+    --paper-raised: #FFFFFF;
+    --ink: #23271F;
+    --ink-soft: #565B4E;
+    --line: #D9D5C7;
+    --teal: #1B5E56;
+    --teal-dark: #123F3A;
+    --amber: #B9832E;
+    --amber-soft: #F2E4C8;
+    --red: #A23E2E;
+    --mono: ui-monospace, "SF Mono", "Cascadia Mono", "JetBrains Mono", Consolas, monospace;
+    --sans: ui-sans-serif, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--sans);
+    line-height: 1.5;
+    padding: 48px 24px 96px;
+  }
+
+  .wrap {
+    max-width: 880px;
+    margin: 0 auto;
+  }
+
+  header {
+    margin-bottom: 36px;
+  }
+
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--teal);
+    margin: 0 0 10px;
+  }
+
+  h1 {
+    font-size: 28px;
+    font-weight: 650;
+    margin: 0 0 10px;
+    letter-spacing: -0.01em;
+  }
+
+  .sub {
+    color: var(--ink-soft);
+    font-size: 15px;
+    max-width: 60ch;
+    margin: 0;
+  }
+
+  .panel {
+    background: var(--paper-raised);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 22px 24px;
+    margin-bottom: 20px;
+  }
+
+  details.panel { padding: 0; }
+  details.panel summary {
+    cursor: pointer;
+    padding: 16px 24px;
+    font-weight: 600;
+    font-size: 14px;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: var(--ink);
+  }
+  details.panel summary::-webkit-details-marker { display: none; }
+  details.panel summary::after {
+    content: "+";
+    font-family: var(--mono);
+    color: var(--teal);
+    font-size: 16px;
+  }
+  details.panel[open] summary::after { content: "\2212"; }
+  details.panel .body {
+    padding: 0 24px 20px;
+    font-size: 13.5px;
+    color: var(--ink-soft);
+  }
+  details.panel .body code {
+    font-family: var(--mono);
+    background: var(--amber-soft);
+    padding: 1px 5px;
+    border-radius: 4px;
+    font-size: 12.5px;
+    color: var(--teal-dark);
+  }
+  details.panel ul { margin: 8px 0; padding-left: 20px; }
+
+  .dropzone {
+    border: 2px dashed var(--line);
+    border-radius: 10px;
+    padding: 44px 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background 0.15s ease;
+    background: var(--paper-raised);
+  }
+  .dropzone.hover {
+    border-color: var(--teal);
+    background: #EFF6F4;
+  }
+  .dropzone .icon {
+    width: 40px;
+    height: 40px;
+    margin: 0 auto 14px;
+    color: var(--teal);
+  }
+  .dropzone p { margin: 0; }
+  .dz-title { font-weight: 600; font-size: 15px; margin-bottom: 4px !important; }
+  .dz-sub { color: var(--ink-soft); font-size: 13px; }
+  input[type=file] { display: none; }
+
+  .options {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 18px;
+    font-size: 13.5px;
+    color: var(--ink-soft);
+  }
+  .options input[type=checkbox] {
+    width: 16px; height: 16px; accent-color: var(--teal);
+  }
+
+  .results {
+    margin-top: 28px;
+  }
+
+  .file-card {
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--paper-raised);
+    padding: 18px 20px;
+    margin-bottom: 12px;
+  }
+  .file-card.error {
+    border-color: #E3B7AC;
+    background: #FCF2EF;
+  }
+
+  .file-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+  }
+  .file-name {
+    font-family: var(--mono);
+    font-size: 13.5px;
+    font-weight: 600;
+    word-break: break-all;
+  }
+  .file-venue {
+    font-size: 12px;
+    color: var(--ink-soft);
+    font-family: var(--mono);
+  }
+
+  .error-msg {
+    font-size: 13.5px;
+    color: var(--red);
+  }
+
+  .shrink {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 12px;
+  }
+  .shrink-bar {
+    flex: 1;
+    height: 8px;
+    border-radius: 4px;
+    background: var(--line);
+    overflow: hidden;
+    position: relative;
+  }
+  .shrink-bar-fill {
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    background: var(--teal);
+    border-radius: 4px;
+    transition: width 0.6s ease;
+    width: 0%;
+  }
+  .shrink-pct {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--teal-dark);
+    min-width: 68px;
+    text-align: right;
+  }
+
+  .stat-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .stat {
+    font-family: var(--mono);
+    font-size: 12.5px;
+    color: var(--ink-soft);
+  }
+  .stat b {
+    display: block;
+    font-size: 15px;
+    color: var(--ink);
+    font-weight: 650;
+  }
+
+  .download-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--teal);
+    color: white;
+    border: none;
+    border-radius: 7px;
+    padding: 9px 16px;
+    font-size: 13.5px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+  }
+  .download-btn:hover { background: var(--teal-dark); }
+
+  .summary-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 20px;
+    background: var(--teal-dark);
+    color: white;
+    border-radius: 10px;
+    margin-bottom: 16px;
+    font-size: 13.5px;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .summary-bar .n {
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 16px;
+  }
+
+  .clear-btn {
+    background: none;
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    padding: 6px 12px;
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    cursor: pointer;
+  }
+  .clear-btn:hover { border-color: var(--ink-soft); color: var(--ink); }
+
+  footer {
+    text-align: center;
+    color: var(--ink-soft);
+    font-size: 12px;
+    margin-top: 40px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <p class="eyebrow">Venue Export Cleaner</p>
+    <h1>Shrink SwiftPOS price exports before they hit Sheets</h1>
+    <p class="sub">Drop in a "Product Location Sell and Cost Prices" CSV export. This strips the columns you don't need and drops rows where an item isn't actually priced at that location — entirely in your browser. Nothing is uploaded anywhere.</p>
+  </header>
+
+  <details class="panel">
+    <summary>What exactly does this do?</summary>
+    <div class="body">
+      <p><b>Keeps 27 columns:</b> Product Group, Category, Location, Description, PLU, Cost, Venue ID, all 10 Price columns, and all 10 Virtual Price Level columns.</p>
+      <p><b>Drops 12 columns</b> that don't matter for pricing: <code>INVENTORY_CODE</code>, <code>GROUP_NUMBER</code>, <code>PREV_COST</code>, <code>STOCK</code>, <code>UNITSPERCASE</code>, <code>CASES</code>, <code>UNITS</code>, <code>MINIMUM_STOCK</code>, <code>MAXIMUM_STOCK</code>, <code>TENPRICELEVELS</code>, <code>V_TYPE</code>, <code>SOFTWARETYPE</code>.</p>
+      <p><b>Drops "dead" rows</b> where every one of the 10 Price columns is $0.00 or blank — meaning that item isn't actually sold at that till, so there's nothing to reprice. This is usually the biggest reduction, since a report exports every PLU in your whole catalog against every location, whether that location stocks it or not.</p>
+      <p>Everything runs locally in your browser using plain JavaScript. Your files never leave your computer.</p>
+    </div>
+  </details>
+
+  <div class="dropzone" id="dropzone">
+    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+      <path d="M12 3v12m0 0l-4-4m4 4l4-4" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <p class="dz-title">Drop CSV files here, or click to browse</p>
+    <p class="dz-sub">You can select every venue export at once — each one is cleaned separately</p>
+    <input type="file" id="fileInput" accept=".csv" multiple>
+  </div>
+
+  <div class="options">
+    <input type="checkbox" id="dropZeroRows" checked>
+    <label for="dropZeroRows">Remove rows where an item has no price set at that location</label>
+  </div>
+
+  <div class="results" id="results"></div>
+
+  <footer>Runs entirely offline once this page is open — safe to keep and reuse every price-increase cycle.</footer>
+</div>
+
+<script>
+const KEEP_COLS = [
+  "PRODUCT_GROUP", "GROUP_DESCRIPTION", "LOCATION_NUMBER", "DESCRIPTION",
+  "PLU_NUMBER", "LOCATIONCOST", "LOCATION_VENUEID",
+  "PRICE1","PRICE2","PRICE3","PRICE4","PRICE5","PRICE6","PRICE7","PRICE8","PRICE9","PRICE10",
+  "VIRTUALPRICELEVEL1","VIRTUALPRICELEVEL2","VIRTUALPRICELEVEL3","VIRTUALPRICELEVEL4","VIRTUALPRICELEVEL5",
+  "VIRTUALPRICELEVEL6","VIRTUALPRICELEVEL7","VIRTUALPRICELEVEL8","VIRTUALPRICELEVEL9","VIRTUALPRICELEVEL10"
+];
+const PRICE_COLS = ["PRICE1","PRICE2","PRICE3","PRICE4","PRICE5","PRICE6","PRICE7","PRICE8","PRICE9","PRICE10"];
+const REQUIRED_ANY = ["PLU_NUMBER", "LOCATION_VENUEID", "PRICE1"];
+
+const dropzone = document.getElementById('dropzone');
+const fileInput = document.getElementById('fileInput');
+const resultsEl = document.getElementById('results');
+
+dropzone.addEventListener('click', () => fileInput.click());
+dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.classList.add('hover'); });
+dropzone.addEventListener('dragleave', () => dropzone.classList.remove('hover'));
+dropzone.addEventListener('drop', (e) => {
+  e.preventDefault();
+  dropzone.classList.remove('hover');
+  handleFiles(e.dataTransfer.files);
+});
+fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
+
+// Robust CSV parser: handles quoted fields, embedded commas, embedded quotes ("").
+function parseCSV(text) {
+  const rows = [];
+  let row = [];
+  let field = '';
+  let inQuotes = false;
+  let i = 0;
+  const len = text.length;
+
+  while (i < len) {
+    const c = text[i];
+
+    if (inQuotes) {
+      if (c === '"') {
+        if (text[i + 1] === '"') { field += '"'; i += 2; continue; }
+        inQuotes = false; i++; continue;
+      }
+      field += c; i++; continue;
+    } else {
+      if (c === '"') { inQuotes = true; i++; continue; }
+      if (c === ',') { row.push(field); field = ''; i++; continue; }
+      if (c === '\r') { i++; continue; }
+      if (c === '\n') {
+        row.push(field); field = '';
+        if (row.length > 1 || row[0] !== '') rows.push(row);
+        row = []; i++; continue;
+      }
+      field += c; i++; continue;
+    }
+  }
+  if (field.length > 0 || row.length > 0) {
+    row.push(field);
+    if (row.length > 1 || row[0] !== '') rows.push(row);
+  }
+  return rows;
+}
+
+function csvField(v) {
+  if (v == null) v = '';
+  v = String(v);
+  if (/[",\n\r]/.test(v)) return '"' + v.replace(/"/g, '""') + '"';
+  return v;
+}
+
+function isZeroOrBlank(v) {
+  if (v == null) return true;
+  const s = String(v).trim();
+  if (s === '') return true;
+  const n = parseFloat(s);
+  return !isNaN(n) && n === 0;
+}
+
+function cleanCSV(text, dropZeroRows) {
+  const rows = parseCSV(text);
+  if (rows.length === 0) throw new Error('File appears to be empty.');
+
+  const header = rows[0].map(h => h.trim());
+  const headerIndex = {};
+  header.forEach((h, idx) => headerIndex[h] = idx);
+
+  const missingRequired = REQUIRED_ANY.filter(c => !(c in headerIndex));
+  if (missingRequired.length > 0) {
+    throw new Error(
+      "Doesn't look like a SwiftPOS price export — missing column(s): " + missingRequired.join(', ')
+    );
+  }
+
+  const availableKeepCols = KEEP_COLS.filter(c => c in headerIndex);
+  const availablePriceCols = PRICE_COLS.filter(c => c in headerIndex);
+
+  const outRows = [];
+  let venueIds = new Set();
+  let totalDataRows = 0;
+
+  for (let r = 1; r < rows.length; r++) {
+    const raw = rows[r];
+    if (raw.length === 1 && raw[0].trim() === '') continue;
+    totalDataRows++;
+
+    if (dropZeroRows) {
+      let allZero = true;
+      for (const pc of availablePriceCols) {
+        const val = raw[headerIndex[pc]];
+        if (!isZeroOrBlank(val)) { allZero = false; break; }
+      }
+      if (allZero) continue;
+    }
+
+    const vId = raw[headerIndex['LOCATION_VENUEID']];
+    if (vId !== undefined) venueIds.add(vId);
+
+    outRows.push(availableKeepCols.map(c => raw[headerIndex[c]] ?? ''));
+  }
+
+  const outLines = [availableKeepCols.map(csvField).join(',')];
+  for (const r of outRows) outLines.push(r.map(csvField).join(','));
+
+  return {
+    csv: outLines.join('\r\n'),
+    totalDataRows,
+    keptRows: outRows.length,
+    venueIds: Array.from(venueIds),
+    colsBefore: header.length,
+    colsAfter: availableKeepCols.length
+  };
+}
+
+function fmtBytes(n) {
+  if (n < 1024) return n + ' B';
+  if (n < 1024 * 1024) return (n / 1024).toFixed(1) + ' KB';
+  return (n / 1024 / 1024).toFixed(2) + ' MB';
+}
+
+function renderSummaryBar(count) {
+  let bar = document.getElementById('summaryBar');
+  if (!bar) {
+    bar = document.createElement('div');
+    bar.id = 'summaryBar';
+    bar.className = 'summary-bar';
+    resultsEl.parentNode.insertBefore(bar, resultsEl);
+  }
+  bar.innerHTML =
+    `<span><span class="n">${count}</span> file${count === 1 ? '' : 's'} processed</span>` +
+    `<button class="clear-btn" id="clearBtn">Clear results</button>`;
+  document.getElementById('clearBtn').addEventListener('click', () => {
+    resultsEl.innerHTML = '';
+    bar.remove();
+  });
+}
+
+function handleFiles(fileList) {
+  const files = Array.from(fileList).filter(f => f.name.toLowerCase().endsWith('.csv'));
+  if (files.length === 0) return;
+
+  const dropZeroRows = document.getElementById('dropZeroRows').checked;
+  let processed = 0;
+
+  files.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const text = e.target.result;
+      const card = document.createElement('div');
+      card.className = 'file-card';
+
+      try {
+        const beforeSize = file.size;
+        const result = cleanCSV(text, dropZeroRows);
+        const blob = new Blob([result.csv], { type: 'text/csv' });
+        const afterSize = blob.size;
+        const url = URL.createObjectURL(blob);
+
+        const outName = file.name.replace(/\.csv$/i, '') + '_cleaned.csv';
+        const pctKept = result.totalDataRows === 0 ? 0 : (result.keptRows / result.totalDataRows * 100);
+
+        card.innerHTML = `
+          <div class="file-head">
+            <span class="file-name">${file.name}</span>
+            <span class="file-venue">${result.venueIds.length ? 'Venue ID ' + result.venueIds.join(', ') : ''}</span>
+          </div>
+          <div class="shrink">
+            <div class="shrink-bar"><div class="shrink-bar-fill" style="width:${pctKept}%"></div></div>
+            <span class="shrink-pct">${pctKept.toFixed(1)}% kept</span>
+          </div>
+          <div class="stat-row">
+            <div class="stat">Rows<b>${result.totalDataRows.toLocaleString()} \u2192 ${result.keptRows.toLocaleString()}</b></div>
+            <div class="stat">Columns<b>${result.colsBefore} \u2192 ${result.colsAfter}</b></div>
+            <div class="stat">File size<b>${fmtBytes(beforeSize)} \u2192 ${fmtBytes(afterSize)}</b></div>
+          </div>
+          <a class="download-btn" href="${url}" download="${outName}">
+            Download ${outName}
+          </a>
+        `;
+      } catch (err) {
+        card.className = 'file-card error';
+        card.innerHTML = `
+          <div class="file-head"><span class="file-name">${file.name}</span></div>
+          <p class="error-msg">${err.message}</p>
+        `;
+      }
+
+      resultsEl.appendChild(card);
+      processed++;
+      renderSummaryBar(resultsEl.children.length);
+    };
+    reader.onerror = () => {
+      const card = document.createElement('div');
+      card.className = 'file-card error';
+      card.innerHTML = `
+        <div class="file-head"><span class="file-name">${file.name}</span></div>
+        <p class="error-msg">Couldn't read this file.</p>
+      `;
+      resultsEl.appendChild(card);
+    };
+    reader.readAsText(file);
+  });
+
+  fileInput.value = '';
+}
+</script>
+</body>
+</html>
