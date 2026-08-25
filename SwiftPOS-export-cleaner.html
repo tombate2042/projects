@@ -157,6 +157,18 @@
     border-color: #E3B7AC;
     background: #FCF2EF;
   }
+  .file-card.combined {
+    border-color: var(--teal);
+    background: #EFF6F4;
+  }
+  .combined-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--teal);
+    margin: 0 0 4px;
+  }
 
   .file-head {
     display: flex;
@@ -301,6 +313,7 @@
       <p><b>Keeps 27 columns:</b> Product Group, Category, Location, Description, PLU, Cost, Venue ID, all 10 Price columns, and all 10 Virtual Price Level columns.</p>
       <p><b>Drops 12 columns</b> that don't matter for pricing: <code>INVENTORY_CODE</code>, <code>GROUP_NUMBER</code>, <code>PREV_COST</code>, <code>STOCK</code>, <code>UNITSPERCASE</code>, <code>CASES</code>, <code>UNITS</code>, <code>MINIMUM_STOCK</code>, <code>MAXIMUM_STOCK</code>, <code>TENPRICELEVELS</code>, <code>V_TYPE</code>, <code>SOFTWARETYPE</code>.</p>
       <p><b>Drops "dead" rows</b> where every one of the 10 Price columns is $0.00 or blank — meaning that item isn't actually sold at that till, so there's nothing to reprice. This is usually the biggest reduction, since a report exports every PLU in your whole catalog against every location, whether that location stocks it or not.</p>
+      <p><b>Optionally drops the header row</b> too, if you want a plain data file with no column titles.</p>
       <p>Everything runs locally in your browser using plain JavaScript. Your files never leave your computer.</p>
     </div>
   </details>
@@ -318,6 +331,16 @@
   <div class="options">
     <input type="checkbox" id="dropZeroRows" checked>
     <label for="dropZeroRows">Remove rows where an item has no price set at that location</label>
+  </div>
+
+  <div class="options">
+    <input type="checkbox" id="dropHeaderRow">
+    <label for="dropHeaderRow">Remove the header row (output data rows only, no column titles)</label>
+  </div>
+
+  <div class="options">
+    <input type="checkbox" id="combineFiles">
+    <label for="combineFiles">Also combine all files selected in this batch into one downloadable CSV</label>
   </div>
 
   <div class="results" id="results"></div>
@@ -402,7 +425,7 @@ function isZeroOrBlank(v) {
   return !isNaN(n) && n === 0;
 }
 
-function cleanCSV(text, dropZeroRows) {
+function cleanCSV(text, dropZeroRows, dropHeaderRow) {
   const rows = parseCSV(text);
   if (rows.length === 0) throw new Error('File appears to be empty.');
 
@@ -444,7 +467,7 @@ function cleanCSV(text, dropZeroRows) {
     outRows.push(availableKeepCols.map(c => raw[headerIndex[c]] ?? ''));
   }
 
-  const outLines = [availableKeepCols.map(csvField).join(',')];
+  const outLines = dropHeaderRow ? [] : [availableKeepCols.map(csvField).join(',')];
   for (const r of outRows) outLines.push(r.map(csvField).join(','));
 
   return {
@@ -453,8 +476,33 @@ function cleanCSV(text, dropZeroRows) {
     keptRows: outRows.length,
     venueIds: Array.from(venueIds),
     colsBefore: header.length,
-    colsAfter: availableKeepCols.length
+    colsAfter: availableKeepCols.length,
+    rows: outRows,
+    cols: availableKeepCols
   };
+}
+
+// Merge already-cleaned results from multiple files into one CSV. Files can
+// have slightly different available columns (e.g. one export missing a price
+// level) so we union columns in canonical KEEP_COLS order and backfill blanks.
+function combineResults(results, dropHeaderRow) {
+  const colSet = new Set();
+  results.forEach(r => r.cols.forEach(c => colSet.add(c)));
+  const unionCols = KEEP_COLS.filter(c => colSet.has(c));
+
+  const outLines = dropHeaderRow ? [] : [unionCols.map(csvField).join(',')];
+  let totalRows = 0;
+
+  results.forEach(r => {
+    const idxMap = unionCols.map(c => r.cols.indexOf(c));
+    r.rows.forEach(row => {
+      const mapped = idxMap.map(idx => idx === -1 ? '' : (row[idx] ?? ''));
+      outLines.push(mapped.map(csvField).join(','));
+      totalRows++;
+    });
+  });
+
+  return { csv: outLines.join('\r\n'), cols: unionCols, totalRows };
 }
 
 function fmtBytes(n) {
@@ -462,6 +510,8 @@ function fmtBytes(n) {
   if (n < 1024 * 1024) return (n / 1024).toFixed(1) + ' KB';
   return (n / 1024 / 1024).toFixed(2) + ' MB';
 }
+
+let filesProcessed = 0;
 
 function renderSummaryBar(count) {
   let bar = document.getElementById('summaryBar');
@@ -477,76 +527,120 @@ function renderSummaryBar(count) {
   document.getElementById('clearBtn').addEventListener('click', () => {
     resultsEl.innerHTML = '';
     bar.remove();
+    filesProcessed = 0;
   });
 }
 
-function handleFiles(fileList) {
+function readFileAsText(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => resolve(e.target.result);
+    reader.onerror = () => reject(new Error("Couldn't read this file."));
+    reader.readAsText(file);
+  });
+}
+
+function buildFileCard(file, beforeSize, result) {
+  const card = document.createElement('div');
+  card.className = 'file-card';
+
+  const blob = new Blob([result.csv], { type: 'text/csv' });
+  const afterSize = blob.size;
+  const url = URL.createObjectURL(blob);
+
+  const outName = file.name.replace(/\.csv$/i, '') + '_cleaned.csv';
+  const pctKept = result.totalDataRows === 0 ? 0 : (result.keptRows / result.totalDataRows * 100);
+
+  card.innerHTML = `
+    <div class="file-head">
+      <span class="file-name">${file.name}</span>
+      <span class="file-venue">${result.venueIds.length ? 'Venue ID ' + result.venueIds.join(', ') : ''}</span>
+    </div>
+    <div class="shrink">
+      <div class="shrink-bar"><div class="shrink-bar-fill" style="width:${pctKept}%"></div></div>
+      <span class="shrink-pct">${pctKept.toFixed(1)}% kept</span>
+    </div>
+    <div class="stat-row">
+      <div class="stat">Rows<b>${result.totalDataRows.toLocaleString()} \u2192 ${result.keptRows.toLocaleString()}</b></div>
+      <div class="stat">Columns<b>${result.colsBefore} \u2192 ${result.colsAfter}</b></div>
+      <div class="stat">File size<b>${fmtBytes(beforeSize)} \u2192 ${fmtBytes(afterSize)}</b></div>
+    </div>
+    <a class="download-btn" href="${url}" download="${outName}">
+      Download ${outName}
+    </a>
+  `;
+  return card;
+}
+
+function buildErrorCard(file, message) {
+  const card = document.createElement('div');
+  card.className = 'file-card error';
+  card.innerHTML = `
+    <div class="file-head"><span class="file-name">${file.name}</span></div>
+    <p class="error-msg">${message}</p>
+  `;
+  return card;
+}
+
+function buildCombinedCard(combined, fileCount) {
+  const card = document.createElement('div');
+  card.className = 'file-card combined';
+
+  const blob = new Blob([combined.csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const outName = 'combined_cleaned.csv';
+
+  card.innerHTML = `
+    <p class="combined-label">Combined</p>
+    <div class="file-head">
+      <span class="file-name">${outName}</span>
+      <span class="file-venue">${fileCount} files merged</span>
+    </div>
+    <div class="stat-row">
+      <div class="stat">Total rows<b>${combined.totalRows.toLocaleString()}</b></div>
+      <div class="stat">Columns<b>${combined.cols.length}</b></div>
+      <div class="stat">File size<b>${fmtBytes(blob.size)}</b></div>
+    </div>
+    <a class="download-btn" href="${url}" download="${outName}">
+      Download ${outName}
+    </a>
+  `;
+  return card;
+}
+
+async function handleFiles(fileList) {
   const files = Array.from(fileList).filter(f => f.name.toLowerCase().endsWith('.csv'));
   if (files.length === 0) return;
 
   const dropZeroRows = document.getElementById('dropZeroRows').checked;
-  let processed = 0;
+  const dropHeaderRow = document.getElementById('dropHeaderRow').checked;
+  const combineFiles = document.getElementById('combineFiles').checked;
+  fileInput.value = '';
 
-  files.forEach(file => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const text = e.target.result;
-      const card = document.createElement('div');
-      card.className = 'file-card';
+  const batch = [];
+  for (const file of files) {
+    try {
+      const text = await readFileAsText(file);
+      const beforeSize = file.size;
+      const result = cleanCSV(text, dropZeroRows, dropHeaderRow);
+      batch.push({ file, beforeSize, result });
+    } catch (err) {
+      batch.push({ file, error: err.message });
+    }
+  }
 
-      try {
-        const beforeSize = file.size;
-        const result = cleanCSV(text, dropZeroRows);
-        const blob = new Blob([result.csv], { type: 'text/csv' });
-        const afterSize = blob.size;
-        const url = URL.createObjectURL(blob);
+  const successes = batch.filter(b => b.result);
+  if (combineFiles && successes.length > 0) {
+    const combined = combineResults(successes.map(b => b.result), dropHeaderRow);
+    resultsEl.appendChild(buildCombinedCard(combined, successes.length));
+  }
 
-        const outName = file.name.replace(/\.csv$/i, '') + '_cleaned.csv';
-        const pctKept = result.totalDataRows === 0 ? 0 : (result.keptRows / result.totalDataRows * 100);
-
-        card.innerHTML = `
-          <div class="file-head">
-            <span class="file-name">${file.name}</span>
-            <span class="file-venue">${result.venueIds.length ? 'Venue ID ' + result.venueIds.join(', ') : ''}</span>
-          </div>
-          <div class="shrink">
-            <div class="shrink-bar"><div class="shrink-bar-fill" style="width:${pctKept}%"></div></div>
-            <span class="shrink-pct">${pctKept.toFixed(1)}% kept</span>
-          </div>
-          <div class="stat-row">
-            <div class="stat">Rows<b>${result.totalDataRows.toLocaleString()} \u2192 ${result.keptRows.toLocaleString()}</b></div>
-            <div class="stat">Columns<b>${result.colsBefore} \u2192 ${result.colsAfter}</b></div>
-            <div class="stat">File size<b>${fmtBytes(beforeSize)} \u2192 ${fmtBytes(afterSize)}</b></div>
-          </div>
-          <a class="download-btn" href="${url}" download="${outName}">
-            Download ${outName}
-          </a>
-        `;
-      } catch (err) {
-        card.className = 'file-card error';
-        card.innerHTML = `
-          <div class="file-head"><span class="file-name">${file.name}</span></div>
-          <p class="error-msg">${err.message}</p>
-        `;
-      }
-
-      resultsEl.appendChild(card);
-      processed++;
-      renderSummaryBar(resultsEl.children.length);
-    };
-    reader.onerror = () => {
-      const card = document.createElement('div');
-      card.className = 'file-card error';
-      card.innerHTML = `
-        <div class="file-head"><span class="file-name">${file.name}</span></div>
-        <p class="error-msg">Couldn't read this file.</p>
-      `;
-      resultsEl.appendChild(card);
-    };
-    reader.readAsText(file);
+  batch.forEach(({ file, beforeSize, result, error }) => {
+    resultsEl.appendChild(error ? buildErrorCard(file, error) : buildFileCard(file, beforeSize, result));
   });
 
-  fileInput.value = '';
+  filesProcessed += files.length;
+  renderSummaryBar(filesProcessed);
 }
 </script>
 </body>
