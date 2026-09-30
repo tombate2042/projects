@@ -430,7 +430,7 @@
     </button>
     <button class="btn" onclick="document.getElementById('sohUpload').click()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-      Import SOH CSV
+      Import Stock CSV
     </button>
     <input type="file" id="sohUpload" accept=".csv" style="display:none" onchange="importSOH(this)">
   </div>
@@ -1576,7 +1576,8 @@ function updateVenueCount(id, venueIdx, value) {
   updateStats();
 }
 
-// Import a POS stock export: match PLU_Number to each item's PLU and write SOH into the Basement count
+// Import a POS count sheet export (one row per item per location): match PLU_Number to each item's PLU,
+// add the Stock figures across all locations and write the net total into the Basement count
 function importSOH(input) {
   const file = input.files[0];
   if (!file) return;
@@ -1588,8 +1589,8 @@ function importSOH(input) {
       if (lines.length < 2) { alert('No data rows found.'); return; }
       const headers = parseCSVLine(lines[0]).map(h => h.toLowerCase());
       const pluCol = headers.indexOf('plu_number');
-      const sohCol = headers.indexOf('soh');
-      if (pluCol < 0 || sohCol < 0) { alert('CSV must have PLU_Number and SOH columns.'); return; }
+      const sohCol = headers.indexOf('stock');
+      if (pluCol < 0 || sohCol < 0) { alert('CSV must have PLU_Number and Stock columns.'); return; }
       const soh = {};
       for (let i = 1; i < lines.length; i++) {
         const row = parseCSVLine(lines[i]);
@@ -1608,7 +1609,7 @@ function importSOH(input) {
         if (!state.items[m.id]) state.items[m.id] = { count:0, ordered:0, count_prev:0, used_0:0, used_1:0, used_2:0, used_3:0, received:0 };
         const s = state.items[m.id];
         if (soh[plu] < 0) negative++;
-        s['cnt_' + venueIdx] = Math.max(0, soh[plu]);
+        s['cnt_' + venueIdx] = Math.max(0, Math.round(soh[plu] * 1000) / 1000);
         const total = state.venues.reduce((sum, _, i) => sum + (Number(s['cnt_' + i]) || 0), 0);
         s.count = total;
         s.used_0 = Math.max(0, (Number(s.count_prev) || 0) + (Number(s.received) || 0) - total);
@@ -1618,7 +1619,7 @@ function importSOH(input) {
       renderCount();
       updateStats();
       const notes = [];
-      if (negative) notes.push(`${negative} had negative SOH and were set to 0`);
+      if (negative) notes.push(`${negative} had negative total stock and were set to 0`);
       if (unmatched) notes.push(`${unmatched} item${unmatched !== 1 ? 's' : ''} with a PLU had no match in the file`);
       if (noPlu) notes.push(`${noPlu} item${noPlu !== 1 ? 's have' : ' has'} no PLU set`);
       alert(`Updated ${state.venues[venueIdx]} count for ${updated} item${updated !== 1 ? 's' : ''}.` + (notes.length ? '\n\n' + notes.join('\n') : ''));
