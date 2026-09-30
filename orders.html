@@ -1802,7 +1802,8 @@ function renderPM() {
     items.forEach(item => {
       const tr = document.createElement('tr');
       tr.id = 'pmrow-' + item.id;
-      if (avgUsage(item) < 0.25 && Number(item.count) !== 0) tr.classList.add('low-avg');
+      const stock = getItem(item.id);
+      if (avgUsage(stock) < 0.25 && Number(stock.count) !== 0) tr.classList.add('low-avg');
       tr.draggable = true;
       tr.dataset.id = item.id;
       tr.dataset.category = item.category;
