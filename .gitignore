@@ -1,0 +1,10 @@
+.venv/
+__pycache__/
+.DS_Store
+
+# local data and tools
+Data 22.09.26/
+Clean Inventory.app/
+*.command
+cleanup.py
+cleanup_promotions.py

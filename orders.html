@@ -541,6 +541,10 @@
         <label class="form-label">Sell Price ($)</label>
         <input class="form-input" id="fi-sell" type="number" step="0.01" min="0" placeholder="0.00">
       </div>
+      <div class="form-group">
+        <label class="form-label">PLU</label>
+        <input class="form-input" id="fi-plu" type="text" placeholder="e.g. 10234">
+      </div>
     </div>
     <div class="modal-actions">
       <button class="btn" onclick="closeModal('addItemModal')">Cancel</button>
@@ -1581,7 +1585,7 @@ function renderStock() {
 }
 
 // ─── CSV IMPORT / EXPORT ─────────────────────────────────────────────────────
-const CSV_FIELDS = ['item','category','size','supplier','risk_tier','case','baseline','cost','sell'];
+const CSV_FIELDS = ['item','category','size','supplier','risk_tier','case','baseline','cost','sell','plu'];
 
 function downloadCSVTemplate() {
   const rows = [CSV_FIELDS.join(',')];
@@ -1594,7 +1598,7 @@ function downloadCSVTemplate() {
       }).join(','));
     });
   } else {
-    rows.push('Example Item,Vodka,700ml,ILG,normal,6,2,45.00,12.00');
+    rows.push('Example Item,Vodka,700ml,ILG,normal,6,2,45.00,12.00,10234');
   }
   const blob = new Blob([rows.join('\n')], { type: 'text/csv' });
   const a = document.createElement('a');
@@ -1653,6 +1657,7 @@ function importCSV(input) {
           baseline: parseInt(get(row, 'baseline')) || 0,
           cost: parseFloat(get(row, 'cost')) || 0,
           sell: parseFloat(get(row, 'sell')) || 0,
+          plu: get(row, 'plu'),
           position: 99,
         };
         state.catalog.push(item);
@@ -1714,6 +1719,7 @@ function renderPM() {
             <th style="text-align:center">Risk Tier</th>
             <th style="text-align:center">Cost</th>
             <th style="text-align:center">Sell</th>
+            <th style="text-align:center">PLU</th>
             <th style="text-align:center;width:80px">In Orders</th>
             <th></th>
           </tr></thead>
@@ -1751,6 +1757,7 @@ function renderPM() {
         </select></td>
         <td style="text-align:center"><input class="pm-input narrow" style="text-align:center" type="number" step="0.01" min="0" value="${item.cost||''}" placeholder="—" onchange="updateProduct('${item.id}','cost',+this.value)"></td>
         <td style="text-align:center"><input class="pm-input narrow" style="text-align:center" type="number" step="0.01" min="0" value="${item.sell||''}" placeholder="—" onchange="updateProduct('${item.id}','sell',+this.value)"></td>
+        <td style="text-align:center"><input class="pm-input med" style="text-align:center" value="${esc(item.plu||'')}" placeholder="—" onchange="updateProduct('${item.id}','plu',this.value.trim())"></td>
         <td style="text-align:center">
           <button class="btn btn-icon${item.excludeFromOrders ? '' : ' btn-disc on'}" title="${item.excludeFromOrders ? 'Excluded from orders — click to include' : 'In orders — click to exclude'}" onclick="toggleOrderFlag('${item.id}')">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><polyline points="20 6 9 17 4 12"/></svg>
@@ -1873,7 +1880,7 @@ function showAddItemModal() {
   document.getElementById('addItemTitle').textContent = 'Add New Item';
   const sel = document.getElementById('fi-category');
   sel.innerHTML = CATEGORIES.map(c => `<option value="${c}">${c}</option>`).join('');
-  ['item','size','supplier','cost','sell'].forEach(f => document.getElementById('fi-'+f).value = '');
+  ['item','size','supplier','cost','sell','plu'].forEach(f => document.getElementById('fi-'+f).value = '');
   document.getElementById('fi-case').value = 1;
   document.getElementById('fi-baseline').value = 0;
   document.getElementById('fi-risk_tier').value = 'normal';
@@ -1896,6 +1903,7 @@ function saveItem() {
     baseline: parseInt(document.getElementById('fi-baseline').value)||0,
     cost: parseFloat(document.getElementById('fi-cost').value)||0,
     sell: parseFloat(document.getElementById('fi-sell').value)||0,
+    plu: document.getElementById('fi-plu').value.trim(),
     position: 99,
   };
   if (!state.catalog) state.catalog = [];
