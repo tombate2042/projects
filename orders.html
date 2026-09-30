@@ -406,6 +406,18 @@
     </div>
     <div class="pm-count" id="pmCount"></div>
   </div>
+  <div class="filters">
+    <div class="filter-row">
+      <span class="filter-label">In Orders</span>
+      <button class="filter-chip active" data-pm-orders="all" onclick="setPMFilter('orders','all',this)">All</button>
+      <button class="filter-chip" data-pm-orders="in" onclick="setPMFilter('orders','in',this)">In Orders</button>
+      <button class="filter-chip" data-pm-orders="out" onclick="setPMFilter('orders','out',this)">Excluded</button>
+      <span class="filter-label" style="margin-left:16px">Status</span>
+      <button class="filter-chip active" data-pm-status="all" onclick="setPMFilter('status','all',this)">All</button>
+      <button class="filter-chip" data-pm-status="active" onclick="setPMFilter('status','active',this)">Active</button>
+      <button class="filter-chip" data-pm-status="disc" onclick="setPMFilter('status','disc',this)">Do Not Order</button>
+    </div>
+  </div>
   <div id="pmContent"></div>
 </div>
 
@@ -1677,6 +1689,7 @@ function importCSV(input) {
 
 // ─── PRODUCT MANAGER ─────────────────────────────────────────────────────────
 let pmSearchQuery = '';
+const pmFilters = { orders: 'all', status: 'all' };
 let pendingDeleteId = null;
 let editingItemId = null;
 
@@ -1849,16 +1862,25 @@ function pmSearch(q) {
   applyPMSearch();
 }
 
+function setPMFilter(group, value, el) {
+  pmFilters[group] = value;
+  document.querySelectorAll(`.filter-chip[data-pm-${group}]`).forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  applyPMSearch();
+}
+
 function applyPMSearch() {
   const items = getAllItems();
   let visible = 0;
   items.forEach(item => {
     const row = document.getElementById('pmrow-' + item.id);
     if (!row) return;
-    const match = !pmSearchQuery ||
+    let match = !pmSearchQuery ||
       item.item.toLowerCase().includes(pmSearchQuery) ||
       item.category.toLowerCase().includes(pmSearchQuery) ||
       (item.supplier||'').toLowerCase().includes(pmSearchQuery);
+    if (match && pmFilters.orders !== 'all') match = (pmFilters.orders === 'in') === !item.excludeFromOrders;
+    if (match && pmFilters.status !== 'all') match = (pmFilters.status === 'disc') === !!item.discontinued;
     row.classList.toggle('pm-hidden', !match);
     if (match) visible++;
   });
@@ -1867,10 +1889,10 @@ function applyPMSearch() {
     const key = cat.replace(/\s+/g, '-');
     const section = document.getElementById('pmsection-' + key);
     if (!section) return;
-    const anyVisible = section.querySelectorAll('tr:not(.pm-hidden)').length > 0;
-    section.style.display = anyVisible ? '' : 'none';
+    const shown = section.querySelectorAll('tbody tr:not(.pm-hidden)').length;
+    section.style.display = shown ? '' : 'none';
     const countEl = document.getElementById('pmcount-' + key);
-    if (countEl) countEl.textContent = section.querySelectorAll('tr:not(.pm-hidden)').length + ' items';
+    if (countEl) countEl.textContent = shown + ' items';
   });
   document.getElementById('pmCount').textContent = visible + ' items';
 }
