@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Inventory Cleaner</title>
+<title>Inventory &amp; Promotions Cleaner</title>
 <style>
   :root {
     --paper: #F6F4EF;
@@ -117,16 +117,33 @@
   .dz-sub { color: var(--ink-soft); font-size: 13px; }
   input[type=file] { display: none; }
 
+  .job {
+    background: var(--paper-raised);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 22px 24px;
+    margin-top: 20px;
+  }
+  .job-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .job h2 { font-size: 18px; font-weight: 650; margin: 0; }
+  .job-out { font-family: var(--mono); font-size: 12px; color: var(--ink-soft); }
+
   .slots {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
     gap: 10px;
-    margin-top: 18px;
+    margin-top: 14px;
   }
   .slot {
     border: 1px solid var(--line);
     border-radius: 10px;
-    background: var(--paper-raised);
+    background: var(--paper);
     padding: 12px 16px;
     min-width: 0;
   }
@@ -152,8 +169,9 @@
 
   .notice {
     margin-top: 12px;
-    font-size: 13.5px;
-    color: var(--red);
+    font-size: 13px;
+    color: var(--ink-soft);
+    white-space: pre-line;
   }
   .notice:empty { display: none; }
 
@@ -177,7 +195,7 @@
     color: var(--ink);
   }
 
-  .actions { margin-top: 22px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  .actions { margin-top: 18px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
 
   .download-btn, .run-btn {
     display: inline-flex;
@@ -209,15 +227,16 @@
   }
   .clear-btn:hover { border-color: var(--ink-soft); color: var(--ink); }
 
-  .results { margin-top: 28px; }
+  .results { margin-top: 18px; }
+  .results:empty { display: none; }
 
   .file-card {
     border: 1px solid var(--line);
     border-radius: 10px;
     background: var(--paper-raised);
     padding: 18px 20px;
-    margin-bottom: 12px;
   }
+  .downloads { display: flex; gap: 10px; flex-wrap: wrap; }
   .file-card.error { border-color: #E3B7AC; background: #FCF2EF; }
   .file-card.done { border-color: var(--teal); background: #EFF6F4; }
 
@@ -292,6 +311,7 @@
   @media (max-width: 560px) {
     body { padding: 32px 16px 72px; }
     .slots, .stat-row { grid-template-columns: minmax(0, 1fr); }
+    .job { padding: 18px 16px; }
   }
 </style>
 </head>
@@ -299,22 +319,28 @@
 <div class="wrap">
 
   <header>
-    <p class="eyebrow">Inventory Cleaner</p>
-    <h1>Build the Sheets inventory file from SwiftPOS exports</h1>
-    <p class="sub">Drop in the four SwiftPOS table exports and download <code style="font-family:var(--mono);font-size:13px">Cleaned_Inventory_For_Sheets.csv</code>. Same rules as the Python cleanup script, but it runs entirely in your browser: nothing to install, and nothing is uploaded anywhere.</p>
+    <p class="eyebrow">Inventory &amp; Promotions Cleaner</p>
+    <h1>Build the Sheets inventory and promotions files from SwiftPOS exports</h1>
+    <p class="sub">Drop in the SwiftPOS table exports and download the cleaned files for Sheets. Same rules as the Python cleanup scripts, but it runs entirely in your browser: nothing to install, and nothing is uploaded anywhere.</p>
   </header>
 
   <details class="panel">
     <summary>What exactly does this do?</summary>
     <div class="body">
-      <p><b>Needs four CSV files</b>, recognised by their column headers so the filenames don't matter: Products, Prices, Location Stock and Groups. You can drop them one at a time, all at once, or drop the folder they're in.</p>
-      <p><b>Builds one row per item per price level</b>, then:</p>
+      <p><b>Files are recognised by their column headers</b>, so the filenames don't matter. Drop them one at a time, all at once, or drop the folder they're in. Products is used by both.</p>
+      <p><b>Inventory</b> (Products, Prices, Location Stock, Groups) builds one row per item per price level, then:</p>
       <ul>
         <li>Keeps only products in the drink group ranges (100&ndash;145, 149&ndash;182, 214&ndash;306, 310&ndash;410) and the mapped venue price levels.</li>
         <li>Takes each row's cost and last-sold date from that venue's stock locations (location 132 is ignored). Last-sold dates are shared across size variants of the same product, e.g. <code>6089</code> and <code>6089 GLS</code>.</li>
         <li>Tidies categories into Spirits, Taps, Wine, Packaged and Non-Alc, with Type and Size split out.</li>
         <li>Removes <code>Spirits 15ml</code>, packs/cartons/kegs from Bar price levels, and pints/schooners/middies/7oz/jugs/30ml pours from Bottle price levels.</li>
         <li>Removes rows with a $0.00 price, and rows not sold since the cutoff date below.</li>
+      </ul>
+      <p><b>Promotions</b> (Products, Promo List, Promo Prices) builds two linked files, joined on <code>PromotionID</code>:</p>
+      <ul>
+        <li>Keeps promotions that are enabled, run on at least one day, have a name, and aren't food (names containing BISTRO, BISTO or FOOD).</li>
+        <li>Keeps promo items that aren't in food categories (10 and 25&ndash;69), on venue price levels ending in 1 or 2 (21, 22, 32 and so on), and that match a product by Inventory Code or PLU.</li>
+        <li>Removes duplicate items and any promotion left with no items. Category 3 items named like <code>LAKES - ESPRESSO MARTINI</code> are labelled Cocktails.</li>
       </ul>
       <p>The full rule set is in the <code>CONFIG</code> section at the top of this page's script. It can be edited in Notepad if the rules change.</p>
       <p>The Prices and Location Stock exports are large (hundreds of MB). They're read in pieces rather than loaded whole, so expect a minute or two on a typical work PC.</p>
@@ -326,26 +352,33 @@
       <path d="M12 3v12m0 0l-4-4m4 4l4-4" stroke-linecap="round" stroke-linejoin="round"/>
       <path d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2" stroke-linecap="round" stroke-linejoin="round"/>
     </svg>
-    <p class="dz-title">Drop the four CSV files (or their folder) here, or click to browse</p>
-    <p class="dz-sub">Products, Prices, Location Stock and Groups, in any order, with any filenames</p>
+    <p class="dz-title">Drop the CSV files (or their folder) here, or click to browse</p>
+    <p class="dz-sub">Any order, any filenames. Add just the files for the job you want to run</p>
     <input type="file" id="fileInput" accept=".csv" multiple>
   </div>
-
-  <div class="slots" id="slots"></div>
   <p class="notice" id="notice"></p>
-
-  <div class="options">
-    <input type="checkbox" id="lastSoldEnabled" checked>
-    <label for="lastSoldEnabled">Remove items not sold since</label>
-    <input type="date" id="lastSoldCutoff">
-  </div>
-
-  <div class="actions">
-    <button class="run-btn" id="runBtn" disabled>Build inventory file</button>
+  <div class="actions" style="margin-top:12px">
     <button class="clear-btn" id="clearBtn">Clear files</button>
   </div>
 
-  <div class="results" id="results"></div>
+  <section class="job" id="job-inventory">
+    <div class="job-head"><h2>Inventory</h2><span class="job-out">Cleaned_Inventory_For_Sheets.csv</span></div>
+    <div class="slots"></div>
+    <div class="options">
+      <input type="checkbox" id="lastSoldEnabled" checked>
+      <label for="lastSoldEnabled">Remove items not sold since</label>
+      <input type="date" id="lastSoldCutoff">
+    </div>
+    <div class="actions"><button class="run-btn" disabled>Build inventory file</button></div>
+    <div class="results"></div>
+  </section>
+
+  <section class="job" id="job-promotions">
+    <div class="job-head"><h2>Promotions</h2><span class="job-out">Cleaned_Promotions_For_Sheets.csv + Cleaned_Promotion_Items_For_Sheets.csv</span></div>
+    <div class="slots"></div>
+    <div class="actions"><button class="run-btn" disabled>Build promotions files</button></div>
+    <div class="results"></div>
+  </section>
 
   <footer>Runs entirely offline once this page is open. Keep a copy and reuse it each time.</footer>
 </div>
@@ -556,6 +589,53 @@ const DEFAULT_LAST_SOLD_CUTOFF = "2026-01-01";
 // Inventory_Code then only counts as recently sold under its own exact code).
 const ENABLE_SIZE_FAMILY_LAST_SOLD_POOLING = true;
 
+// ---------- Promotions (mirrors the CONFIG section of cleanup_promotions.py) ----------
+
+const PROMOTIONS_FILENAME = "Cleaned_Promotions_For_Sheets.csv";
+const PROMO_ITEMS_FILENAME = "Cleaned_Promotion_Items_For_Sheets.csv";
+
+// Promo List.Enabled uses this legacy boolean encoding.
+const ENABLED_VALUE = "-1";
+
+// Promotions are deleted if their PromotionName contains any of these
+// substrings - not case sensitive. Used to drop food promos (bistro deals etc.).
+const EXCLUDE_NAME_SUBSTRINGS = ["BISTRO", "BISTO", "FOOD"];
+
+// Promo items are deleted if their PromotionCategory is in this list. These
+// codes are all food items (10, and 25-69 inclusive).
+const EXCLUDE_PROMOTION_CATEGORIES = [10, ...range(25, 70)];
+
+// Promo items are kept only if their PriceLevel ends in one of these digits
+// (e.g. 21 Lakes Bottle, 22 Lakes Bar). Single-digit levels (1, 2) don't
+// count. Everything else is deleted.
+const KEEP_PRICE_LEVEL_LAST_DIGITS = [1, 2];
+
+// PromotionCategory -> human-readable name, for the Sheets UI export.
+const PROMOTION_CATEGORY_NAMES = {
+  1: "Wine",
+  2: "Packaged",
+  3: "Spirits",
+  4: "Taps",
+  12: "Cocktails",
+};
+
+// Category 3 ("Spirits") mixes plain spirit pours and named cocktails. Venue
+// cocktails are written "VENUE - Drink Name" (e.g. "LAKES - ESPRESSO MARTINI"),
+// so any category-3 item whose Description contains this is labelled Cocktails.
+const COCKTAIL_MARKER = " - ";
+
+// Promo List.DaysOfWeek is a bitmask. A promotion with no days set (0) never
+// runs and is dropped along with disabled ones.
+const DAY_BITS = [
+  [2, "Mon"],
+  [4, "Tue"],
+  [8, "Wed"],
+  [16, "Thu"],
+  [32, "Fri"],
+  [64, "Sat"],
+  [1, "Sun"],
+];
+
 // ============================================================
 // END OF CONFIG
 // ============================================================
@@ -570,6 +650,8 @@ const ROLES = {
   prices:        { label: "Prices",         required: ["ProductCode", "PriceLevel", "Price"] },
   locationStock: { label: "Location Stock", required: ["Location_Number", "Inventory_Code", "Stock"] },
   groups:        { label: "Groups",         required: ["Group_Number", "Group_Description"] },
+  promoList:     { label: "Promo List",     required: ["PromotionID", "PromotionName", "Enabled", "Locations"] },
+  promoPrices:   { label: "Promo Prices",   required: ["PromotionID", "Inventory_Code", "PriceLevel", "PromotionPrice"] },
 };
 
 const OUTPUT_COLUMNS = [
@@ -624,7 +706,7 @@ function csvField(v) {
   return /[",\r\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v;
 }
 
-function pyList(arr) { return '[' + arr.map(s => `'${s}'`).join(', ') + ']'; }
+function pyList(arr) { return '[' + arr.map(s => typeof s === 'number' ? String(s) : `'${s}'`).join(', ') + ']'; }
 
 function cmpStr(a, b) {
   if (a === b) return 0;
@@ -698,10 +780,11 @@ async function streamCSV(file, wanted, onRow, onProgress) {
   let header = null, idx = null, maxIdx = 0;
   let carry = '', pending = null, bytes = 0;
 
-  const handleLine = (line) => {
-    if (line.charCodeAt(line.length - 1) === 13) line = line.slice(0, -1);
-    if (pending !== null) { line = pending + '\n' + line; pending = null; }
+  const handleLine = (raw) => {
+    let line = pending !== null ? pending + '\n' + raw : raw;
+    pending = null;
     if (line.indexOf('"') !== -1 && hasOddQuotes(line)) { pending = line; return; }
+    if (line.charCodeAt(line.length - 1) === 13) line = line.slice(0, -1);
     if (line === '') return;
     if (header === null) {
       header = parseRecord(line.replace(/^﻿/, ''));
@@ -745,8 +828,9 @@ async function identifyRole(file) {
   const header = new Set(await readHeader(file));
   const matches = Object.keys(ROLES).filter(role => ROLES[role].required.every(c => header.has(c)));
   if (matches.length !== 1) {
-    throw new Error(`Couldn't tell which export "${file.name}" is` +
-      (matches.length ? ` (it looks like more than one: ${matches.map(r => ROLES[r].label).join(', ')}).` : '. Its columns don\'t match any of the four expected files.'));
+    throw new Error(matches.length
+      ? `Skipped "${file.name}": it looks like more than one export (${matches.map(r => ROLES[r].label).join(', ')}).`
+      : `Skipped "${file.name}": its columns don't match any of the exports this page uses.`);
   }
   return matches[0];
 }
@@ -1089,6 +1173,160 @@ async function runInventoryCleanup(files, options, hooks = {}) {
   return { csv: lines.join('\n') + '\n', rowCount: survivors.length };
 }
 
+// ─── PROMOTIONS CLEANUP ──────────────────────────────────────────────────────
+
+// Read a whole (small) CSV into an array of objects with the wanted columns
+async function readTable(file, columns, onProgress) {
+  const rows = [];
+  await streamCSV(file, columns, (vals) => {
+    const row = {};
+    columns.forEach((col, i) => { row[col] = na(vals[i]); });
+    rows.push(row);
+  }, onProgress);
+  return rows;
+}
+
+function decodeDays(value) {
+  if (Number.isNaN(value) || Math.trunc(value) === 0) return '';
+  const v = Math.trunc(value);
+  return DAY_BITS.filter(([bit]) => v & bit).map(([, name]) => name).join(', ');
+}
+
+// files: { products, promoList, promoPrices } (File/Blob objects)
+// hooks: { log(message), progress(stageLabel, fraction) }
+async function runPromotionsCleanup(files, hooks = {}) {
+  const log = hooks.log || (() => {});
+  const totalBytes = files.products.size + files.promoList.size + files.promoPrices.size;
+  let doneBytes = 0;
+  const progressFor = (label) => (bytes) => {
+    if (hooks.progress) hooks.progress(label, Math.min(1, (doneBytes + bytes) / totalBytes));
+  };
+
+  // ---------- Load ----------
+  const promoList = await readTable(files.promoList,
+    ["PromotionID", "PromotionName", "DaysOfWeek", "StartTime", "EndTime", "Locations", "Notes", "Enabled"],
+    progressFor("Reading Promo List"));
+  doneBytes += files.promoList.size;
+  const promoPrices = await readTable(files.promoPrices,
+    ["PromotionID", "Inventory_Code", "PriceLevel", "PromotionPrice", "PromotionCategory"],
+    progressFor("Reading Promo Prices"));
+  doneBytes += files.promoPrices.size;
+  const products = await readTable(files.products, ["Inventory_Code", "Description", "PLU_Number"],
+    progressFor("Reading Products"));
+  doneBytes += files.products.size;
+  if (hooks.progress) hooks.progress("Applying rules", 1);
+
+  // ---------- Step 1: keep only enabled promotions with at least one day set ----------
+  let list = promoList.filter(r => {
+    const days = toNum(r.DaysOfWeek);
+    return r.Enabled === ENABLED_VALUE && (Number.isNaN(days) ? 0 : days) !== 0;
+  });
+  log(`Promotions kept (Enabled + at least one day): ${list.length} / ${promoList.length}`);
+
+  // ---------- Step 1b: drop promotions matching EXCLUDE_NAME_SUBSTRINGS (e.g. food/bistro) ----------
+  let before = list.length;
+  list = list.filter(r => !(r.PromotionName !== null &&
+    EXCLUDE_NAME_SUBSTRINGS.some(s => r.PromotionName.toUpperCase().includes(s))));
+  log(`Removed ${before - list.length} promotions matching ${pyList(EXCLUDE_NAME_SUBSTRINGS)}. Remaining: ${list.length}`);
+
+  // ---------- Step 1c: drop promotions with no name ----------
+  before = list.length;
+  list = list.filter(r => r.PromotionName !== null && r.PromotionName.trim() !== '');
+  log(`Removed ${before - list.length} promotions with no name. Remaining: ${list.length}`);
+
+  // ---------- Step 2: build the Promotions output table ----------
+  let promotionsOut = list.map(r => ({ ...r, Days: decodeDays(toNum(r.DaysOfWeek)) }))
+    .sort((a, b) => cmpStr(a.PromotionID, b.PromotionID));
+
+  // ---------- Step 3: drop promo items belonging to promotions we just dropped ----------
+  const activeIds = new Set(list.map(r => r.PromotionID));
+  let items = promoPrices.filter(r => activeIds.has(r.PromotionID));
+  log(`Promo items after dropping inactive promotions: ${items.length} / ${promoPrices.length}`);
+
+  // ---------- Step 3b: drop promo items in excluded PromotionCategory codes (food) ----------
+  const excludedCategories = new Set(EXCLUDE_PROMOTION_CATEGORIES);
+  before = items.length;
+  items = items.filter(r => !excludedCategories.has(toNum(r.PromotionCategory)));
+  log(`Removed ${before - items.length} promo items in excluded PromotionCategory codes. Remaining: ${items.length}`);
+
+  // ---------- Step 3c: keep only promo items whose PriceLevel ends in KEEP_PRICE_LEVEL_LAST_DIGITS ----------
+  before = items.length;
+  items = items.filter(r => {
+    const level = toNum(r.PriceLevel);
+    return level >= 10 && KEEP_PRICE_LEVEL_LAST_DIGITS.includes(level % 10);
+  });
+  log(`Removed ${before - items.length} promo items with PriceLevel not ending in ${pyList(KEEP_PRICE_LEVEL_LAST_DIGITS)}. Remaining: ${items.length}`);
+
+  // ---------- Step 4: resolve Inventory_Code, falling back to PLU_Number ----------
+  const descByCode = new Map();
+  const codeByPlu = new Map();
+  for (const p of products) {
+    if (!descByCode.has(p.Inventory_Code)) descByCode.set(p.Inventory_Code, p.Description);
+    if (!codeByPlu.has(p.PLU_Number)) codeByPlu.set(p.PLU_Number, p.Inventory_Code);
+  }
+  const resolveCode = (code) => {
+    if (descByCode.has(code)) return code;
+    if (codeByPlu.has(code)) return codeByPlu.get(code);
+    return null;
+  };
+  items = items.map(r => ({ ...r, Resolved: resolveCode(r.Inventory_Code) }));
+
+  before = items.length;
+  const unresolved = items.filter(r => r.Resolved === null);
+  if (unresolved.length) {
+    const sample = [...new Set(unresolved.map(r => r.Inventory_Code).filter(c => c !== null))]
+      .sort((a, b) => cmpStr(a, b)).slice(0, 10);
+    log(`Dropping ${unresolved.length} promo item rows with no matching Inventory_Code or PLU_Number ` +
+        `(unmatched codes include: ${pyList(sample)})`);
+  }
+  items = items.filter(r => r.Resolved !== null);
+  log(`Promo items after resolving product codes: ${items.length} / ${before}`);
+
+  // ---------- Step 5: drop exact duplicate (Promotion x Item x PriceLevel) rows ----------
+  before = items.length;
+  const seen = new Set();
+  items = items.filter(r => {
+    const key = JSON.stringify([r.PromotionID, r.Resolved, r.PriceLevel]);
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+  log(`Removed ${before - items.length} duplicate promo item rows. Remaining: ${items.length}`);
+
+  // ---------- Step 5b: drop promotions that ended up with no items ----------
+  before = promotionsOut.length;
+  const idsWithItems = new Set(items.map(r => r.PromotionID));
+  promotionsOut = promotionsOut.filter(r => idsWithItems.has(r.PromotionID));
+  log(`Removed ${before - promotionsOut.length} promotions with no items left. Remaining: ${promotionsOut.length}`);
+
+  // ---------- Steps 6-7: attach names and build the Promotion Items table ----------
+  const itemsOut = items.map(r => {
+    const description = descByCode.has(r.Resolved) ? descByCode.get(r.Resolved) : null;
+    const level = toNum(r.PriceLevel);
+    const category = toNum(r.PromotionCategory);
+    let categoryName = PROMOTION_CATEGORY_NAMES[category] ?? null;
+    if (category === 3 && description !== null && description.includes(COCKTAIL_MARKER)) categoryName = "Cocktails";
+    return {
+      KEY: r.PromotionID === null || r.Resolved === null || r.PriceLevel === null
+        ? null : `${r.PromotionID}-${r.Resolved}-${r.PriceLevel}`,
+      PromotionID: r.PromotionID,
+      Description: description,
+      PriceLevel: Number.isInteger(level) ? String(level) : null,
+      PriceLevel_Name: PRICE_LEVEL_NAMES[level] ?? null,
+      PromotionPrice: r.PromotionPrice,
+      PromotionCategory: categoryName,
+    };
+  }).sort((a, b) => cmpStr(a.PromotionID, b.PromotionID) || cmpStr(a.KEY, b.KEY));
+
+  const toCsv = (rows, cols) => [cols.join(','), ...rows.map(r => cols.map(col => csvField(r[col])).join(','))].join('\n') + '\n';
+  log(`Wrote ${promotionsOut.length} promotions.`);
+  log(`Wrote ${itemsOut.length} promotion items.`);
+  return {
+    promotions: { csv: toCsv(promotionsOut, ["PromotionID", "PromotionName", "Days", "StartTime", "EndTime", "Locations", "Notes"]), rowCount: promotionsOut.length },
+    items: { csv: toCsv(itemsOut, ["KEY", "PromotionID", "Description", "PriceLevel", "PriceLevel_Name", "PromotionPrice", "PromotionCategory"]), rowCount: itemsOut.length },
+  };
+}
+
 // ─── PAGE ────────────────────────────────────────────────────────────────────
 
 function fmtBytes(n) {
@@ -1104,11 +1342,8 @@ function escapeHtml(s) {
 function initPage() {
   const dropzone = document.getElementById('dropzone');
   const fileInput = document.getElementById('fileInput');
-  const slotsEl = document.getElementById('slots');
   const noticeEl = document.getElementById('notice');
-  const runBtn = document.getElementById('runBtn');
   const clearBtn = document.getElementById('clearBtn');
-  const resultsEl = document.getElementById('results');
   const lastSoldEnabled = document.getElementById('lastSoldEnabled');
   const lastSoldCutoff = document.getElementById('lastSoldCutoff');
 
@@ -1116,19 +1351,47 @@ function initPage() {
   lastSoldEnabled.addEventListener('change', () => { lastSoldCutoff.disabled = !lastSoldEnabled.checked; });
 
   const selected = {};
-  let running = false;
-  let downloadUrl = null;
 
-  function renderSlots() {
-    slotsEl.innerHTML = Object.keys(ROLES).map(role => {
-      const f = selected[role];
-      return `<div class="slot${f ? ' ready' : ''}">
-        <div class="slot-role">${ROLES[role].label}</div>
-        <div class="slot-file${f ? '' : ' empty'}">${f ? escapeHtml(f.name) : 'Not added yet'}</div>
-        <div class="slot-size">${f ? fmtBytes(f.size) : '&nbsp;'}</div>
-      </div>`;
-    }).join('');
-    runBtn.disabled = running || Object.keys(ROLES).some(role => !selected[role]);
+  // Each job: the files it needs, how to run it, and what to show when it's done
+  const jobs = [
+    {
+      el: document.getElementById('job-inventory'),
+      roles: ['products', 'prices', 'locationStock', 'groups'],
+      async run(log, progress) {
+        const cutoff = lastSoldCutoff.value || DEFAULT_LAST_SOLD_CUTOFF;
+        const res = await runInventoryCleanup(selected, { lastSoldEnabled: lastSoldEnabled.checked, lastSoldCutoff: cutoff }, { log, progress });
+        return {
+          outputs: [{ filename: OUTPUT_FILENAME, csv: res.csv }],
+          stats: [['Rows', res.rowCount.toLocaleString()], ['Last sold since', lastSoldEnabled.checked ? cutoff : 'Not filtered']],
+        };
+      },
+    },
+    {
+      el: document.getElementById('job-promotions'),
+      roles: ['products', 'promoList', 'promoPrices'],
+      async run(log, progress) {
+        const res = await runPromotionsCleanup(selected, { log, progress });
+        return {
+          outputs: [{ filename: PROMOTIONS_FILENAME, csv: res.promotions.csv }, { filename: PROMO_ITEMS_FILENAME, csv: res.items.csv }],
+          stats: [['Promotions', res.promotions.rowCount.toLocaleString()], ['Promotion items', res.items.rowCount.toLocaleString()]],
+        };
+      },
+    },
+  ];
+  const anyRunning = () => jobs.some(j => j.running);
+
+  function render() {
+    for (const job of jobs) {
+      job.el.querySelector('.slots').innerHTML = job.roles.map(role => {
+        const f = selected[role];
+        return `<div class="slot${f ? ' ready' : ''}">
+          <div class="slot-role">${ROLES[role].label}</div>
+          <div class="slot-file${f ? '' : ' empty'}">${f ? escapeHtml(f.name) : 'Not added yet'}</div>
+          <div class="slot-size">${f ? fmtBytes(f.size) : '&nbsp;'}</div>
+        </div>`;
+      }).join('');
+      job.el.querySelector('.run-btn').disabled = job.running || job.roles.some(role => !selected[role]);
+    }
   }
 
   async function addFiles(files) {
@@ -1141,8 +1404,8 @@ function initPage() {
         problems.push(err.message);
       }
     }
-    noticeEl.textContent = problems.join(' ');
-    renderSlots();
+    noticeEl.textContent = problems.join('\n');
+    render();
   }
 
   // Expand dropped folders into the CSV files directly inside them
@@ -1175,78 +1438,72 @@ function initPage() {
   fileInput.addEventListener('change', (e) => { addFiles([...e.target.files]); fileInput.value = ''; });
 
   clearBtn.addEventListener('click', () => {
-    if (running) return;
+    if (anyRunning()) return;
     for (const role of Object.keys(selected)) delete selected[role];
     noticeEl.textContent = '';
-    resultsEl.innerHTML = '';
-    renderSlots();
+    for (const job of jobs) job.el.querySelector('.results').innerHTML = '';
+    render();
   });
 
-  runBtn.addEventListener('click', async () => {
-    running = true;
-    renderSlots();
-    if (downloadUrl) { URL.revokeObjectURL(downloadUrl); downloadUrl = null; }
+  for (const job of jobs) {
+    const resultsEl = job.el.querySelector('.results');
+    job.el.querySelector('.run-btn').addEventListener('click', async () => {
+      job.running = true;
+      render();
+      for (const url of job.urls || []) URL.revokeObjectURL(url);
+      job.urls = [];
 
-    const card = document.createElement('div');
-    card.className = 'file-card';
-    card.innerHTML = `
-      <div class="file-head"><span class="file-name">${OUTPUT_FILENAME}</span><span class="file-meta">Working…</span></div>
-      <div class="progress">
-        <div class="progress-bar"><div class="progress-fill"></div></div>
-        <span class="progress-pct">0%</span>
-      </div>
-      <div class="progress-stage">Starting…</div>`;
-    resultsEl.innerHTML = '';
-    resultsEl.appendChild(card);
-    const fill = card.querySelector('.progress-fill');
-    const pct = card.querySelector('.progress-pct');
-    const stage = card.querySelector('.progress-stage');
+      const card = document.createElement('div');
+      card.className = 'file-card';
+      card.innerHTML = `
+        <div class="progress">
+          <div class="progress-bar"><div class="progress-fill"></div></div>
+          <span class="progress-pct">0%</span>
+        </div>
+        <div class="progress-stage">Starting…</div>`;
+      resultsEl.innerHTML = '';
+      resultsEl.appendChild(card);
+      const fill = card.querySelector('.progress-fill');
+      const pct = card.querySelector('.progress-pct');
+      const stage = card.querySelector('.progress-stage');
 
-    const logLines = [];
-    let lastPaint = 0;
-    const started = performance.now();
-    try {
-      const result = await runInventoryCleanup(selected, {
-        lastSoldEnabled: lastSoldEnabled.checked,
-        lastSoldCutoff: lastSoldCutoff.value || DEFAULT_LAST_SOLD_CUTOFF,
-      }, {
-        log: (m) => logLines.push(m),
-        progress: (label, fraction) => {
+      const logLines = [];
+      let lastPaint = 0;
+      const started = performance.now();
+      try {
+        const result = await job.run((m) => logLines.push(m), (label, fraction) => {
           const now = performance.now();
           if (now - lastPaint < 100 && fraction < 1) return;
           lastPaint = now;
           fill.style.width = (fraction * 100).toFixed(1) + '%';
           pct.textContent = Math.floor(fraction * 100) + '%';
           stage.textContent = label + '…';
-        },
-      });
+        });
 
-      const blob = new Blob([result.csv], { type: 'text/csv' });
-      downloadUrl = URL.createObjectURL(blob);
-      const seconds = (performance.now() - started) / 1000;
-      card.className = 'file-card done';
-      card.innerHTML = `
-        <div class="file-head"><span class="file-name">${OUTPUT_FILENAME}</span><span class="file-meta">Done in ${seconds.toFixed(0)}s</span></div>
-        <div class="stat-row">
-          <div class="stat">Rows<b>${result.rowCount.toLocaleString()}</b></div>
-          <div class="stat">File size<b>${fmtBytes(blob.size)}</b></div>
-          <div class="stat">Last sold since<b>${lastSoldEnabled.checked ? escapeHtml(lastSoldCutoff.value || DEFAULT_LAST_SOLD_CUTOFF) : 'Not filtered'}</b></div>
-        </div>
-        <a class="download-btn" href="${downloadUrl}" download="${OUTPUT_FILENAME}">Download ${OUTPUT_FILENAME}</a>
-        <details class="log"><summary>Step-by-step log</summary><pre>${escapeHtml(logLines.join('\n'))}</pre></details>`;
-    } catch (err) {
-      console.error(err);
-      card.className = 'file-card error';
-      card.innerHTML = `
-        <div class="file-head"><span class="file-name">${OUTPUT_FILENAME}</span></div>
-        <p class="error-msg">Something went wrong: ${escapeHtml(err.message || err)}</p>`;
-    } finally {
-      running = false;
-      renderSlots();
-    }
-  });
+        const seconds = (performance.now() - started) / 1000;
+        const links = result.outputs.map(({ filename, csv }) => {
+          const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+          job.urls.push(url);
+          return `<a class="download-btn" href="${url}" download="${filename}">Download ${filename}</a>`;
+        }).join('');
+        card.className = 'file-card done';
+        card.innerHTML = `
+          <div class="file-head"><span class="file-name">Ready</span><span class="file-meta">Done in ${seconds < 1 ? '<1' : seconds.toFixed(0)}s</span></div>
+          <div class="stat-row">${result.stats.map(([label, value]) => `<div class="stat">${label}<b>${escapeHtml(value)}</b></div>`).join('')}</div>
+          <div class="downloads">${links}</div>
+          <details class="log"><summary>Step-by-step log</summary><pre>${escapeHtml(logLines.join('\n'))}</pre></details>`;
+      } catch (err) {
+        console.error(err);
+        card.className = 'file-card error';
+        card.innerHTML = `<p class="error-msg">Something went wrong: ${escapeHtml(err.message || err)}</p>`;
+      } finally {
+        job.running = false;
+        render();
+      }
+    });
+  }
 
-  renderSlots();
+  render();
 }
 
 if (typeof document !== 'undefined') initPage();
