@@ -1,0 +1,1255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Inventory Cleaner</title>
+<style>
+  :root {
+    --paper: #F6F4EF;
+    --paper-raised: #FFFFFF;
+    --ink: #23271F;
+    --ink-soft: #565B4E;
+    --line: #D9D5C7;
+    --teal: #1B5E56;
+    --teal-dark: #123F3A;
+    --amber: #B9832E;
+    --amber-soft: #F2E4C8;
+    --red: #A23E2E;
+    --mono: ui-monospace, "SF Mono", "Cascadia Mono", "JetBrains Mono", Consolas, monospace;
+    --sans: ui-sans-serif, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--sans);
+    line-height: 1.5;
+    padding: 48px 24px 96px;
+  }
+
+  .wrap { max-width: 880px; margin: 0 auto; }
+
+  header { margin-bottom: 36px; }
+
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--teal);
+    margin: 0 0 10px;
+  }
+
+  h1 {
+    font-size: 28px;
+    font-weight: 650;
+    margin: 0 0 10px;
+    letter-spacing: -0.01em;
+  }
+
+  .sub {
+    color: var(--ink-soft);
+    font-size: 15px;
+    max-width: 60ch;
+    margin: 0;
+  }
+
+  .panel {
+    background: var(--paper-raised);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 22px 24px;
+    margin-bottom: 20px;
+  }
+
+  details.panel { padding: 0; }
+  details.panel summary {
+    cursor: pointer;
+    padding: 16px 24px;
+    font-weight: 600;
+    font-size: 14px;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: var(--ink);
+  }
+  details.panel summary::-webkit-details-marker { display: none; }
+  details.panel summary::after {
+    content: "+";
+    font-family: var(--mono);
+    color: var(--teal);
+    font-size: 16px;
+  }
+  details.panel[open] summary::after { content: "\2212"; }
+  details.panel .body {
+    padding: 0 24px 20px;
+    font-size: 13.5px;
+    color: var(--ink-soft);
+  }
+  details.panel .body code {
+    font-family: var(--mono);
+    background: var(--amber-soft);
+    padding: 1px 5px;
+    border-radius: 4px;
+    font-size: 12.5px;
+    color: var(--teal-dark);
+  }
+  details.panel ul { margin: 8px 0; padding-left: 20px; }
+
+  .dropzone {
+    border: 2px dashed var(--line);
+    border-radius: 10px;
+    padding: 44px 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background 0.15s ease;
+    background: var(--paper-raised);
+  }
+  .dropzone.hover { border-color: var(--teal); background: #EFF6F4; }
+  .dropzone .icon { width: 40px; height: 40px; margin: 0 auto 14px; color: var(--teal); }
+  .dropzone p { margin: 0; }
+  .dz-title { font-weight: 600; font-size: 15px; margin-bottom: 4px !important; }
+  .dz-sub { color: var(--ink-soft); font-size: 13px; }
+  input[type=file] { display: none; }
+
+  .slots {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    margin-top: 18px;
+  }
+  .slot {
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--paper-raised);
+    padding: 12px 16px;
+    min-width: 0;
+  }
+  .slot.ready { border-color: var(--teal); background: #EFF6F4; }
+  .slot-role {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+  .slot.ready .slot-role { color: var(--teal); }
+  .slot-file {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .slot-file.empty { color: var(--ink-soft); font-weight: 400; }
+  .slot-size { font-family: var(--mono); font-size: 12px; color: var(--ink-soft); }
+
+  .notice {
+    margin-top: 12px;
+    font-size: 13.5px;
+    color: var(--red);
+  }
+  .notice:empty { display: none; }
+
+  .options {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 18px;
+    font-size: 13.5px;
+    color: var(--ink-soft);
+    flex-wrap: wrap;
+  }
+  .options input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--teal); }
+  .options input[type=date] {
+    font-family: var(--mono);
+    font-size: 13px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 4px 8px;
+    background: var(--paper-raised);
+    color: var(--ink);
+  }
+
+  .actions { margin-top: 22px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+
+  .download-btn, .run-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--teal);
+    color: white;
+    border: none;
+    border-radius: 7px;
+    padding: 9px 16px;
+    font-size: 13.5px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    font-family: var(--sans);
+  }
+  .download-btn:hover, .run-btn:hover { background: var(--teal-dark); }
+  .run-btn:disabled { background: var(--line); color: var(--ink-soft); cursor: not-allowed; }
+
+  .clear-btn {
+    background: none;
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    padding: 8px 12px;
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    cursor: pointer;
+    font-family: var(--sans);
+  }
+  .clear-btn:hover { border-color: var(--ink-soft); color: var(--ink); }
+
+  .results { margin-top: 28px; }
+
+  .file-card {
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--paper-raised);
+    padding: 18px 20px;
+    margin-bottom: 12px;
+  }
+  .file-card.error { border-color: #E3B7AC; background: #FCF2EF; }
+  .file-card.done { border-color: var(--teal); background: #EFF6F4; }
+
+  .file-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+  }
+  .file-name { font-family: var(--mono); font-size: 13.5px; font-weight: 600; word-break: break-all; }
+  .file-meta { font-size: 12px; color: var(--ink-soft); font-family: var(--mono); }
+
+  .error-msg { font-size: 13.5px; color: var(--red); margin: 0; }
+
+  .progress { display: flex; align-items: center; gap: 14px; margin-bottom: 8px; }
+  .progress-bar {
+    flex: 1;
+    height: 8px;
+    border-radius: 4px;
+    background: var(--line);
+    overflow: hidden;
+    position: relative;
+  }
+  .progress-fill {
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    background: var(--teal);
+    border-radius: 4px;
+    width: 0%;
+  }
+  .progress-pct {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--teal-dark);
+    min-width: 52px;
+    text-align: right;
+  }
+  .progress-stage { font-size: 13px; color: var(--ink-soft); }
+
+  .stat-row {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .stat { font-family: var(--mono); font-size: 12.5px; color: var(--ink-soft); }
+  .stat b { display: block; font-size: 15px; color: var(--ink); font-weight: 650; }
+
+  .log {
+    margin-top: 14px;
+    font-size: 13px;
+  }
+  .log summary { cursor: pointer; color: var(--teal); font-weight: 600; }
+  .log pre {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--ink-soft);
+    white-space: pre-wrap;
+    word-break: break-word;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 12px 14px;
+    margin: 10px 0 0;
+  }
+
+  footer { text-align: center; color: var(--ink-soft); font-size: 12px; margin-top: 40px; }
+
+  @media (max-width: 560px) {
+    body { padding: 32px 16px 72px; }
+    .slots, .stat-row { grid-template-columns: minmax(0, 1fr); }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <p class="eyebrow">Inventory Cleaner</p>
+    <h1>Build the Sheets inventory file from SwiftPOS exports</h1>
+    <p class="sub">Drop in the four SwiftPOS table exports and download <code style="font-family:var(--mono);font-size:13px">Cleaned_Inventory_For_Sheets.csv</code>. Same rules as the Python cleanup script, but it runs entirely in your browser: nothing to install, and nothing is uploaded anywhere.</p>
+  </header>
+
+  <details class="panel">
+    <summary>What exactly does this do?</summary>
+    <div class="body">
+      <p><b>Needs four CSV files</b>, recognised by their column headers so the filenames don't matter: Products, Prices, Location Stock and Groups. You can drop them one at a time, all at once, or drop the folder they're in.</p>
+      <p><b>Builds one row per item per price level</b>, then:</p>
+      <ul>
+        <li>Keeps only products in the drink group ranges (100&ndash;145, 149&ndash;182, 214&ndash;306, 310&ndash;410) and the mapped venue price levels.</li>
+        <li>Takes each row's cost and last-sold date from that venue's stock locations (location 132 is ignored). Last-sold dates are shared across size variants of the same product, e.g. <code>6089</code> and <code>6089 GLS</code>.</li>
+        <li>Tidies categories into Spirits, Taps, Wine, Packaged and Non-Alc, with Type and Size split out.</li>
+        <li>Removes <code>Spirits 15ml</code>, packs/cartons/kegs from Bar price levels, and pints/schooners/middies/7oz/jugs/30ml pours from Bottle price levels.</li>
+        <li>Removes rows with a $0.00 price, and rows not sold since the cutoff date below.</li>
+      </ul>
+      <p>The full rule set is in the <code>CONFIG</code> section at the top of this page's script. It can be edited in Notepad if the rules change.</p>
+      <p>The Prices and Location Stock exports are large (hundreds of MB). They're read in pieces rather than loaded whole, so expect a minute or two on a typical work PC.</p>
+    </div>
+  </details>
+
+  <div class="dropzone" id="dropzone">
+    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+      <path d="M12 3v12m0 0l-4-4m4 4l4-4" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <p class="dz-title">Drop the four CSV files (or their folder) here, or click to browse</p>
+    <p class="dz-sub">Products, Prices, Location Stock and Groups, in any order, with any filenames</p>
+    <input type="file" id="fileInput" accept=".csv" multiple>
+  </div>
+
+  <div class="slots" id="slots"></div>
+  <p class="notice" id="notice"></p>
+
+  <div class="options">
+    <input type="checkbox" id="lastSoldEnabled" checked>
+    <label for="lastSoldEnabled">Remove items not sold since</label>
+    <input type="date" id="lastSoldCutoff">
+  </div>
+
+  <div class="actions">
+    <button class="run-btn" id="runBtn" disabled>Build inventory file</button>
+    <button class="clear-btn" id="clearBtn">Clear files</button>
+  </div>
+
+  <div class="results" id="results"></div>
+
+  <footer>Runs entirely offline once this page is open. Keep a copy and reuse it each time.</footer>
+</div>
+
+<script>
+// ============================================================
+// CONFIG - edit these if the business rules change
+// (mirrors the CONFIG section of cleanup.py)
+// ============================================================
+
+const OUTPUT_FILENAME = "Cleaned_Inventory_For_Sheets.csv";
+
+// inclusive range helper matching Python's range(lo, hi) - hi is NOT included
+function range(lo, hi) { const out = []; for (let i = lo; i < hi; i++) out.push(i); return out; }
+
+// Only keep Products whose Group Number falls in these ranges (inclusive)
+const GROUP_NUMBER_RANGES = [
+  [100, 145],
+  [149, 182],
+  [214, 306],
+  [310, 410],
+];
+
+// Price Level -> list of Location Numbers whose stock should be SUMMED
+// for that price level. Only price levels listed here are kept in the
+// output - any price level not listed below is dropped entirely.
+const PRICE_LEVEL_LOCATION_GROUPS = {
+  11:  range(1, 5),        // 1-4
+  12:  range(1, 5),
+  21:  range(11, 15),      // 11-14
+  22:  range(11, 15),
+  31:  range(33, 37),      // 33-36
+  32:  range(33, 37),
+  41:  range(41, 43),      // 41-42
+  42:  range(41, 43),
+  51:  range(51, 53),      // 51-52
+  52:  range(51, 53),
+  61:  range(61, 63),      // 61-62
+  62:  range(61, 63),
+  71:  range(72, 75),      // 72-74
+  72:  range(72, 75),
+  81:  range(82, 84),      // 82-83
+  82:  range(82, 84),
+  91:  range(91, 93),      // 91-92
+  92:  range(91, 93),
+  101: range(101, 106),    // 101-105
+  102: range(101, 106),
+  111: range(113, 117),    // 113-116
+  112: range(113, 117),
+  121: [122],              // 122 only
+  122: [122],
+  141: range(141, 143),    // 141-142
+  142: range(141, 143),
+  151: range(151, 154),    // 151-153
+  152: range(151, 154),
+  161: range(161, 163),    // 161-162
+  162: range(161, 163),
+  181: range(171, 174),    // 171-173
+  182: range(171, 174),
+  191: range(401, 405),    // 401-404
+  192: range(401, 405),
+  201: range(181, 185),    // 181-184
+  202: range(181, 185),
+  211: range(302, 305),    // 302-304
+  212: range(302, 305),
+  221: range(191, 195),    // 191-194
+  222: range(191, 195),
+  231: range(211, 215),    // 211-214
+  232: range(211, 215),
+};
+
+// Price Level -> human-readable name, for the Sheets UI export.
+const PRICE_LEVEL_NAMES = {
+  11: "Coach Bottle", 12: "Coach Bar",
+  21: "Lakes Bottle", 22: "Lakes Bar",
+  31: "Aurora Bottle", 32: "Aurora Bar",
+  41: "Madison Bottle", 42: "Madison Bar",
+  51: "MMT Bottle", 52: "MMT Bar",
+  61: "Vic Bottle", 62: "Vic Bar",
+  71: "Mortdale Bottle", 72: "Mortdale Bar",
+  81: "Campsie Bottle", 82: "Campsie Bar",
+  91: "Meridian Bottle", 92: "Meridian Bar",
+  101: "Commercial Bottle", 102: "Commercial Bar",
+  111: "Tollgate Bottle", 112: "Tollgate Bar",
+  121: "Bradbury Bottle", 122: "Bradbury Bar",
+  141: "Canterbury Bottle", 142: "Canterbury Bar",
+  151: "Monkey Bottle", 152: "Monkey Bar",
+  161: "Kingsgrove Bottle", 162: "Kingsgrove Bar",
+  181: "RoyalEx Bottle", 182: "RoyalEx Bar",
+  191: "Premier Bottle", 192: "Premier Bar",
+  201: "Penshurst Bottle", 202: "Penshurst Bar",
+  211: "LnO Bottle", 212: "LnO Bar",
+  221: "Republic Bottle", 222: "Republic Bar",
+  231: "Regent Bottle", 232: "Regent Bar",
+};
+
+// Row is deleted if its PriceLevel is a Bar price level AND (its Inventory_Code
+// contains any of these codes, or its Description contains any of these words) -
+// not case sensitive.
+const BAR_EXCLUDE_CODE_SUBSTRINGS = ["PK", "CTN"];
+const BAR_EXCLUDE_DESCRIPTION_SUBSTRINGS = ["KEG"];
+
+// Row is deleted if its PriceLevel is a Bottle price level AND its Inventory_Code
+// contains any of these codes - not case sensitive.
+const BOTTLE_EXCLUDE_CODE_SUBSTRINGS = ["PINT", "SCH", "MID", "7OZ", "JUG", "30ML"];
+
+// Row is deleted if its Group_Description (raw Category) is in this list - not
+// case sensitive.
+const EXCLUDE_CATEGORIES = ["Spirits 15ml"];
+
+// Rows whose Category matches one of these patterns get that serve size split
+// out into Size, and Category rewritten to the simpler name. Whole-word, not
+// case sensitive - e.g. "Sch" matches "Bulk Sch Full Str" but not "Schnapps".
+// Checked in order, first match wins.
+const CATEGORY_SIZE_RULES = [
+  [/\bPint\b/i, "Pint", "Taps"],
+  [/\bSch\b/i, "Schooner", "Taps"],
+  [/\bMiddy\b/i, "Middy", "Taps"],
+  [/\bJug\b/i, "Jug", "Taps"],
+  [/\bBulk Other\b/i, "Other", "Taps"],
+  [/\bSpirits 30ml\b/i, "30mL", "Spirits"],
+];
+
+// Rows whose Category matches one of these patterns get that spirit type split
+// out into Type, and Category rewritten to "Spirits". First match wins.
+const CATEGORY_TYPE_RULES = [
+  [/\bVodka\b/i, "Vodka", "Spirits"],
+  [/\bGin\b/i, "Gin", "Spirits"],
+  [/\bTequila\b/i, "Tequila", "Spirits"],
+  [/\bRum Dark\b/i, "Rum & Brandy", "Spirits"],
+  [/\bRum Light\b/i, "Rum & Brandy", "Spirits"],
+  [/\bBrandy\b/i, "Rum & Brandy", "Spirits"],
+  [/\bCognac\b/i, "Rum & Brandy", "Spirits"],
+  [/\bBourbon\b/i, "Whiskey", "Spirits"],
+  [/\bScotch\b/i, "Whiskey", "Spirits"],
+  [/\bWhiskey\b/i, "Whiskey", "Spirits"],
+  [/\bLiqueurs\b/i, "Liqueurs", "Spirits"],
+  [/\bApertifs\b/i, "Liqueurs", "Spirits"],
+  [/\bSambuca\b/i, "Liqueurs", "Spirits"],
+  [/\bSchnapps\b/i, "Liqueurs", "Spirits"],
+  [/\bOuzo\b/i, "Liqueurs", "Spirits"],
+  [/\bVermouth\b/i, "Liqueurs", "Spirits"],
+];
+
+// For rows already Category "Spirits" but still without a Type (mainly 30ml
+// pours), match against the Description instead, with extra spelling variants.
+// First match wins.
+const DESCRIPTION_TYPE_RULES = [
+  [/\bVodka\b/i, "Vodka"],
+  [/\bGin\b/i, "Gin"],
+  [/\bTequila\b/i, "Tequila"],
+  [/\bRum\b/i, "Rum & Brandy"],
+  [/\bBrandy\b/i, "Rum & Brandy"],
+  [/\bCognac\b/i, "Rum & Brandy"],
+  [/\bBourbon\b/i, "Whiskey"],
+  [/\bScotch\b/i, "Whiskey"],
+  [/\bWhiske?y\b/i, "Whiskey"],
+  [/\bLiqueurs?\b/i, "Liqueurs"],
+  [/\bLiquors?\b/i, "Liqueurs"],
+  [/\bLiquore\b/i, "Liqueurs"],
+  [/\bAperitifs?\b/i, "Liqueurs"],
+  [/\bApertifs?\b/i, "Liqueurs"],
+  [/\bSambuca\b/i, "Liqueurs"],
+  [/\bSchnapps\b/i, "Liqueurs"],
+  [/\bOuzo\b/i, "Liqueurs"],
+];
+
+// Rows whose Category matches one of these patterns get this Size - Category
+// itself is left unchanged. Every rule is applied, so a later match overrides
+// an earlier one.
+const SIZE_ONLY_RULES = [
+  [/\bSingle\b/i, "Single"],
+  [/\bSgl\b/i, "Single"],
+  [/\bPacks?\b/i, "Pack"],
+  [/\bDozen\b/i, "Pack"],
+  [/\bCarton\b/i, "Pack"],
+  [/\d+Pk\b/i, "Pack"],
+];
+
+// Rows whose Category matches one of these patterns get that Type split out and
+// Category rewritten to "Packaged". "Full" & "Beer" (both words, any order) is
+// handled separately below and sets Type "Beer".
+const PACKAGED_TYPE_RULES = [
+  [/\bMidstrength Beer\b/i, "Mid-Strength Beer"],
+  [/\bCider\b/i, "Cider"],
+  [/\bRTD\b/i, "RTD"],
+  [/\bLight Beer\b/i, "Light Beer"],
+];
+
+// Rows whose Category matches one of these patterns get that Type split out and
+// Category rewritten to "Non-Alc".
+const NON_ALC_TYPE_RULES = [
+  [/\bWater\b/i, "Water"],
+  [/\bSoft Drink\b/i, "Soft Drink"],
+  [/\bPostmix\b/i, "Soft Drink"],
+  [/\bJuice\b/i, "Juice"],
+];
+
+// Locations to exclude entirely from all stock calculations
+const EXCLUDED_LOCATIONS = [132];
+
+// Default for the "Remove items not sold since" option on the page. Rows are
+// deleted if their most-recent Last_Sold date (across the price level's mapped
+// locations) is before this date, or missing entirely.
+const DEFAULT_LAST_SOLD_CUTOFF = "2026-01-01";
+
+// Set to false to stop pooling Last_Sold across size variants (each
+// Inventory_Code then only counts as recently sold under its own exact code).
+const ENABLE_SIZE_FAMILY_LAST_SOLD_POOLING = true;
+
+// ============================================================
+// END OF CONFIG
+// ============================================================
+
+const BAR_PRICE_LEVELS = new Set(Object.entries(PRICE_LEVEL_NAMES).filter(([, n]) => n.endsWith("Bar")).map(([l]) => Number(l)));
+const BOTTLE_PRICE_LEVELS = new Set(Object.entries(PRICE_LEVEL_NAMES).filter(([, n]) => n.endsWith("Bottle")).map(([l]) => Number(l)));
+
+// Columns that uniquely identify each source file, used to figure out which
+// dropped file is which regardless of its filename.
+const ROLES = {
+  products:      { label: "Products",       required: ["Product_Group", "Inventory_Code", "Description"] },
+  prices:        { label: "Prices",         required: ["ProductCode", "PriceLevel", "Price"] },
+  locationStock: { label: "Location Stock", required: ["Location_Number", "Inventory_Code", "Stock"] },
+  groups:        { label: "Groups",         required: ["Group_Number", "Group_Description"] },
+};
+
+const OUTPUT_COLUMNS = [
+  "KEY", "Description", "PLU", "PLN", "PriceLevel_Name", "Category", "Type", "Size",
+  "Supplier", "Current Cost", "Guiding Cost", "Current Price", "Current GP",
+  "Suggested Price", "New Price", "New GP",
+];
+
+// ─── VALUE HELPERS (match pandas read_csv / to_numeric behaviour) ────────────
+
+// Strings pandas reads as missing by default
+const NA_VALUES = new Set(['', '#N/A', '#N/A N/A', '#NA', '-1.#IND', '-1.#QNAN', '-NaN', '-nan',
+  '1.#IND', '1.#QNAN', '<NA>', 'N/A', 'NA', 'NULL', 'NaN', 'None', 'n/a', 'nan', 'null']);
+
+function na(v) { return v === undefined || NA_VALUES.has(v) ? null : v; }
+
+function toNum(v) {
+  if (v === null || v === undefined) return NaN;
+  const s = v.trim();
+  return s === '' ? NaN : Number(s);
+}
+
+// Last_Sold dates come as ISO strings ("2026-03-09T22:54:30.000"), which compare
+// correctly as plain strings. Anything else is converted to ISO first.
+function toDateKey(v) {
+  if (v === null) return null;
+  const s = v.trim();
+  if (/^\d{4}-\d{2}-\d{2}([ T]|$)/.test(s)) return s.replace(' ', 'T');
+  const t = Date.parse(s);
+  return Number.isNaN(t) ? null : new Date(t).toISOString();
+}
+
+// Format a number the way Python/pandas writes floats to CSV (4.5 -> "4.5", 12 -> "12.0")
+function pyFloat(x) {
+  if (x === null || x === undefined || Number.isNaN(x)) return '';
+  if (x === Infinity) return 'inf';
+  if (x === -Infinity) return '-inf';
+  if (x === 0) return Object.is(x, -0) ? '-0.0' : '0.0';
+  const ax = Math.abs(x);
+  if (ax >= 1e16 || ax < 1e-4) {
+    const [m, e] = x.toExponential().split('e');
+    const sign = e[0] === '-' ? '-' : '+';
+    const digits = e.replace(/^[+-]/, '').padStart(2, '0');
+    return `${m}e${sign}${digits}`;
+  }
+  return Number.isInteger(x) ? String(x) + '.0' : String(x);
+}
+
+function csvField(v) {
+  if (v === null || v === undefined) return '';
+  v = String(v);
+  return /[",\r\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v;
+}
+
+function pyList(arr) { return '[' + arr.map(s => `'${s}'`).join(', ') + ']'; }
+
+function cmpStr(a, b) {
+  if (a === b) return 0;
+  if (a === null) return 1;   // missing values sort last, like pandas
+  if (b === null) return -1;
+  return a < b ? -1 : 1;
+}
+
+// ─── CSV READING ─────────────────────────────────────────────────────────────
+
+// Full parser for one record: quoted fields, embedded commas/newlines, "" escapes
+function parseRecord(line) {
+  const out = [];
+  let field = '', inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i];
+    if (inQuotes) {
+      if (c === '"') {
+        if (line[i + 1] === '"') { field += '"'; i++; }
+        else inQuotes = false;
+      } else field += c;
+    } else if (c === '"') inQuotes = true;
+    else if (c === ',') { out.push(field); field = ''; }
+    else field += c;
+  }
+  out.push(field);
+  return out;
+}
+
+function hasOddQuotes(line) {
+  let n = 0, i = -1;
+  while ((i = line.indexOf('"', i + 1)) !== -1) n++;
+  return (n & 1) === 1;
+}
+
+// Pull the wanted columns out of one record. Fast path splits on commas and
+// strips plain surrounding quotes; anything trickier (a comma or quote inside a
+// field) falls back to the full parser.
+function extractFields(line, idx, maxIdx) {
+  const parts = line.split(',', maxIdx + 1);
+  for (let k = 0; k < parts.length; k++) {
+    const p = parts[k];
+    if (p.indexOf('"') === -1) continue;
+    if (p.length >= 2 && p.charCodeAt(0) === 34 && p.indexOf('"', 1) === p.length - 1) {
+      parts[k] = p.slice(1, -1);
+      continue;
+    }
+    const full = parseRecord(line);
+    return idx.map(i => full[i]);
+  }
+  return idx.map(i => parts[i]);
+}
+
+// Read just the header row of a file
+async function readHeader(file) {
+  const text = (await file.slice(0, 256 * 1024).text()).replace(/^﻿/, '');
+  let end = 0, inQuotes = false;
+  for (; end < text.length; end++) {
+    const c = text[end];
+    if (c === '"') inQuotes = !inQuotes;
+    else if ((c === '\n' || c === '\r') && !inQuotes) break;
+  }
+  return parseRecord(text.slice(0, end));
+}
+
+// Stream a CSV file in chunks, calling onRow(values) with the wanted columns
+// (raw strings, unquoted) for every data row. Never holds the whole file in memory.
+async function streamCSV(file, wanted, onRow, onProgress) {
+  const reader = file.stream().getReader();
+  const decoder = new TextDecoder('utf-8');
+  let header = null, idx = null, maxIdx = 0;
+  let carry = '', pending = null, bytes = 0;
+
+  const handleLine = (line) => {
+    if (line.charCodeAt(line.length - 1) === 13) line = line.slice(0, -1);
+    if (pending !== null) { line = pending + '\n' + line; pending = null; }
+    if (line.indexOf('"') !== -1 && hasOddQuotes(line)) { pending = line; return; }
+    if (line === '') return;
+    if (header === null) {
+      header = parseRecord(line.replace(/^﻿/, ''));
+      idx = wanted.map(col => {
+        const i = header.indexOf(col);
+        if (i === -1) throw new Error(`${file.name} is missing the "${col}" column.`);
+        return i;
+      });
+      maxIdx = Math.max(...idx);
+      return;
+    }
+    onRow(extractFields(line, idx, maxIdx));
+  };
+
+  for (;;) {
+    const { done, value } = await reader.read();
+    let text;
+    if (done) text = carry + decoder.decode();
+    else { bytes += value.byteLength; text = carry + decoder.decode(value, { stream: true }); }
+    let start = 0, nl;
+    while ((nl = text.indexOf('\n', start)) !== -1) {
+      handleLine(text.slice(start, nl));
+      start = nl + 1;
+    }
+    if (done) {
+      if (start < text.length) handleLine(text.slice(start));
+      // a quote that never closed: keep whatever the record holds
+      if (pending !== null && header !== null) { const full = parseRecord(pending); pending = null; onRow(idx.map(i => full[i])); }
+      break;
+    }
+    carry = text.slice(start);
+    if (onProgress) onProgress(bytes);
+  }
+  if (onProgress) onProgress(file.size);
+  if (header === null) throw new Error(`${file.name} appears to be empty.`);
+}
+
+// ─── FILE IDENTIFICATION ─────────────────────────────────────────────────────
+
+async function identifyRole(file) {
+  const header = new Set(await readHeader(file));
+  const matches = Object.keys(ROLES).filter(role => ROLES[role].required.every(c => header.has(c)));
+  if (matches.length !== 1) {
+    throw new Error(`Couldn't tell which export "${file.name}" is` +
+      (matches.length ? ` (it looks like more than one: ${matches.map(r => ROLES[r].label).join(', ')}).` : '. Its columns don\'t match any of the four expected files.'));
+  }
+  return matches[0];
+}
+
+// ─── SIZE FAMILIES ───────────────────────────────────────────────────────────
+
+// Group Inventory_Codes that are size variants of the same product (same leading
+// numeric code, e.g. "6089" / "6089 GLS" / "6089 250ML") so their Last_Sold dates
+// can be pooled. Only pools codes whose Descriptions agree (same first word),
+// because leading numbers get recycled across unrelated products.
+// Returns Map Inventory_Code -> pooling key.
+function computeSizeFamilyKeys(products) {
+  const families = new Map();
+  for (const p of products) {
+    if (p.code === null) continue;
+    const base = p.code.split(' ')[0];
+    if (!/^\d+$/.test(base)) continue;
+    const d = p.desc === null ? '' : p.desc;
+    const firstWord = d.trim() ? d.trim().split(/\s+/)[0].toUpperCase() : '';
+    let f = families.get(base);
+    if (!f) families.set(base, f = { count: 0, words: new Set(), codes: [] });
+    f.count++;
+    f.words.add(firstWord);
+    f.codes.push(p.code);
+  }
+  const keyMap = new Map();
+  for (const [base, f] of families) {
+    if (f.count > 1 && f.words.size === 1 && !f.words.has('')) {
+      for (const code of f.codes) keyMap.set(code, base);
+    }
+  }
+  return keyMap;
+}
+
+// ─── MAIN CLEANUP ────────────────────────────────────────────────────────────
+
+// files: { products, prices, locationStock, groups } (File/Blob objects)
+// options: { lastSoldEnabled, lastSoldCutoff }
+// hooks: { log(message), progress(stageLabel, fraction) }
+async function runInventoryCleanup(files, options, hooks = {}) {
+  const log = hooks.log || (() => {});
+  // Messages are collected and emitted at the end, in the same order cleanup.py prints them
+  const messages = [];
+  const say = (m) => messages.push(m);
+  const totalBytes = files.groups.size + files.products.size + files.locationStock.size + files.prices.size;
+  let doneBytes = 0;
+  const progressFor = (label) => (bytes) => {
+    if (hooks.progress) hooks.progress(label, Math.min(1, (doneBytes + bytes) / totalBytes));
+  };
+  const finishFile = (file) => { doneBytes += file.size; };
+
+  // ---------- Load Groups (small) ----------
+  const groupsByNum = new Map();
+  await streamCSV(files.groups, ["Group_Number", "Group_Description"], ([num, desc]) => {
+    const n = toNum(na(num));
+    if (Number.isNaN(n)) return;
+    if (!groupsByNum.has(n)) groupsByNum.set(n, []);
+    groupsByNum.get(n).push(na(desc));
+  }, progressFor("Reading Groups"));
+  finishFile(files.groups);
+
+  // ---------- Load Products and apply Step 1 (group-range filter) ----------
+  const products = [];
+  await streamCSV(files.products, ["Inventory_Code", "Description", "Product_Group", "PLU_Number"], ([code, desc, group, plu]) => {
+    products.push({ code: na(code), desc: na(desc), group: na(group), groupNum: toNum(na(group)), plu: na(plu) });
+  }, progressFor("Reading Products"));
+  finishFile(files.products);
+
+  const productsF = products.filter(p => !Number.isNaN(p.groupNum) &&
+    GROUP_NUMBER_RANGES.some(([lo, hi]) => lo <= p.groupNum && p.groupNum <= hi));
+  say(`Products after group-range filter: ${productsF.length} / ${products.length}`);
+  const pricesMessageAt = messages.length;
+  say('');  // "Prices after price-level filter" - filled in once Prices has been read
+
+  const productsFByCode = new Map();
+  for (const p of productsF) {
+    if (!productsFByCode.has(p.code)) productsFByCode.set(p.code, []);
+    productsFByCode.get(p.code).push(p);
+  }
+
+  // ---------- Size families for Last_Sold pooling ----------
+  let familyKeys = new Map();
+  if (ENABLE_SIZE_FAMILY_LAST_SOLD_POOLING) {
+    familyKeys = computeSizeFamilyKeys(products);
+    say(`Identified ${new Set(familyKeys.values()).size} size-variant families covering ` +
+        `${familyKeys.size} Inventory_Codes for Last_Sold pooling.`);
+  }
+  const familyKey = code => (familyKeys.has(code) ? familyKeys.get(code) : code);
+
+  // ---------- Step 3: per price level, sum stock / first cost / latest Last_Sold ----------
+  // Only codes (and pooling keys) that can appear in the output are tracked.
+  const relevantCodes = new Set(productsF.map(p => p.code));
+  const relevantKeys = new Set(productsF.map(p => familyKey(p.code)));
+  const excluded = new Set(EXCLUDED_LOCATIONS);
+  const levelsByLocation = new Map();
+  const stockByLevel = new Map(), costByLevel = new Map(), lastSoldByLevel = new Map();
+  for (const [lvl, locs] of Object.entries(PRICE_LEVEL_LOCATION_GROUPS)) {
+    const level = Number(lvl);
+    stockByLevel.set(level, new Map());
+    costByLevel.set(level, new Map());
+    lastSoldByLevel.set(level, new Map());
+    for (const loc of locs) {
+      if (!levelsByLocation.has(loc)) levelsByLocation.set(loc, []);
+      levelsByLocation.get(loc).push(level);
+    }
+  }
+
+  await streamCSV(files.locationStock, ["Location_Number", "Inventory_Code", "Stock", "LocationCost", "Last_Sold"],
+    ([locStr, codeStr, stockStr, costStr, soldStr]) => {
+      const loc = toNum(na(locStr));
+      if (excluded.has(loc)) return;
+      const levels = levelsByLocation.get(loc);
+      if (!levels) return;
+      const code = na(codeStr);
+      if (code === null) return;
+      const isRelevant = relevantCodes.has(code);
+      const key = familyKey(code);
+      const keyRelevant = relevantKeys.has(key);
+      if (!isRelevant && !keyRelevant) return;
+      let stock = toNum(na(stockStr));
+      if (Number.isNaN(stock)) stock = 0;
+      const cost = toNum(na(costStr));
+      const sold = toDateKey(na(soldStr));
+      for (const level of levels) {
+        if (isRelevant) {
+          // Kahan-compensated sum, as pandas uses for groupby sums
+          const sums = stockByLevel.get(level);
+          const s = sums.get(code);
+          if (!s) sums.set(code, { sum: stock, comp: 0 });
+          else { const y = stock - s.comp; const t = s.sum + y; s.comp = (t - s.sum) - y; s.sum = t; }
+          // LocationCost: first value present across the mapped locations
+          const costs = costByLevel.get(level);
+          if (!costs.has(code) || (Number.isNaN(costs.get(code)) && !Number.isNaN(cost))) costs.set(code, cost);
+        }
+        if (keyRelevant && sold !== null) {
+          const dates = lastSoldByLevel.get(level);
+          const prev = dates.get(key);
+          if (prev === undefined || sold > prev) dates.set(key, sold);
+        }
+      }
+    }, progressFor("Reading Location Stock"));
+  finishFile(files.locationStock);
+  say("Pre-computed location-group stock sums, costs, and last-sold dates for all mapped price levels.");
+
+  // ---------- Steps 2 and 4-7: stream Prices, join, then apply every rule row by row ----------
+  // Every rule only looks at its own row, so each joined row is classified and
+  // filtered as soon as it's built - only survivors are kept in memory.
+  const validLevels = new Set(Object.keys(PRICE_LEVEL_LOCATION_GROUPS).map(Number));
+  const excludeCategoriesUpper = new Set(EXCLUDE_CATEGORIES.map(c => c.toUpperCase()));
+  const cutoff = options.lastSoldCutoff || DEFAULT_LAST_SOLD_CUTOFF;
+  const c = {
+    prices: 0, pricesF: 0, merged: 0, excludedCat: 0, afterExcl: 0, sizeSplit: 0, typeSplit: 0,
+    spiritsMissingBefore: 0, spiritsMissingAfter: 0, bottle: 0, thirty: 0,
+    wineBottle: 0, wineGlass: 0, wineCask: 0, sizeOnly: 0, packaged: 0, nonAlc: 0,
+    barRemoved: 0, bottleRemoved: 0, noStockNoPrice: 0, zeroPrice: 0, lastSold: 0,
+  };
+  let remaining = 0;
+  const survivors = [];
+  const has = (s, re) => s !== null && re.test(s);
+
+  const processRow = (p, gd, levelStr, level, priceStr, priceNum) => {
+    const code = p.code, desc = p.desc;
+
+    // Step 6a: delete rows in excluded categories
+    if (gd !== null && excludeCategoriesUpper.has(gd.toUpperCase())) { c.excludedCat++; return; }
+    c.afterExcl++;
+
+    // Step 6a2: split Size out of Category
+    let size = null;
+    for (const [re, value, newCat] of CATEGORY_SIZE_RULES) {
+      if (has(gd, re)) { size = value; gd = newCat; break; }
+    }
+    if (size !== null) c.sizeSplit++;
+
+    // Step 6a3: split Type out of Category into Spirits sub-types
+    let type = null;
+    for (const [re, value, newCat] of CATEGORY_TYPE_RULES) {
+      if (has(gd, re)) { type = value; gd = newCat; break; }
+    }
+    if (type !== null) c.typeSplit++;
+
+    // Step 6a4: fall back to Description for Spirits rows still missing a Type
+    if (gd === "Spirits" && type === null) {
+      c.spiritsMissingBefore++;
+      for (const [re, value] of DESCRIPTION_TYPE_RULES) {
+        if (has(desc, re)) { type = value; break; }
+      }
+      if (type === null) c.spiritsMissingAfter++;
+    }
+
+    // Step 6a5: default remaining Spirits rows without a Size to Bottle (or 30mL)
+    if (gd === "Spirits" && size === null) {
+      if (has(desc, /30ML/i)) { size = "30mL"; c.thirty++; }
+      else { size = "Bottle"; c.bottle++; }
+    }
+
+    // Step 6a6: fold Wine Bottle / Wine Glass / Wine Cask categories into Wine
+    const isWine = has(gd, /\bWine\b/i);
+    const isWineBottle = isWine && /\bBottle\b/i.test(gd);
+    const isWineGlass = isWine && /\bGlass\b/i.test(gd);
+    const isWineCask = isWine && /\bCask\b/i.test(gd);
+    if (isWineBottle) size = "Bottle";
+    const has150 = has(desc, /150ML/i), has250 = has(desc, /250ML/i);
+    if (isWineGlass && has150) size = "150mL";
+    if (isWineGlass && !has150 && has250) size = "250mL";
+    if (isWineCask) size = "Cask";
+    if (isWineBottle || isWineGlass || isWineCask) gd = "Wine";
+    if (isWineBottle) c.wineBottle++;
+    if (isWineGlass) c.wineGlass++;
+    if (isWineCask) c.wineCask++;
+
+    // Step 6a7: set Size for Single/Pack categories (Category left unchanged)
+    let sizeMatched = false;
+    for (const [re, value] of SIZE_ONLY_RULES) {
+      if (has(gd, re)) { size = value; sizeMatched = true; }
+    }
+    if (sizeMatched) c.sizeOnly++;
+
+    // Step 6a8: fold Cider/RTD/Light Beer/Midstrength/Full Beer into Packaged
+    let isPackaged = false;
+    for (const [re, value] of PACKAGED_TYPE_RULES) {
+      if (has(gd, re)) { type = value; isPackaged = true; }
+    }
+    if (has(gd, /\bFull\b/i) && /\bBeer\b/i.test(gd)) { type = "Beer"; isPackaged = true; }
+    if (isPackaged) { gd = "Packaged"; c.packaged++; }
+
+    // Step 6a9: fold Water/Soft Drink/Postmix/Juice into Non-Alc
+    let isNonAlc = false;
+    for (const [re, value] of NON_ALC_TYPE_RULES) {
+      if (has(gd, re)) { type = value; isNonAlc = true; }
+    }
+    if (isNonAlc) { gd = "Non-Alc"; c.nonAlc++; }
+
+    // Step 6b: delete PK/CTN/KEG items from Bar price levels
+    const codeUpper = code === null ? null : code.toUpperCase();
+    const descUpper = desc === null ? null : desc.toUpperCase();
+    if (BAR_PRICE_LEVELS.has(level) &&
+        ((codeUpper !== null && BAR_EXCLUDE_CODE_SUBSTRINGS.some(s => codeUpper.includes(s))) ||
+         (descUpper !== null && BAR_EXCLUDE_DESCRIPTION_SUBSTRINGS.some(s => descUpper.includes(s))))) {
+      c.barRemoved++; return;
+    }
+
+    // Step 6c: delete PINT/SCH/MID/7OZ/JUG/30ML items from Bottle price levels
+    if (BOTTLE_PRICE_LEVELS.has(level) && codeUpper !== null &&
+        BOTTLE_EXCLUDE_CODE_SUBSTRINGS.some(s => codeUpper.includes(s))) {
+      c.bottleRemoved++; return;
+    }
+
+    // Step 5 lookups: stock, cost and last-sold for this price level
+    const stockEntry = stockByLevel.get(level).get(code);
+    const stock = stockEntry ? stockEntry.sum : 0;
+    const costs = costByLevel.get(level);
+    const cost = costs.has(code) ? costs.get(code) : null;
+    const lastSold = lastSoldByLevel.get(level).get(familyKey(code));
+    const price = Number.isNaN(priceNum) ? 0 : priceNum;
+
+    // Step 7: delete rows with no stock AND no price
+    if ((Number.isNaN(stock) ? 0 : stock) === 0 && price === 0) { c.noStockNoPrice++; return; }
+
+    // Step 7b: delete rows with a $0.00 price
+    if (price === 0) { c.zeroPrice++; return; }
+
+    // Step 7c: delete rows with no/old Last_Sold date
+    if (options.lastSoldEnabled && (lastSold === undefined || lastSold < cutoff)) { c.lastSold++; return; }
+
+    survivors.push({ code, desc, plu: p.plu, gd, type, size, levelStr, level, priceStr, cost });
+  };
+
+  await streamCSV(files.prices, ["PriceLevel", "ProductCode", "Price"], ([levelRaw, codeRaw, priceRaw]) => {
+    c.prices++;
+    const levelStr = na(levelRaw);
+    const level = toNum(levelStr);
+    if (!validLevels.has(level)) return;
+    c.pricesF++;
+    const matches = productsFByCode.get(na(codeRaw));
+    if (!matches) return;
+    const priceStr = na(priceRaw);
+    const priceNum = toNum(priceStr);
+    for (const p of matches) {
+      c.merged++;
+      const gds = groupsByNum.get(p.groupNum) || [null];
+      for (const gd of gds) processRow(p, gd, levelStr, level, priceStr, priceNum);
+    }
+  }, progressFor("Reading Prices"));
+  finishFile(files.prices);
+
+  messages[pricesMessageAt] = `Prices after price-level filter: ${c.pricesF} / ${c.prices}`;
+  say(`Products x Prices merged rows: ${c.merged}`);
+  remaining = c.afterExcl;
+  say(`Removed ${c.excludedCat} rows in excluded categories ${pyList(EXCLUDE_CATEGORIES)}. Remaining: ${remaining}`);
+  say(`Split Size out of Category for ${c.sizeSplit} rows.`);
+  say(`Split Type out of Category into Spirits sub-types for ${c.typeSplit} rows.`);
+  say(`Filled Type from Description for ${c.spiritsMissingBefore - c.spiritsMissingAfter} Spirits rows ` +
+      `(${c.spiritsMissingAfter} still unclassified - brand names with no generic type word).`);
+  say(`Set Size='Bottle' for ${c.bottle} Spirits rows without "30ML" in the Description, ` +
+      `and Size='30mL' for ${c.thirty} rows where Category said full bottle but Description says 30ML.`);
+  say(`Folded ${c.wineBottle} Wine Bottle, ${c.wineGlass} Wine Glass, and ${c.wineCask} Wine Cask rows into Category 'Wine'.`);
+  say(`Set Size (Single/Pack) for ${c.sizeOnly} rows, Category left unchanged.`);
+  say(`Folded ${c.packaged} Cider/RTD/Light Beer/Midstrength Beer/Full Beer rows into Category 'Packaged'.`);
+  say(`Folded ${c.nonAlc} Water/Soft Drink/Postmix/Juice rows into Category 'Non-Alc'.`);
+  remaining -= c.barRemoved;
+  say(`Removed ${c.barRemoved} PK/CTN/KEG rows from Bar price levels. Remaining: ${remaining}`);
+  remaining -= c.bottleRemoved;
+  say(`Removed ${c.bottleRemoved} PINT/SCH/MID/7OZ/JUG/30ML rows from Bottle price levels. Remaining: ${remaining}`);
+  remaining -= c.noStockNoPrice;
+  say(`Removed ${c.noStockNoPrice} rows with no stock and no price. Remaining: ${remaining}`);
+  remaining -= c.zeroPrice;
+  say(`Removed ${c.zeroPrice} rows with $0.00 price. Remaining: ${remaining}`);
+  if (options.lastSoldEnabled) {
+    remaining -= c.lastSold;
+    say(`Removed ${c.lastSold} rows with no Last_Sold date or before ${cutoff}. Remaining: ${remaining}`);
+  } else {
+    say("Last_Sold filter disabled.");
+  }
+
+  // ---------- Steps 8-9: sort and build the Sheets layout ----------
+  if (hooks.progress) hooks.progress("Writing file", 1);
+  survivors.sort((a, b) => cmpStr(a.code, b.code) || cmpStr(a.levelStr, b.levelStr));
+
+  const lines = [OUTPUT_COLUMNS.join(',')];
+  for (const r of survivors) {
+    lines.push([
+      (r.plu === null ? 'nan' : r.plu) + '-' + r.levelStr,
+      r.desc,
+      r.plu,
+      Number.isInteger(r.level) ? String(r.level) : '',
+      PRICE_LEVEL_NAMES[r.level] ?? null,
+      r.gd,
+      r.type,
+      r.size,
+      null,
+      pyFloat(r.cost),
+      null,
+      r.priceStr,
+      null, null, null, null,
+    ].map(csvField).join(','));
+  }
+  say(`Wrote ${survivors.length} rows.`);
+  messages.forEach(log);
+  return { csv: lines.join('\n') + '\n', rowCount: survivors.length };
+}
+
+// ─── PAGE ────────────────────────────────────────────────────────────────────
+
+function fmtBytes(n) {
+  if (n < 1024) return n + ' B';
+  if (n < 1024 * 1024) return (n / 1024).toFixed(1) + ' KB';
+  return (n / 1024 / 1024).toFixed(1) + ' MB';
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
+}
+
+function initPage() {
+  const dropzone = document.getElementById('dropzone');
+  const fileInput = document.getElementById('fileInput');
+  const slotsEl = document.getElementById('slots');
+  const noticeEl = document.getElementById('notice');
+  const runBtn = document.getElementById('runBtn');
+  const clearBtn = document.getElementById('clearBtn');
+  const resultsEl = document.getElementById('results');
+  const lastSoldEnabled = document.getElementById('lastSoldEnabled');
+  const lastSoldCutoff = document.getElementById('lastSoldCutoff');
+
+  lastSoldCutoff.value = DEFAULT_LAST_SOLD_CUTOFF;
+  lastSoldEnabled.addEventListener('change', () => { lastSoldCutoff.disabled = !lastSoldEnabled.checked; });
+
+  const selected = {};
+  let running = false;
+  let downloadUrl = null;
+
+  function renderSlots() {
+    slotsEl.innerHTML = Object.keys(ROLES).map(role => {
+      const f = selected[role];
+      return `<div class="slot${f ? ' ready' : ''}">
+        <div class="slot-role">${ROLES[role].label}</div>
+        <div class="slot-file${f ? '' : ' empty'}">${f ? escapeHtml(f.name) : 'Not added yet'}</div>
+        <div class="slot-size">${f ? fmtBytes(f.size) : '&nbsp;'}</div>
+      </div>`;
+    }).join('');
+    runBtn.disabled = running || Object.keys(ROLES).some(role => !selected[role]);
+  }
+
+  async function addFiles(files) {
+    const problems = [];
+    for (const file of files) {
+      if (!file.name.toLowerCase().endsWith('.csv')) continue;
+      try {
+        selected[await identifyRole(file)] = file;
+      } catch (err) {
+        problems.push(err.message);
+      }
+    }
+    noticeEl.textContent = problems.join(' ');
+    renderSlots();
+  }
+
+  // Expand dropped folders into the CSV files directly inside them
+  async function filesFromDrop(dataTransfer) {
+    const entries = [...dataTransfer.items].map(item => item.webkitGetAsEntry && item.webkitGetAsEntry()).filter(Boolean);
+    if (!entries.length) return [...dataTransfer.files];
+    const out = [];
+    for (const entry of entries) {
+      if (entry.isFile) out.push(await new Promise((res, rej) => entry.file(res, rej)));
+      else if (entry.isDirectory) {
+        const reader = entry.createReader();
+        for (;;) {
+          const batch = await new Promise((res, rej) => reader.readEntries(res, rej));
+          if (!batch.length) break;
+          for (const e of batch) if (e.isFile) out.push(await new Promise((res, rej) => e.file(res, rej)));
+        }
+      }
+    }
+    return out;
+  }
+
+  dropzone.addEventListener('click', () => fileInput.click());
+  dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.classList.add('hover'); });
+  dropzone.addEventListener('dragleave', () => dropzone.classList.remove('hover'));
+  dropzone.addEventListener('drop', async (e) => {
+    e.preventDefault();
+    dropzone.classList.remove('hover');
+    addFiles(await filesFromDrop(e.dataTransfer));
+  });
+  fileInput.addEventListener('change', (e) => { addFiles([...e.target.files]); fileInput.value = ''; });
+
+  clearBtn.addEventListener('click', () => {
+    if (running) return;
+    for (const role of Object.keys(selected)) delete selected[role];
+    noticeEl.textContent = '';
+    resultsEl.innerHTML = '';
+    renderSlots();
+  });
+
+  runBtn.addEventListener('click', async () => {
+    running = true;
+    renderSlots();
+    if (downloadUrl) { URL.revokeObjectURL(downloadUrl); downloadUrl = null; }
+
+    const card = document.createElement('div');
+    card.className = 'file-card';
+    card.innerHTML = `
+      <div class="file-head"><span class="file-name">${OUTPUT_FILENAME}</span><span class="file-meta">Working…</span></div>
+      <div class="progress">
+        <div class="progress-bar"><div class="progress-fill"></div></div>
+        <span class="progress-pct">0%</span>
+      </div>
+      <div class="progress-stage">Starting…</div>`;
+    resultsEl.innerHTML = '';
+    resultsEl.appendChild(card);
+    const fill = card.querySelector('.progress-fill');
+    const pct = card.querySelector('.progress-pct');
+    const stage = card.querySelector('.progress-stage');
+
+    const logLines = [];
+    let lastPaint = 0;
+    const started = performance.now();
+    try {
+      const result = await runInventoryCleanup(selected, {
+        lastSoldEnabled: lastSoldEnabled.checked,
+        lastSoldCutoff: lastSoldCutoff.value || DEFAULT_LAST_SOLD_CUTOFF,
+      }, {
+        log: (m) => logLines.push(m),
+        progress: (label, fraction) => {
+          const now = performance.now();
+          if (now - lastPaint < 100 && fraction < 1) return;
+          lastPaint = now;
+          fill.style.width = (fraction * 100).toFixed(1) + '%';
+          pct.textContent = Math.floor(fraction * 100) + '%';
+          stage.textContent = label + '…';
+        },
+      });
+
+      const blob = new Blob([result.csv], { type: 'text/csv' });
+      downloadUrl = URL.createObjectURL(blob);
+      const seconds = (performance.now() - started) / 1000;
+      card.className = 'file-card done';
+      card.innerHTML = `
+        <div class="file-head"><span class="file-name">${OUTPUT_FILENAME}</span><span class="file-meta">Done in ${seconds.toFixed(0)}s</span></div>
+        <div class="stat-row">
+          <div class="stat">Rows<b>${result.rowCount.toLocaleString()}</b></div>
+          <div class="stat">File size<b>${fmtBytes(blob.size)}</b></div>
+          <div class="stat">Last sold since<b>${lastSoldEnabled.checked ? escapeHtml(lastSoldCutoff.value || DEFAULT_LAST_SOLD_CUTOFF) : 'Not filtered'}</b></div>
+        </div>
+        <a class="download-btn" href="${downloadUrl}" download="${OUTPUT_FILENAME}">Download ${OUTPUT_FILENAME}</a>
+        <details class="log"><summary>Step-by-step log</summary><pre>${escapeHtml(logLines.join('\n'))}</pre></details>`;
+    } catch (err) {
+      console.error(err);
+      card.className = 'file-card error';
+      card.innerHTML = `
+        <div class="file-head"><span class="file-name">${OUTPUT_FILENAME}</span></div>
+        <p class="error-msg">Something went wrong: ${escapeHtml(err.message || err)}</p>`;
+    } finally {
+      running = false;
+      renderSlots();
+    }
+  });
+
+  renderSlots();
+}
+
+if (typeof document !== 'undefined') initPage();
+</script>
+</body>
+</html>
