@@ -327,20 +327,21 @@
   <details class="panel">
     <summary>What exactly does this do?</summary>
     <div class="body">
-      <p><b>Files are recognised by their column headers</b>, so the filenames don't matter. Drop them one at a time, all at once, or drop the folder they're in. Products is used by both.</p>
+      <p><b>Files are recognised by their column headers</b>, so the filenames don't matter. Drop them one at a time, all at once, or drop the folder they're in. Products and Groups are used by both.</p>
       <p><b>Inventory</b> (Products, Prices, Location Stock, Groups) builds one row per item per price level, then:</p>
       <ul>
         <li>Keeps only products in the drink group ranges (100&ndash;145, 149&ndash;182, 214&ndash;306, 310&ndash;410) and the mapped venue price levels.</li>
         <li>Takes each row's cost and last-sold date from that venue's stock locations (location 132 is ignored). Last-sold dates are shared across size variants of the same product, e.g. <code>6089</code> and <code>6089 GLS</code>.</li>
         <li>Tidies categories into Spirits, Taps, Wine, Packaged and Non-Alc, with Type and Size split out.</li>
-        <li>Removes <code>Spirits 15ml</code>, packs/cartons/kegs from Bar price levels, and pints/schooners/middies/7oz/jugs/30ml pours from Bottle price levels.</li>
+        <li>Removes <code>Spirits 15ml</code> and <code>Spirits 60ml</code>, packs/cartons/kegs from Bar price levels, and pints/schooners/middies/7oz/jugs/30ml pours from Bottle price levels, plus Wine items coded <code>GLS</code>, <code>150ML</code> or <code>250ML</code> (by the glass).</li>
         <li>Removes rows with a $0.00 price, and rows not sold since the cutoff date below.</li>
       </ul>
-      <p><b>Promotions</b> (Products, Promo List, Promo Prices) builds two linked files, joined on <code>PromotionID</code>:</p>
+      <p><b>Promotions</b> (Products, Groups, Promo List, Promo Prices) builds two linked files, joined on <code>PromotionID</code>:</p>
       <ul>
         <li>Keeps promotions that are enabled, run on at least one day, have a name, and aren't food (names containing BISTRO, BISTO or FOOD).</li>
         <li>Keeps promo items that aren't in food categories (10 and 25&ndash;69), on venue price levels ending in 1 or 2 (21, 22, 32 and so on), and that match a product by Inventory Code or PLU.</li>
         <li>Removes duplicate items and any promotion left with no items. Category 3 items named like <code>LAKES - ESPRESSO MARTINI</code> are labelled Cocktails.</li>
+        <li>Adds Category and Size to each item using the same rules as the inventory file. Anything whose description contains a hyphen, Worksmith or Vanguard is Category Cocktails, Size Serve.</li>
       </ul>
       <p>The full rule set is in the <code>CONFIG</code> section at the top of this page's script. It can be edited in Notepad if the rules change.</p>
       <p>The Prices and Location Stock exports are large (hundreds of MB). They're read in pieces rather than loaded whole, so expect a minute or two on a typical work PC.</p>
@@ -485,9 +486,15 @@ const BAR_EXCLUDE_DESCRIPTION_SUBSTRINGS = ["KEG"];
 // contains any of these codes - not case sensitive.
 const BOTTLE_EXCLUDE_CODE_SUBSTRINGS = ["PINT", "SCH", "MID", "7OZ", "JUG", "30ML"];
 
+// Row is deleted if its PriceLevel is a Bottle price level AND its Category (after
+// the category rules) is this one AND its Inventory_Code contains any of these
+// codes - not case sensitive. Catches wine-by-the-glass items.
+const WINE_BOTTLE_EXCLUDE_CATEGORY = "Wine";
+const WINE_BOTTLE_EXCLUDE_CODE_SUBSTRINGS = ["GLS", "150ML", "250ML"];
+
 // Row is deleted if its Group_Description (raw Category) is in this list - not
 // case sensitive.
-const EXCLUDE_CATEGORIES = ["Spirits 15ml"];
+const EXCLUDE_CATEGORIES = ["Spirits 15ml", "Spirits 60ml", "Spirits 90ml"];
 
 // Rows whose Category matches one of these patterns get that serve size split
 // out into Size, and Category rewritten to the simpler name. Whole-word, not
@@ -623,6 +630,13 @@ const PROMOTION_CATEGORY_NAMES = {
 // cocktails are written "VENUE - Drink Name" (e.g. "LAKES - ESPRESSO MARTINI"),
 // so any category-3 item whose Description contains this is labelled Cocktails.
 const COCKTAIL_MARKER = " - ";
+
+// For the Category/Size columns: any promo item whose Description contains one
+// of these (not case sensitive) is Category "Cocktails", Size "Serve", whatever
+// its product group says. Note "-" matches any hyphen, e.g. "COCA-COLA" too.
+const COCKTAIL_SERVE_SUBSTRINGS = ["-", "WORKSMITH", "VANGUARD"];
+const COCKTAIL_SERVE_CATEGORY = "Cocktails";
+const COCKTAIL_SERVE_SIZE = "Serve";
 
 // Promo List.DaysOfWeek is a bitmask. A promotion with no days set (0) never
 // runs and is dropped along with disabled ones.
@@ -865,6 +879,84 @@ function computeSizeFamilyKeys(products) {
   return keyMap;
 }
 
+// ─── CATEGORY RULES ──────────────────────────────────────────────────────────
+
+const has = (s, re) => s !== null && re.test(s);
+
+// Steps 6a2-6a9: split Size and Type out of Category (Group_Description) and fold
+// categories into Spirits/Taps/Wine/Packaged/Non-Alc. Used by both the inventory
+// and promotions builds. Counters in `c` are incremented for the inventory log.
+function categorise(gd, desc, c = {}) {
+  const bump = (k) => { c[k] = (c[k] || 0) + 1; };
+  // Step 6a2: split Size out of Category
+  let size = null;
+  for (const [re, value, newCat] of CATEGORY_SIZE_RULES) {
+    if (has(gd, re)) { size = value; gd = newCat; break; }
+  }
+  if (size !== null) bump("sizeSplit");
+
+  // Step 6a3: split Type out of Category into Spirits sub-types
+  let type = null;
+  for (const [re, value, newCat] of CATEGORY_TYPE_RULES) {
+    if (has(gd, re)) { type = value; gd = newCat; break; }
+  }
+  if (type !== null) bump("typeSplit");
+
+  // Step 6a4: fall back to Description for Spirits rows still missing a Type
+  if (gd === "Spirits" && type === null) {
+    bump("spiritsMissingBefore");
+    for (const [re, value] of DESCRIPTION_TYPE_RULES) {
+      if (has(desc, re)) { type = value; break; }
+    }
+    if (type === null) bump("spiritsMissingAfter");
+  }
+
+  // Step 6a5: default remaining Spirits rows without a Size to Bottle (or 30mL)
+  if (gd === "Spirits" && size === null) {
+    if (has(desc, /30ML/i)) { size = "30mL"; bump("thirty"); }
+    else { size = "Bottle"; bump("bottle"); }
+  }
+
+  // Step 6a6: fold Wine Bottle / Wine Glass / Wine Cask categories into Wine
+  const isWine = has(gd, /\bWine\b/i);
+  const isWineBottle = isWine && /\bBottle\b/i.test(gd);
+  const isWineGlass = isWine && /\bGlass\b/i.test(gd);
+  const isWineCask = isWine && /\bCask\b/i.test(gd);
+  if (isWineBottle) size = "Bottle";
+  const has150 = has(desc, /150ML/i), has250 = has(desc, /250ML/i);
+  if (isWineGlass && has150) size = "150mL";
+  if (isWineGlass && !has150 && has250) size = "250mL";
+  if (isWineCask) size = "Cask";
+  if (isWineBottle || isWineGlass || isWineCask) gd = "Wine";
+  if (isWineBottle) bump("wineBottle");
+  if (isWineGlass) bump("wineGlass");
+  if (isWineCask) bump("wineCask");
+
+  // Step 6a7: set Size for Single/Pack categories (Category left unchanged)
+  let sizeMatched = false;
+  for (const [re, value] of SIZE_ONLY_RULES) {
+    if (has(gd, re)) { size = value; sizeMatched = true; }
+  }
+  if (sizeMatched) bump("sizeOnly");
+
+  // Step 6a8: fold Cider/RTD/Light Beer/Midstrength/Full Beer into Packaged
+  let isPackaged = false;
+  for (const [re, value] of PACKAGED_TYPE_RULES) {
+    if (has(gd, re)) { type = value; isPackaged = true; }
+  }
+  if (has(gd, /\bFull\b/i) && /\bBeer\b/i.test(gd)) { type = "Beer"; isPackaged = true; }
+  if (isPackaged) { gd = "Packaged"; bump("packaged"); }
+
+  // Step 6a9: fold Water/Soft Drink/Postmix/Juice into Non-Alc
+  let isNonAlc = false;
+  for (const [re, value] of NON_ALC_TYPE_RULES) {
+    if (has(gd, re)) { type = value; isNonAlc = true; }
+  }
+  if (isNonAlc) { gd = "Non-Alc"; bump("nonAlc"); }
+
+  return { gd, type, size };
+}
+
 // ─── MAIN CLEANUP ────────────────────────────────────────────────────────────
 
 // files: { products, prices, locationStock, groups } (File/Blob objects)
@@ -985,12 +1077,10 @@ async function runInventoryCleanup(files, options, hooks = {}) {
     prices: 0, pricesF: 0, merged: 0, excludedCat: 0, afterExcl: 0, sizeSplit: 0, typeSplit: 0,
     spiritsMissingBefore: 0, spiritsMissingAfter: 0, bottle: 0, thirty: 0,
     wineBottle: 0, wineGlass: 0, wineCask: 0, sizeOnly: 0, packaged: 0, nonAlc: 0,
-    barRemoved: 0, bottleRemoved: 0, noStockNoPrice: 0, zeroPrice: 0, lastSold: 0,
+    barRemoved: 0, bottleRemoved: 0, wineGlassRemoved: 0, noStockNoPrice: 0, zeroPrice: 0, lastSold: 0,
   };
   let remaining = 0;
   const survivors = [];
-  const has = (s, re) => s !== null && re.test(s);
-
   const processRow = (p, gd, levelStr, level, priceStr, priceNum) => {
     const code = p.code, desc = p.desc;
 
@@ -998,71 +1088,9 @@ async function runInventoryCleanup(files, options, hooks = {}) {
     if (gd !== null && excludeCategoriesUpper.has(gd.toUpperCase())) { c.excludedCat++; return; }
     c.afterExcl++;
 
-    // Step 6a2: split Size out of Category
-    let size = null;
-    for (const [re, value, newCat] of CATEGORY_SIZE_RULES) {
-      if (has(gd, re)) { size = value; gd = newCat; break; }
-    }
-    if (size !== null) c.sizeSplit++;
-
-    // Step 6a3: split Type out of Category into Spirits sub-types
-    let type = null;
-    for (const [re, value, newCat] of CATEGORY_TYPE_RULES) {
-      if (has(gd, re)) { type = value; gd = newCat; break; }
-    }
-    if (type !== null) c.typeSplit++;
-
-    // Step 6a4: fall back to Description for Spirits rows still missing a Type
-    if (gd === "Spirits" && type === null) {
-      c.spiritsMissingBefore++;
-      for (const [re, value] of DESCRIPTION_TYPE_RULES) {
-        if (has(desc, re)) { type = value; break; }
-      }
-      if (type === null) c.spiritsMissingAfter++;
-    }
-
-    // Step 6a5: default remaining Spirits rows without a Size to Bottle (or 30mL)
-    if (gd === "Spirits" && size === null) {
-      if (has(desc, /30ML/i)) { size = "30mL"; c.thirty++; }
-      else { size = "Bottle"; c.bottle++; }
-    }
-
-    // Step 6a6: fold Wine Bottle / Wine Glass / Wine Cask categories into Wine
-    const isWine = has(gd, /\bWine\b/i);
-    const isWineBottle = isWine && /\bBottle\b/i.test(gd);
-    const isWineGlass = isWine && /\bGlass\b/i.test(gd);
-    const isWineCask = isWine && /\bCask\b/i.test(gd);
-    if (isWineBottle) size = "Bottle";
-    const has150 = has(desc, /150ML/i), has250 = has(desc, /250ML/i);
-    if (isWineGlass && has150) size = "150mL";
-    if (isWineGlass && !has150 && has250) size = "250mL";
-    if (isWineCask) size = "Cask";
-    if (isWineBottle || isWineGlass || isWineCask) gd = "Wine";
-    if (isWineBottle) c.wineBottle++;
-    if (isWineGlass) c.wineGlass++;
-    if (isWineCask) c.wineCask++;
-
-    // Step 6a7: set Size for Single/Pack categories (Category left unchanged)
-    let sizeMatched = false;
-    for (const [re, value] of SIZE_ONLY_RULES) {
-      if (has(gd, re)) { size = value; sizeMatched = true; }
-    }
-    if (sizeMatched) c.sizeOnly++;
-
-    // Step 6a8: fold Cider/RTD/Light Beer/Midstrength/Full Beer into Packaged
-    let isPackaged = false;
-    for (const [re, value] of PACKAGED_TYPE_RULES) {
-      if (has(gd, re)) { type = value; isPackaged = true; }
-    }
-    if (has(gd, /\bFull\b/i) && /\bBeer\b/i.test(gd)) { type = "Beer"; isPackaged = true; }
-    if (isPackaged) { gd = "Packaged"; c.packaged++; }
-
-    // Step 6a9: fold Water/Soft Drink/Postmix/Juice into Non-Alc
-    let isNonAlc = false;
-    for (const [re, value] of NON_ALC_TYPE_RULES) {
-      if (has(gd, re)) { type = value; isNonAlc = true; }
-    }
-    if (isNonAlc) { gd = "Non-Alc"; c.nonAlc++; }
+    // Steps 6a2-6a9: split Size/Type out of Category and fold categories
+    let type, size;
+    ({ gd, type, size } = categorise(gd, desc, c));
 
     // Step 6b: delete PK/CTN/KEG items from Bar price levels
     const codeUpper = code === null ? null : code.toUpperCase();
@@ -1077,6 +1105,13 @@ async function runInventoryCleanup(files, options, hooks = {}) {
     if (BOTTLE_PRICE_LEVELS.has(level) && codeUpper !== null &&
         BOTTLE_EXCLUDE_CODE_SUBSTRINGS.some(s => codeUpper.includes(s))) {
       c.bottleRemoved++; return;
+    }
+
+    // Step 6c2: delete Wine GLS/150ML/250ML (by-the-glass) items from Bottle price levels
+    if (BOTTLE_PRICE_LEVELS.has(level) && codeUpper !== null && gd !== null &&
+        gd.toUpperCase() === WINE_BOTTLE_EXCLUDE_CATEGORY.toUpperCase() &&
+        WINE_BOTTLE_EXCLUDE_CODE_SUBSTRINGS.some(s => codeUpper.includes(s.toUpperCase()))) {
+      c.wineGlassRemoved++; return;
     }
 
     // Step 5 lookups: stock, cost and last-sold for this price level
@@ -1134,7 +1169,10 @@ async function runInventoryCleanup(files, options, hooks = {}) {
   remaining -= c.barRemoved;
   say(`Removed ${c.barRemoved} PK/CTN/KEG rows from Bar price levels. Remaining: ${remaining}`);
   remaining -= c.bottleRemoved;
-  say(`Removed ${c.bottleRemoved} PINT/SCH/MID/7OZ/JUG/30ML rows from Bottle price levels. Remaining: ${remaining}`);
+  say(`Removed ${c.bottleRemoved} ${BOTTLE_EXCLUDE_CODE_SUBSTRINGS.join('/')} rows from Bottle price levels. Remaining: ${remaining}`);
+  remaining -= c.wineGlassRemoved;
+  say(`Removed ${c.wineGlassRemoved} ${WINE_BOTTLE_EXCLUDE_CODE_SUBSTRINGS.join('/')} rows in Category ` +
+      `'${WINE_BOTTLE_EXCLUDE_CATEGORY}' from Bottle price levels. Remaining: ${remaining}`);
   remaining -= c.noStockNoPrice;
   say(`Removed ${c.noStockNoPrice} rows with no stock and no price. Remaining: ${remaining}`);
   remaining -= c.zeroPrice;
@@ -1192,11 +1230,11 @@ function decodeDays(value) {
   return DAY_BITS.filter(([bit]) => v & bit).map(([, name]) => name).join(', ');
 }
 
-// files: { products, promoList, promoPrices } (File/Blob objects)
+// files: { products, groups, promoList, promoPrices } (File/Blob objects)
 // hooks: { log(message), progress(stageLabel, fraction) }
 async function runPromotionsCleanup(files, hooks = {}) {
   const log = hooks.log || (() => {});
-  const totalBytes = files.products.size + files.promoList.size + files.promoPrices.size;
+  const totalBytes = files.products.size + files.groups.size + files.promoList.size + files.promoPrices.size;
   let doneBytes = 0;
   const progressFor = (label) => (bytes) => {
     if (hooks.progress) hooks.progress(label, Math.min(1, (doneBytes + bytes) / totalBytes));
@@ -1211,9 +1249,11 @@ async function runPromotionsCleanup(files, hooks = {}) {
     ["PromotionID", "Inventory_Code", "PriceLevel", "PromotionPrice", "PromotionCategory"],
     progressFor("Reading Promo Prices"));
   doneBytes += files.promoPrices.size;
-  const products = await readTable(files.products, ["Inventory_Code", "Description", "PLU_Number"],
+  const products = await readTable(files.products, ["Inventory_Code", "Description", "PLU_Number", "Product_Group"],
     progressFor("Reading Products"));
   doneBytes += files.products.size;
+  const groups = await readTable(files.groups, ["Group_Number", "Group_Description"], progressFor("Reading Groups"));
+  doneBytes += files.groups.size;
   if (hooks.progress) hooks.progress("Applying rules", 1);
 
   // ---------- Step 1: keep only enabled promotions with at least one day set ----------
@@ -1299,9 +1339,28 @@ async function runPromotionsCleanup(files, hooks = {}) {
   promotionsOut = promotionsOut.filter(r => idsWithItems.has(r.PromotionID));
   log(`Removed ${before - promotionsOut.length} promotions with no items left. Remaining: ${promotionsOut.length}`);
 
+  // ---------- Step 6b setup: Category and Size, same rules as the inventory build ----------
+  // Product_Group -> Group_Description, then categorise(). The inventory-only row
+  // deletions are not applied - promo items are only categorised, never dropped.
+  const groupNumByCode = new Map();
+  for (const p of products) if (!groupNumByCode.has(p.Inventory_Code)) groupNumByCode.set(p.Inventory_Code, toNum(p.Product_Group));
+  const groupDescByNum = new Map();
+  for (const g of groups) {
+    const n = toNum(g.Group_Number);
+    if (!Number.isNaN(n) && !groupDescByNum.has(n)) groupDescByNum.set(n, g.Group_Description);
+  }
+  let serveCount = 0;
+
   // ---------- Steps 6-7: attach names and build the Promotion Items table ----------
   const itemsOut = items.map(r => {
     const description = descByCode.has(r.Resolved) ? descByCode.get(r.Resolved) : null;
+    const groupDesc = groupDescByNum.get(groupNumByCode.get(r.Resolved)) ?? null;
+    let { gd: itemCategory, size: itemSize } = categorise(groupDesc, description);
+    if (description !== null && COCKTAIL_SERVE_SUBSTRINGS.some(s => description.toUpperCase().includes(s.toUpperCase()))) {
+      itemCategory = COCKTAIL_SERVE_CATEGORY;
+      itemSize = COCKTAIL_SERVE_SIZE;
+      serveCount++;
+    }
     const level = toNum(r.PriceLevel);
     const category = toNum(r.PromotionCategory);
     let categoryName = PROMOTION_CATEGORY_NAMES[category] ?? null;
@@ -1315,15 +1374,20 @@ async function runPromotionsCleanup(files, hooks = {}) {
       PriceLevel_Name: PRICE_LEVEL_NAMES[level] ?? null,
       PromotionPrice: r.PromotionPrice,
       PromotionCategory: categoryName,
+      Category: itemCategory,
+      Size: itemSize,
     };
   }).sort((a, b) => cmpStr(a.PromotionID, b.PromotionID) || cmpStr(a.KEY, b.KEY));
+
+  log(`Set Category and Size for promo items; ${serveCount} set to ` +
+      `'${COCKTAIL_SERVE_CATEGORY}' / '${COCKTAIL_SERVE_SIZE}' by Description ${pyList(COCKTAIL_SERVE_SUBSTRINGS)}.`);
 
   const toCsv = (rows, cols) => [cols.join(','), ...rows.map(r => cols.map(col => csvField(r[col])).join(','))].join('\n') + '\n';
   log(`Wrote ${promotionsOut.length} promotions.`);
   log(`Wrote ${itemsOut.length} promotion items.`);
   return {
     promotions: { csv: toCsv(promotionsOut, ["PromotionID", "PromotionName", "Days", "StartTime", "EndTime", "Locations", "Notes"]), rowCount: promotionsOut.length },
-    items: { csv: toCsv(itemsOut, ["KEY", "PromotionID", "Description", "PriceLevel", "PriceLevel_Name", "PromotionPrice", "PromotionCategory"]), rowCount: itemsOut.length },
+    items: { csv: toCsv(itemsOut, ["KEY", "PromotionID", "Description", "PriceLevel", "PriceLevel_Name", "PromotionPrice", "PromotionCategory", "Category", "Size"]), rowCount: itemsOut.length },
   };
 }
 
@@ -1368,7 +1432,7 @@ function initPage() {
     },
     {
       el: document.getElementById('job-promotions'),
-      roles: ['products', 'promoList', 'promoPrices'],
+      roles: ['products', 'groups', 'promoList', 'promoPrices'],
       async run(log, progress) {
         const res = await runPromotionsCleanup(selected, { log, progress });
         return {
