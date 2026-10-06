@@ -133,6 +133,8 @@
   }
   .job h2 { font-size: 18px; font-weight: 650; margin: 0; }
   .job-out { font-family: var(--mono); font-size: 12px; color: var(--ink-soft); }
+  .job-note { font-size: 13px; color: var(--ink-soft); margin: 6px 0 0; }
+  .job-note code { font-family: var(--mono); font-size: 12px; }
 
   .slots {
     display: grid;
@@ -336,12 +338,13 @@
         <li>Removes <code>Spirits 15ml</code> and <code>Spirits 60ml</code>, packs/cartons/kegs from Bar price levels, and pints/schooners/middies/7oz/jugs/30ml pours from Bottle price levels, plus Wine items coded <code>GLS</code>, <code>150ML</code> or <code>250ML</code> (by the glass).</li>
         <li>Removes rows with a $0.00 price, and rows not sold since the cutoff date below.</li>
       </ul>
-      <p><b>Promotions</b> (Products, Groups, Promo List, Promo Prices) builds two linked files, joined on <code>PromotionID</code>:</p>
+      <p><b>Promotions</b> (Products, Groups, Promo List, Promo Prices, and the cleaned inventory file) builds two linked files, joined on <code>PromotionID</code>:</p>
       <ul>
         <li>Keeps promotions that are enabled, run on at least one day, have a name, and aren't food (names containing BISTRO, BISTO or FOOD).</li>
         <li>Keeps promo items that aren't in food categories (10 and 25&ndash;69), on venue price levels ending in 1 or 2 (21, 22, 32 and so on), and that match a product by Inventory Code or PLU.</li>
         <li>Removes duplicate items and any promotion left with no items. Category 3 items named like <code>LAKES - ESPRESSO MARTINI</code> are labelled Cocktails.</li>
-        <li>Adds Category and Size to each item using the same rules as the inventory file. Anything whose description contains a hyphen, Worksmith or Vanguard is Category Cocktails, Size Serve.</li>
+        <li>Adds Category and Size to each item using the same rules as the inventory file. Anything whose description contains a hyphen, Worksmith or Vanguard, or that's in the Cocktail Serve group, is Category Cocktails, Size Serve.</li>
+        <li>Removes items that aren't in the cleaned inventory file at the same price level (except Cocktails), then any promotion left with no items.</li>
       </ul>
       <p>The full rule set is in the <code>CONFIG</code> section at the top of this page's script. It can be edited in Notepad if the rules change.</p>
       <p>The Prices and Location Stock exports are large (hundreds of MB). They're read in pieces rather than loaded whole, so expect a minute or two on a typical work PC.</p>
@@ -376,6 +379,7 @@
 
   <section class="job" id="job-promotions">
     <div class="job-head"><h2>Promotions</h2><span class="job-out">Cleaned_Promotions_For_Sheets.csv + Cleaned_Promotion_Items_For_Sheets.csv</span></div>
+    <p class="job-note">Uses the cleaned inventory file: build Inventory first (it's filled in here automatically), or add a <code>Cleaned_Inventory_For_Sheets.csv</code> from before.</p>
     <div class="slots"></div>
     <div class="actions"><button class="run-btn" disabled>Build promotions files</button></div>
     <div class="results"></div>
@@ -635,6 +639,9 @@ const COCKTAIL_MARKER = " - ";
 // of these (not case sensitive) is Category "Cocktails", Size "Serve", whatever
 // its product group says. Note "-" matches any hyphen, e.g. "COCA-COLA" too.
 const COCKTAIL_SERVE_SUBSTRINGS = ["-", "WORKSMITH", "VANGUARD"];
+// Items whose product group (Group_Description) is one of these are also
+// Category "Cocktails", Size "Serve" - not case sensitive.
+const COCKTAIL_SERVE_GROUPS = ["Cocktail Serve"];
 const COCKTAIL_SERVE_CATEGORY = "Cocktails";
 const COCKTAIL_SERVE_SIZE = "Serve";
 
@@ -666,6 +673,7 @@ const ROLES = {
   groups:        { label: "Groups",         required: ["Group_Number", "Group_Description"] },
   promoList:     { label: "Promo List",     required: ["PromotionID", "PromotionName", "Enabled", "Locations"] },
   promoPrices:   { label: "Promo Prices",   required: ["PromotionID", "Inventory_Code", "PriceLevel", "PromotionPrice"] },
+  inventory:     { label: "Cleaned Inventory", required: ["KEY", "PLU", "PLN", "PriceLevel_Name"] },
 };
 
 const OUTPUT_COLUMNS = [
@@ -1230,11 +1238,12 @@ function decodeDays(value) {
   return DAY_BITS.filter(([bit]) => v & bit).map(([, name]) => name).join(', ');
 }
 
-// files: { products, groups, promoList, promoPrices } (File/Blob objects)
+// files: { products, groups, promoList, promoPrices, inventory } (File/Blob objects;
+// inventory is Cleaned_Inventory_For_Sheets.csv - promo items not in it are dropped)
 // hooks: { log(message), progress(stageLabel, fraction) }
 async function runPromotionsCleanup(files, hooks = {}) {
   const log = hooks.log || (() => {});
-  const totalBytes = files.products.size + files.groups.size + files.promoList.size + files.promoPrices.size;
+  const totalBytes = files.products.size + files.groups.size + files.promoList.size + files.promoPrices.size + files.inventory.size;
   let doneBytes = 0;
   const progressFor = (label) => (bytes) => {
     if (hooks.progress) hooks.progress(label, Math.min(1, (doneBytes + bytes) / totalBytes));
@@ -1254,6 +1263,8 @@ async function runPromotionsCleanup(files, hooks = {}) {
   doneBytes += files.products.size;
   const groups = await readTable(files.groups, ["Group_Number", "Group_Description"], progressFor("Reading Groups"));
   doneBytes += files.groups.size;
+  const inventoryKeys = new Set((await readTable(files.inventory, ["KEY"], progressFor("Reading Cleaned Inventory"))).map(r => r.KEY));
+  doneBytes += files.inventory.size;
   if (hooks.progress) hooks.progress("Applying rules", 1);
 
   // ---------- Step 1: keep only enabled promotions with at least one day set ----------
@@ -1333,30 +1344,29 @@ async function runPromotionsCleanup(files, hooks = {}) {
   });
   log(`Removed ${before - items.length} duplicate promo item rows. Remaining: ${items.length}`);
 
-  // ---------- Step 5b: drop promotions that ended up with no items ----------
-  before = promotionsOut.length;
-  const idsWithItems = new Set(items.map(r => r.PromotionID));
-  promotionsOut = promotionsOut.filter(r => idsWithItems.has(r.PromotionID));
-  log(`Removed ${before - promotionsOut.length} promotions with no items left. Remaining: ${promotionsOut.length}`);
-
-  // ---------- Step 6b setup: Category and Size, same rules as the inventory build ----------
-  // Product_Group -> Group_Description, then categorise(). The inventory-only row
-  // deletions are not applied - promo items are only categorised, never dropped.
-  const groupNumByCode = new Map();
-  for (const p of products) if (!groupNumByCode.has(p.Inventory_Code)) groupNumByCode.set(p.Inventory_Code, toNum(p.Product_Group));
+  // ---------- Steps 6-6b: attach names, Category and Size ----------
+  // Category/Size: Product_Group -> Group_Description, then categorise() - the same
+  // rules as the inventory build. Inventory-only row deletions aren't applied here;
+  // Step 6c drops items missing from the inventory output instead.
+  const groupNumByCode = new Map(), pluByCode = new Map();
+  for (const p of products) {
+    if (!groupNumByCode.has(p.Inventory_Code)) groupNumByCode.set(p.Inventory_Code, toNum(p.Product_Group));
+    if (!pluByCode.has(p.Inventory_Code)) pluByCode.set(p.Inventory_Code, p.PLU_Number);
+  }
   const groupDescByNum = new Map();
   for (const g of groups) {
     const n = toNum(g.Group_Number);
     if (!Number.isNaN(n) && !groupDescByNum.has(n)) groupDescByNum.set(n, g.Group_Description);
   }
+  const serveGroups = new Set(COCKTAIL_SERVE_GROUPS.map(g => g.toUpperCase()));
   let serveCount = 0;
 
-  // ---------- Steps 6-7: attach names and build the Promotion Items table ----------
-  const itemsOut = items.map(r => {
+  let itemsOut = items.map(r => {
     const description = descByCode.has(r.Resolved) ? descByCode.get(r.Resolved) : null;
     const groupDesc = groupDescByNum.get(groupNumByCode.get(r.Resolved)) ?? null;
     let { gd: itemCategory, size: itemSize } = categorise(groupDesc, description);
-    if (description !== null && COCKTAIL_SERVE_SUBSTRINGS.some(s => description.toUpperCase().includes(s.toUpperCase()))) {
+    if ((groupDesc !== null && serveGroups.has(groupDesc.toUpperCase())) ||
+        (description !== null && COCKTAIL_SERVE_SUBSTRINGS.some(s => description.toUpperCase().includes(s.toUpperCase())))) {
       itemCategory = COCKTAIL_SERVE_CATEGORY;
       itemSize = COCKTAIL_SERVE_SIZE;
       serveCount++;
@@ -1365,6 +1375,7 @@ async function runPromotionsCleanup(files, hooks = {}) {
     const category = toNum(r.PromotionCategory);
     let categoryName = PROMOTION_CATEGORY_NAMES[category] ?? null;
     if (category === 3 && description !== null && description.includes(COCKTAIL_MARKER)) categoryName = "Cocktails";
+    const plu = pluByCode.get(r.Resolved) ?? null;
     return {
       KEY: r.PromotionID === null || r.Resolved === null || r.PriceLevel === null
         ? null : `${r.PromotionID}-${r.Resolved}-${r.PriceLevel}`,
@@ -1376,11 +1387,29 @@ async function runPromotionsCleanup(files, hooks = {}) {
       PromotionCategory: categoryName,
       Category: itemCategory,
       Size: itemSize,
+      inventoryKey: `${plu === null ? 'nan' : plu}-${r.PriceLevel === null ? 'nan' : r.PriceLevel}`,
     };
-  }).sort((a, b) => cmpStr(a.PromotionID, b.PromotionID) || cmpStr(a.KEY, b.KEY));
-
+  });
   log(`Set Category and Size for promo items; ${serveCount} set to ` +
-      `'${COCKTAIL_SERVE_CATEGORY}' / '${COCKTAIL_SERVE_SIZE}' by Description ${pyList(COCKTAIL_SERVE_SUBSTRINGS)}.`);
+      `'${COCKTAIL_SERVE_CATEGORY}' / '${COCKTAIL_SERVE_SIZE}' by Description ${pyList(COCKTAIL_SERVE_SUBSTRINGS)} ` +
+      `or group ${pyList(COCKTAIL_SERVE_GROUPS)}.`);
+
+  // ---------- Step 6c: drop items not in the cleaned inventory at the same price level ----------
+  // Matched on the inventory's KEY ("{PLU}-{PriceLevel}"). Cocktails are kept
+  // regardless, since cocktail serves aren't part of the inventory output.
+  before = itemsOut.length;
+  itemsOut = itemsOut.filter(r => inventoryKeys.has(r.inventoryKey) || r.Category === COCKTAIL_SERVE_CATEGORY);
+  log(`Removed ${before - itemsOut.length} promo items not in the cleaned inventory at their price level ` +
+      `('${COCKTAIL_SERVE_CATEGORY}' kept). Remaining: ${itemsOut.length}`);
+
+  // ---------- Step 6d: drop promotions that ended up with no items ----------
+  before = promotionsOut.length;
+  const idsWithItems = new Set(itemsOut.map(r => r.PromotionID));
+  promotionsOut = promotionsOut.filter(r => idsWithItems.has(r.PromotionID));
+  log(`Removed ${before - promotionsOut.length} promotions with no items left. Remaining: ${promotionsOut.length}`);
+
+  // ---------- Step 7: sort the Promotion Items table ----------
+  itemsOut.sort((a, b) => cmpStr(a.PromotionID, b.PromotionID) || cmpStr(a.KEY, b.KEY));
 
   const toCsv = (rows, cols) => [cols.join(','), ...rows.map(r => cols.map(col => csvField(r[col])).join(','))].join('\n') + '\n';
   log(`Wrote ${promotionsOut.length} promotions.`);
@@ -1415,6 +1444,7 @@ function initPage() {
   lastSoldEnabled.addEventListener('change', () => { lastSoldCutoff.disabled = !lastSoldEnabled.checked; });
 
   const selected = {};
+  const builtHere = new Set();   // roles filled by a build on this page, not a dropped file
 
   // Each job: the files it needs, how to run it, and what to show when it's done
   const jobs = [
@@ -1424,6 +1454,9 @@ function initPage() {
       async run(log, progress) {
         const cutoff = lastSoldCutoff.value || DEFAULT_LAST_SOLD_CUTOFF;
         const res = await runInventoryCleanup(selected, { lastSoldEnabled: lastSoldEnabled.checked, lastSoldCutoff: cutoff }, { log, progress });
+        // hand the fresh inventory file straight to the Promotions section
+        selected.inventory = new File([res.csv], OUTPUT_FILENAME, { type: 'text/csv' });
+        builtHere.add('inventory');
         return {
           outputs: [{ filename: OUTPUT_FILENAME, csv: res.csv }],
           stats: [['Rows', res.rowCount.toLocaleString()], ['Last sold since', lastSoldEnabled.checked ? cutoff : 'Not filtered']],
@@ -1432,7 +1465,7 @@ function initPage() {
     },
     {
       el: document.getElementById('job-promotions'),
-      roles: ['products', 'groups', 'promoList', 'promoPrices'],
+      roles: ['products', 'groups', 'promoList', 'promoPrices', 'inventory'],
       async run(log, progress) {
         const res = await runPromotionsCleanup(selected, { log, progress });
         return {
@@ -1450,8 +1483,8 @@ function initPage() {
         const f = selected[role];
         return `<div class="slot${f ? ' ready' : ''}">
           <div class="slot-role">${ROLES[role].label}</div>
-          <div class="slot-file${f ? '' : ' empty'}">${f ? escapeHtml(f.name) : 'Not added yet'}</div>
-          <div class="slot-size">${f ? fmtBytes(f.size) : '&nbsp;'}</div>
+          <div class="slot-file${f ? '' : ' empty'}">${f ? escapeHtml(f.name) : (role === 'inventory' ? 'Build inventory above, or add the file' : 'Not added yet')}</div>
+          <div class="slot-size">${f ? (builtHere.has(role) ? 'Built on this page · ' : '') + fmtBytes(f.size) : '&nbsp;'}</div>
         </div>`;
       }).join('');
       job.el.querySelector('.run-btn').disabled = job.running || job.roles.some(role => !selected[role]);
@@ -1463,7 +1496,9 @@ function initPage() {
     for (const file of files) {
       if (!file.name.toLowerCase().endsWith('.csv')) continue;
       try {
-        selected[await identifyRole(file)] = file;
+        const role = await identifyRole(file);
+        selected[role] = file;
+        builtHere.delete(role);
       } catch (err) {
         problems.push(err.message);
       }
@@ -1504,6 +1539,7 @@ function initPage() {
   clearBtn.addEventListener('click', () => {
     if (anyRunning()) return;
     for (const role of Object.keys(selected)) delete selected[role];
+    builtHere.clear();
     noticeEl.textContent = '';
     for (const job of jobs) job.el.querySelector('.results').innerHTML = '';
     render();
