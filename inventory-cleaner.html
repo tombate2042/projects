@@ -342,8 +342,8 @@
       <ul>
         <li>Keeps promotions that are enabled, run on at least one day, have a name, and aren't food (names containing BISTRO, BISTO or FOOD).</li>
         <li>Keeps promo items that aren't in food categories (10 and 25&ndash;69), on venue price levels ending in 1 or 2 (21, 22, 32 and so on), and that match a product by Inventory Code or PLU.</li>
-        <li>Removes duplicate items and any promotion left with no items. Category 3 items named like <code>LAKES - ESPRESSO MARTINI</code> are labelled Cocktails.</li>
-        <li>Adds Category and Size to each item using the same rules as the inventory file. Anything whose description contains a hyphen, Worksmith or Vanguard, or that's in the Cocktail Serve group, is Category Cocktails, Size Serve.</li>
+        <li>Removes duplicate items and any promotion left with no items.</li>
+        <li>Adds a blank NewPromoPrice column, and Category and Size for each item using the same rules as the inventory file. Anything whose description contains a hyphen, Worksmith or Vanguard, or that's in the Cocktail Serve group, is Category Cocktails, Size Serve.</li>
         <li>Removes items that aren't in the cleaned inventory file at the same price level (except Cocktails), then any promotion left with no items.</li>
       </ul>
       <p>The full rule set is in the <code>CONFIG</code> section at the top of this page's script. It can be edited in Notepad if the rules change.</p>
@@ -620,20 +620,6 @@ const EXCLUDE_PROMOTION_CATEGORIES = [10, ...range(25, 70)];
 // (e.g. 21 Lakes Bottle, 22 Lakes Bar). Single-digit levels (1, 2) don't
 // count. Everything else is deleted.
 const KEEP_PRICE_LEVEL_LAST_DIGITS = [1, 2];
-
-// PromotionCategory -> human-readable name, for the Sheets UI export.
-const PROMOTION_CATEGORY_NAMES = {
-  1: "Wine",
-  2: "Packaged",
-  3: "Spirits",
-  4: "Taps",
-  12: "Cocktails",
-};
-
-// Category 3 ("Spirits") mixes plain spirit pours and named cocktails. Venue
-// cocktails are written "VENUE - Drink Name" (e.g. "LAKES - ESPRESSO MARTINI"),
-// so any category-3 item whose Description contains this is labelled Cocktails.
-const COCKTAIL_MARKER = " - ";
 
 // For the Category/Size columns: any promo item whose Description contains one
 // of these (not case sensitive) is Category "Cocktails", Size "Serve", whatever
@@ -1372,9 +1358,6 @@ async function runPromotionsCleanup(files, hooks = {}) {
       serveCount++;
     }
     const level = toNum(r.PriceLevel);
-    const category = toNum(r.PromotionCategory);
-    let categoryName = PROMOTION_CATEGORY_NAMES[category] ?? null;
-    if (category === 3 && description !== null && description.includes(COCKTAIL_MARKER)) categoryName = "Cocktails";
     const plu = pluByCode.get(r.Resolved) ?? null;
     return {
       KEY: r.PromotionID === null || r.Resolved === null || r.PriceLevel === null
@@ -1384,7 +1367,7 @@ async function runPromotionsCleanup(files, hooks = {}) {
       PriceLevel: Number.isInteger(level) ? String(level) : null,
       PriceLevel_Name: PRICE_LEVEL_NAMES[level] ?? null,
       PromotionPrice: r.PromotionPrice,
-      PromotionCategory: categoryName,
+      NewPromoPrice: null,
       Category: itemCategory,
       Size: itemSize,
       inventoryKey: `${plu === null ? 'nan' : plu}-${r.PriceLevel === null ? 'nan' : r.PriceLevel}`,
@@ -1416,7 +1399,7 @@ async function runPromotionsCleanup(files, hooks = {}) {
   log(`Wrote ${itemsOut.length} promotion items.`);
   return {
     promotions: { csv: toCsv(promotionsOut, ["PromotionID", "PromotionName", "Days", "StartTime", "EndTime", "Locations", "Notes"]), rowCount: promotionsOut.length },
-    items: { csv: toCsv(itemsOut, ["KEY", "PromotionID", "Description", "PriceLevel", "PriceLevel_Name", "PromotionPrice", "PromotionCategory", "Category", "Size"]), rowCount: itemsOut.length },
+    items: { csv: toCsv(itemsOut, ["KEY", "PromotionID", "Description", "PriceLevel", "PriceLevel_Name", "PromotionPrice", "NewPromoPrice", "Category", "Size"]), rowCount: itemsOut.length },
   };
 }
 
