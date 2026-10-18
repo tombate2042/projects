@@ -1242,7 +1242,8 @@ function exportPDF() {
     body { font-family: Arial, sans-serif; font-size: 11px; color: #111; margin: 20px; }
     .page-header { color: #666; font-size: 10px; text-align: right; margin-bottom: 8px; }
     .supplier-cols { column-count: 2; column-gap: 32px; }
-    .supplier-block { border-top: 3px solid #333; padding-top: 8px; margin-bottom: 20px; }
+    /* keep a supplier together; one taller than a column still splits, but only between categories */
+    .supplier-block { border-top: 3px solid #333; padding-top: 8px; margin-bottom: 20px; break-inside: avoid; page-break-inside: avoid; }
     h2 { font-size: 15px; margin: 0 0 2px; }
     h3 { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: #444; border-bottom: 1px solid #ddd; padding-bottom: 4px; margin: 14px 0 6px; }
     .cat-block { break-inside: avoid; page-break-inside: avoid; }
