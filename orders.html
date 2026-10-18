@@ -596,7 +596,7 @@
       </div>
       <div class="form-group">
         <label class="form-label">Delivery Day</label>
-        <select class="form-select" id="sm-delivery"></select>
+        <select class="form-select" id="sm-delivery" onchange="updateSupplierLink()"></select>
       </div>
       <div class="form-group full">
         <label class="form-label" id="sm-contact-label">Email Address</label>
@@ -839,8 +839,16 @@ function updateSupplierLink() {
   const link = document.getElementById('sm-link');
   if (!contact) { link.style.display = 'none'; return; }
   if (isEmail) {
-    const d = new Date(state.weekStart + 'T00:00:00').toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' });
-    link.href = `mailto:${contact}?subject=${encodeURIComponent('Order - week commencing ' + d)}`;
+    const local = contact.split('@')[0];
+    const name = local.charAt(0).toUpperCase() + local.slice(1);
+    const lines = getOrderItems()
+      .filter(m => m.supplier === editingSupplier && Number(getItem(m.id).ordered) > 0)
+      .map(m => `- ${Number(getItem(m.id).ordered)}x ${m.item}`);
+    const delivery = document.getElementById('sm-delivery').value;
+    const subject = 'Republic Hotel Order ' + new Date().toLocaleDateString('en-AU');
+    const body = `Hey ${name},\n\nCould I please place an order of:\n${lines.join('\n')}\n\n` +
+      (delivery ? `For delivery on ${delivery}.\n\n` : '') + 'Thanks,\nTom';
+    link.href = `mailto:${contact}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
     link.textContent = 'Email ' + contact;
   } else {
     link.href = /^https?:\/\//i.test(contact) ? contact : 'https://' + contact;
