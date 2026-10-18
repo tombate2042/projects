@@ -1240,7 +1240,8 @@ function exportPDF() {
   let html = `<html><head><meta charset="UTF-8"><title>Stock Order ${dateStr}</title>
   <style>
     body { font-family: Arial, sans-serif; font-size: 11px; color: #111; margin: 20px; }
-    .page-header { color: #666; font-size: 10px; text-align: right; margin-bottom: 8px; }
+    /* week date lives in the page margin so it takes no space from the supplier columns */
+    @page { @bottom-right { content: "Week commencing ${dateStr}"; font-family: Arial, sans-serif; font-size: 9px; color: #666; } }
     .supplier-cols { column-count: 2; column-gap: 32px; }
     /* keep a supplier together; one taller than a column still splits, but only between categories */
     .supplier-block { border-top: 3px solid #333; padding-top: 8px; margin-bottom: 20px; break-inside: avoid; page-break-inside: avoid; }
@@ -1255,7 +1256,6 @@ function exportPDF() {
     td.r { text-align: right; }
     @media print { body { margin: 10px; } }
   </style></head><body>
-  <div class="page-header">Week commencing ${dateStr}</div>
   <div class="supplier-cols">`;
 
   sortedSuppliers.forEach((sup, si) => {
