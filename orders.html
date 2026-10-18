@@ -1418,9 +1418,9 @@ function generateSupplierChecklist() {
       <td class="cb-cell"><input type="checkbox">${dateLine}</td>
     </tr>`;
   const rows = suppliers.map(s => {
-    const line = row(s, getSupplierInfo(s).delivery, ordered.has(s));
-    // Select Fresh gets a second blank line to fill in by hand on the printed sheet
-    return s === 'Select Fresh' ? line + row(s, '', false) : line;
+    // Select Fresh always gets a blank line to fill in by hand on the printed sheet
+    if (s === 'Select Fresh') return (ordered.has(s) ? row(s, getSupplierInfo(s).delivery, true) : '') + row(s, '', false);
+    return row(s, getSupplierInfo(s).delivery, true);
   }).join('');
 
   const html = `<html><head><meta charset="UTF-8"><title>Order Checklist</title>
