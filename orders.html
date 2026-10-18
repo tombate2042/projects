@@ -1241,7 +1241,7 @@ function exportPDF() {
   <style>
     body { font-family: Arial, sans-serif; font-size: 11px; color: #111; margin: 20px; }
     /* week date lives in the page margin so it takes no space from the supplier columns */
-    @page { @bottom-right { content: "Week commencing ${dateStr}"; font-family: Arial, sans-serif; font-size: 9px; color: #666; } }
+    @page { @bottom-right { content: "Week commencing ${dateStr}"; font-family: Arial, sans-serif; font-size: 13px; font-weight: 700; color: #111; } }
     .supplier-cols { column-count: 2; column-gap: 32px; }
     /* keep a supplier together; one taller than a column still splits, but only between categories */
     .supplier-block { border-top: 3px solid #333; padding-top: 8px; margin-bottom: 20px; break-inside: avoid; page-break-inside: avoid; }
