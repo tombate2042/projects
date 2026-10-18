@@ -582,6 +582,35 @@
   </div>
 </div>
 
+<!-- SUPPLIER MODAL -->
+<div class="modal-overlay" id="supplierModal">
+  <div class="modal">
+    <h3 id="supplierModalTitle"></h3>
+    <div class="form-grid">
+      <div class="form-group">
+        <label class="form-label">Ordered By</label>
+        <select class="form-select" id="sm-method" onchange="updateSupplierLink()">
+          <option value="email">Email</option>
+          <option value="website">Website</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Delivery Day</label>
+        <select class="form-select" id="sm-delivery"></select>
+      </div>
+      <div class="form-group full">
+        <label class="form-label" id="sm-contact-label">Email Address</label>
+        <input class="form-input" id="sm-contact" type="text" oninput="updateSupplierLink()">
+      </div>
+    </div>
+    <a class="btn" id="sm-link" target="_blank" rel="noopener" style="text-decoration:none;display:none"></a>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('supplierModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveSupplier()">Save</button>
+    </div>
+  </div>
+</div>
+
 <script>
 // ─── DATA ────────────────────────────────────────────────────────────────────
 const MASTER = [];
@@ -774,6 +803,63 @@ const SUPPLIER_DELIVERY = {
   '4Food':        'Wednesday',
 };
 
+const DELIVERY_OPTIONS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday','Monday or Tuesday','Monday or Thursday','Varies'];
+
+// Saved supplier details (state.suppliers) fall back to the SUPPLIER_DELIVERY defaults
+function getSupplierInfo(s) {
+  const saved = (state.suppliers || {})[s] || {};
+  return {
+    method: saved.method || 'email',
+    contact: saved.contact || '',
+    delivery: saved.delivery ?? SUPPLIER_DELIVERY[s] ?? '',
+  };
+}
+
+let editingSupplier = null;
+
+function openSupplierModal(s) {
+  editingSupplier = s;
+  const info = getSupplierInfo(s);
+  document.getElementById('supplierModalTitle').textContent = s;
+  document.getElementById('sm-method').value = info.method;
+  document.getElementById('sm-contact').value = info.contact;
+  const opts = DELIVERY_OPTIONS.includes(info.delivery) || !info.delivery ? DELIVERY_OPTIONS : [info.delivery, ...DELIVERY_OPTIONS];
+  document.getElementById('sm-delivery').innerHTML = '<option value="">—</option>' +
+    opts.map(o => `<option value="${esc(o)}"${o === info.delivery ? ' selected' : ''}>${esc(o)}</option>`).join('');
+  updateSupplierLink();
+  document.getElementById('supplierModal').classList.add('open');
+}
+
+function updateSupplierLink() {
+  const method = document.getElementById('sm-method').value;
+  const contact = document.getElementById('sm-contact').value.trim();
+  const isEmail = method === 'email';
+  document.getElementById('sm-contact-label').textContent = isEmail ? 'Email Address' : 'Website';
+  document.getElementById('sm-contact').placeholder = isEmail ? 'orders@supplier.com.au' : 'https://supplier.com.au';
+  const link = document.getElementById('sm-link');
+  if (!contact) { link.style.display = 'none'; return; }
+  if (isEmail) {
+    const d = new Date(state.weekStart + 'T00:00:00').toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' });
+    link.href = `mailto:${contact}?subject=${encodeURIComponent('Order - week commencing ' + d)}`;
+    link.textContent = 'Email ' + contact;
+  } else {
+    link.href = /^https?:\/\//i.test(contact) ? contact : 'https://' + contact;
+    link.textContent = 'Open ' + contact.replace(/^https?:\/\//i, '');
+  }
+  link.style.display = 'inline-block';
+}
+
+function saveSupplier() {
+  if (!state.suppliers) state.suppliers = {};
+  state.suppliers[editingSupplier] = {
+    method: document.getElementById('sm-method').value,
+    contact: document.getElementById('sm-contact').value.trim(),
+    delivery: document.getElementById('sm-delivery').value,
+  };
+  saveState();
+  closeModal('supplierModal');
+}
+
 function renderSupplierFilters() {
   const existing = new Set(getOrderItems().map(m => m.supplier).filter(Boolean));
   const suppliers = [...existing].sort((a, b) => {
@@ -782,7 +868,7 @@ function renderSupplierFilters() {
   });
   const wrap = document.getElementById('supplierFilters');
   wrap.innerHTML = '<button class="filter-chip active" data-supplier="all" onclick="setSupplierFilter(\'all\',this)">All</button>' +
-    suppliers.map(s => `<button class="filter-chip" data-supplier="${s}" onclick="setSupplierFilter('${s.replace(/'/g,"\\'")}',this)">${s}</button>`).join('');
+    suppliers.map(s => `<button class="filter-chip" data-supplier="${s}" title="Double-click for supplier details" onclick="setSupplierFilter('${s.replace(/'/g,"\\'")}',this)" ondblclick="openSupplierModal('${s.replace(/'/g,"\\'")}')">${s}</button>`).join('');
 }
 
 function renderCategories() {
@@ -1313,7 +1399,7 @@ function generateSupplierChecklist() {
   const allItems = getOrderItems();
   const rows = suppliers.map(s => {
     const hasOrder = allItems.some(m => m.supplier === s && Number(state.items[m.id]?.ordered) > 0);
-    const delivery = SUPPLIER_DELIVERY[s] || '';
+    const delivery = getSupplierInfo(s).delivery;
     return `
     <tr${hasOrder ? '' : ' class="no-order"'}>
       <td class="supplier-name">${s}</td>
