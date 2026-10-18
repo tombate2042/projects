@@ -838,7 +838,7 @@ function updateSupplierLink() {
   const link = document.getElementById('sm-link');
   if (!contact) { link.style.display = 'none'; return; }
   if (isEmail) {
-    const local = contact.split('@')[0];
+    const local = contact.split('@')[0].split('.')[0];
     const name = local.charAt(0).toUpperCase() + local.slice(1);
     const lines = getOrderItems()
       .filter(m => m.supplier === editingSupplier && Number(getItem(m.id).ordered) > 0)
