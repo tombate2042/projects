@@ -477,6 +477,13 @@
   }
   .rs-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent-mid); flex-shrink: 0; }
   .rs-card-body { padding: 16px; }
+  .rs-saved-list { max-height: 240px; overflow-y: auto; }
+  .rs-saved-row { display: flex; align-items: center; gap: 10px; padding: 8px 16px; border-bottom: 1px solid var(--border); font-size: 13px; }
+  .rs-saved-row:last-child { border-bottom: none; }
+  .rs-saved-row.current { background: var(--accent-light); }
+  .rs-saved-info { flex: 1; min-width: 0; }
+  .rs-saved-name { font-weight: 600; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .rs-saved-meta { font-size: 11px; color: var(--text3); }
 
   .rs-field { display: flex; flex-direction: column; gap: 4px; }
   .rs-field label { font-size: 11px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; color: var(--text2); }
@@ -927,6 +934,18 @@
   <div class="rs-container">
 
     <div class="rs-card">
+      <div class="rs-card-head" style="justify-content:space-between;">
+        <span><span class="rs-dot"></span>Saved Runsheets</span>
+        <span style="display:flex;align-items:center;gap:8px;text-transform:none;letter-spacing:0;font-weight:500;">
+          <span id="rs-save-status" style="font-size:12px;color:var(--text3);"></span>
+          <button class="btn btn-outline btn-sm" onclick="rsNewRunsheet()">New Runsheet</button>
+          <button class="btn btn-primary btn-sm" onclick="rsSaveRunsheet()">Save Runsheet</button>
+        </span>
+      </div>
+      <div class="rs-saved-list" id="rs-saved-list"></div>
+    </div>
+
+    <div class="rs-card">
       <div class="rs-card-head"><span class="rs-dot"></span>Event Information</div>
       <div class="rs-card-body">
         <div class="rs-field" style="margin-bottom:12px;">
@@ -1020,7 +1039,7 @@
     <div class="rs-preview-actions">
       <span style="flex:1;font-size:13px;color:var(--text3);">Review your runsheet, then print or save as PDF.<br><strong style="color:var(--text2);">Go to more settings &amp; select Background graphics</strong></span>
       <button class="btn btn-outline" onclick="rsSwitchSub('form')">← Edit Details</button>
-      <button class="btn btn-primary" onclick="window.print()">Print / Save PDF</button>
+      <button class="btn btn-primary" onclick="rsPrint()">Print / Save PDF</button>
     </div>
     <div class="rs-output" id="rs-output">
       <div style="padding:40px;text-align:center;color:var(--text3);font-size:14px;">Fill in event details and click "Preview Runsheet" to generate.</div>
@@ -2362,6 +2381,12 @@ function rsInit() {
   rsRenderLocButtons();
   rsRenderFoodTypeGrid();
   rsLoadFormData();
+  // compare against the stored copy, so edits made before a tab switch or reload still show as unsaved
+  const entry = rsGetSaved().find(r => r.id === rsGetCurrentId());
+  if (!entry) rsSetCurrentId(null);
+  rsSavedSnapshot = entry ? JSON.stringify(entry.data) : null;
+  rsRenderSavedList();
+  rsUpdateSaveStatus();
 }
 
 function rsSwitchSub(name) {
@@ -2998,6 +3023,118 @@ function rsCalcFoodCost() {
 /* ── Persistence ── */
 function rsAutoSave() {
   localStorage.setItem('rr_form', JSON.stringify(rsGetFormData()));
+  rsUpdateSaveStatus();
+}
+
+/* ── Saved runsheets ──
+   rr_form holds the form being edited (auto-saved on every change).
+   rr_saved holds the runsheets kept with Save Runsheet (or Print), one entry per event.
+   rr_current_id links the open form to its saved entry, if it has one. */
+const RS_SAVED_KEY   = 'rr_saved';
+const RS_CURRENT_KEY = 'rr_current_id';
+let rsSavedSnapshot  = null; // form data as of the last save/open, to detect unsaved changes
+
+function rsGetSaved() {
+  try { return JSON.parse(localStorage.getItem(RS_SAVED_KEY) || '[]'); } catch(e) { return []; }
+}
+function rsGetCurrentId()   { return localStorage.getItem(RS_CURRENT_KEY) || null; }
+function rsSetCurrentId(id) { id ? localStorage.setItem(RS_CURRENT_KEY, id) : localStorage.removeItem(RS_CURRENT_KEY); }
+
+// Record the current form as the "clean" state, then refresh the list and status
+function rsCheckpoint() {
+  const id = rsGetCurrentId();
+  rsSavedSnapshot = id && rsGetSaved().some(r => r.id === id) ? JSON.stringify(rsGetFormData()) : null;
+  if (!rsSavedSnapshot) rsSetCurrentId(null);
+  rsRenderSavedList();
+  rsUpdateSaveStatus();
+}
+
+function rsHasUnsavedChanges() {
+  const cur = JSON.stringify(rsGetFormData());
+  if (rsSavedSnapshot) return cur !== rsSavedSnapshot;
+  const d = rsGetFormData();
+  return !!(d.eventName || d.date || d.client || d.menuType || !rsRTEEmpty(d.notes) || !rsRTEEmpty(d.notes2));
+}
+
+function rsUpdateSaveStatus() {
+  const el = document.getElementById('rs-save-status');
+  if (!el) return;
+  if (!rsSavedSnapshot) el.textContent = rsHasUnsavedChanges() ? 'Not saved yet' : '';
+  else el.textContent = rsHasUnsavedChanges() ? 'Unsaved changes' : 'Saved';
+}
+
+function rsSaveRunsheet() {
+  const saved = rsGetSaved();
+  const id    = rsGetCurrentId() || ('rs_' + Date.now().toString(36));
+  const entry = { id, savedAt: new Date().toISOString(), data: rsGetFormData() };
+  const idx   = saved.findIndex(r => r.id === id);
+  if (idx >= 0) saved[idx] = entry; else saved.unshift(entry);
+  try {
+    localStorage.setItem(RS_SAVED_KEY, JSON.stringify(saved));
+  } catch(e) {
+    alert('Could not save — browser storage is full. Delete some old runsheets and try again.');
+    return false;
+  }
+  rsSetCurrentId(id);
+  rsCheckpoint();
+  return true;
+}
+
+function rsOpenRunsheet(id) {
+  if (id === rsGetCurrentId()) return;
+  const entry = rsGetSaved().find(r => r.id === id);
+  if (!entry) return;
+  if (rsHasUnsavedChanges() && !confirm('Discard unsaved changes to the current runsheet?')) return;
+  rsResetForm();
+  localStorage.setItem('rr_form', JSON.stringify(entry.data));
+  rsSetCurrentId(id);
+  rsLoadFormData();
+  rsCheckpoint();
+}
+
+function rsDeleteRunsheet(id) {
+  const entry = rsGetSaved().find(r => r.id === id);
+  if (!entry || !confirm(`Delete the saved runsheet "${entry.data.eventName || 'Untitled'}"?`)) return;
+  localStorage.setItem(RS_SAVED_KEY, JSON.stringify(rsGetSaved().filter(r => r.id !== id)));
+  // the form stays open, but as a new unsaved runsheet
+  if (id === rsGetCurrentId()) rsSetCurrentId(null);
+  rsCheckpoint();
+}
+
+function rsNewRunsheet() {
+  if (rsHasUnsavedChanges() && !confirm('Discard unsaved changes to the current runsheet?')) return;
+  rsResetForm();
+  rsCheckpoint();
+}
+
+function rsPrint() {
+  if (rsSaveRunsheet() === false && !confirm('The runsheet could not be saved. Print anyway?')) return;
+  window.print();
+}
+
+function rsRenderSavedList() {
+  const list = document.getElementById('rs-saved-list');
+  if (!list) return;
+  const saved = rsGetSaved().sort((a, b) => (b.data.date || '').localeCompare(a.data.date || '') || b.savedAt.localeCompare(a.savedAt));
+  if (!saved.length) {
+    list.innerHTML = '<div style="padding:12px 16px;font-size:13px;color:var(--text3);">No saved runsheets yet. Click Save Runsheet to keep this one.</div>';
+    return;
+  }
+  const cur = rsGetCurrentId();
+  list.innerHTML = saved.map(r => {
+    const d    = r.data;
+    const meta = [d.date ? rsFormatDate(d.date) : 'No date', d.location, d.client].filter(Boolean).map(esc).join(' · ');
+    const when = new Date(r.savedAt).toLocaleString('en-AU', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' });
+    return `<div class="rs-saved-row${r.id === cur ? ' current' : ''}">
+      <div class="rs-saved-info">
+        <div class="rs-saved-name">${esc(d.eventName) || 'Untitled'}</div>
+        <div class="rs-saved-meta">${meta} — saved ${esc(when)}</div>
+      </div>
+      ${r.id === cur ? '<span style="font-size:11px;color:var(--text3);">Open</span>'
+                     : `<button class="btn btn-outline btn-sm" onclick="rsOpenRunsheet('${r.id}')">Open</button>`}
+      <button class="btn btn-outline btn-sm" onclick="rsDeleteRunsheet('${r.id}')">Delete</button>
+    </div>`;
+  }).join('');
 }
 
 function rsGetFormData() {
@@ -3085,6 +3222,12 @@ function rsLoadFormData() {
 
 function rsClearForm() {
   if (!confirm('Clear all event details?')) return;
+  rsResetForm();
+  rsCheckpoint();
+}
+
+// Empty the form and start a new, unsaved runsheet (saved runsheets are untouched)
+function rsResetForm() {
   ['rs-event-name','rs-date','rs-start','rs-end','rs-pax','rs-location',
    'rs-client','rs-contact','rs-food-cost','rs-prepaid','rs-extra-cost-title','rs-extra-cost'].forEach(id => rsSV(id, ''));
   rsRTESet('rs-notes',  '');
@@ -3100,6 +3243,9 @@ function rsClearForm() {
   document.getElementById('rs-food-panel').innerHTML  = '';
   document.getElementById('rs-addons-panel').innerHTML = '';
   localStorage.removeItem('rr_form');
+  rsSetCurrentId(null);
+  rsFoodCostIsAuto = true;
+  rsApplySpaceColours(null);
 }
 
 /* ── Date / time formatting ── */
